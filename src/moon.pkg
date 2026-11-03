@@ -1,2 +1,3 @@
-// What this package implements, and a first-hand link to the specification it
-// implements. A package without that link is not finished.
+// The root package carries no code of its own. Every capability lives in a
+// subpackage named after what it does, so a program that wants only the wire
+// format pulls in only that.
