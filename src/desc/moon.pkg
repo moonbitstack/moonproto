@@ -1,0 +1,10 @@
+// Building runtime descriptors from the `descriptor.proto` shape, and the
+// inverse. The input records mirror the fields the builder reads; a generated
+// `known/descriptor` package can fill them from real messages later.
+// https://protobuf.dev/reference/protobuf/google.protobuf/#descriptor
+
+import {
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/float",
+  "moonbitstack/moonproto/reflect",
+}

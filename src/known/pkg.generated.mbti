@@ -1,0 +1,22 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonproto/known"
+
+import {
+  "moonbitstack/moonproto/desc",
+  "moonbitstack/moonproto/reflect",
+}
+
+// Values
+pub fn file_descriptor() -> @reflect.FileDescriptor raise @desc.Refused
+
+pub fn message_descriptor(String) -> @reflect.MessageDescriptor? raise @desc.Refused
+
+pub fn register_all() -> Unit
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits

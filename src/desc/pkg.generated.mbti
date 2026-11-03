@@ -1,0 +1,94 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonproto/desc"
+
+import {
+  "moonbitstack/moonproto/reflect",
+}
+
+// Values
+pub fn build_file(FileDescriptorProto) -> @reflect.FileDescriptor raise Refused
+
+pub fn to_file_descriptor_proto(@reflect.FileDescriptor) -> FileDescriptorProto
+
+pub fn to_json_name(String) -> String
+
+// Errors
+pub(all) suberror Refused {
+  Name(String)
+  Number(Int32)
+  Type(String)
+  Syntax(String)
+}
+pub fn Refused::output(Self, &Logger) -> Unit
+pub fn Refused::to_string(Self) -> String
+pub impl Show for Refused
+
+// Types and methods
+pub(all) struct DescriptorProto {
+  name : String
+  field : Array[FieldDescriptorProto]
+  nested_type : Array[DescriptorProto]
+  enum_type : Array[EnumDescriptorProto]
+  extension : Array[FieldDescriptorProto]
+  oneof_decl : Array[OneofDescriptorProto]
+  reserved_range : Array[(Int32, Int32)]
+  reserved_name : Array[String]
+  extension_range : Array[(Int32, Int32)]
+  map_entry : Bool
+}
+
+pub(all) struct EnumDescriptorProto {
+  name : String
+  value : Array[EnumValueDescriptorProto]
+}
+
+pub(all) struct EnumValueDescriptorProto {
+  name : String
+  number : Int32
+}
+
+pub(all) struct FieldDescriptorProto {
+  name : String
+  number : Int32
+  label : Int32
+  type_code : Int32
+  type_name : String?
+  json_name : String?
+  default_value : String?
+  oneof_index : Int32?
+  proto3_optional : Bool
+  packed_off : Bool
+}
+
+pub(all) struct FileDescriptorProto {
+  name : String
+  package_name : String
+  syntax : String
+  message_type : Array[DescriptorProto]
+  enum_type : Array[EnumDescriptorProto]
+  service : Array[ServiceDescriptorProto]
+  extension : Array[FieldDescriptorProto]
+  dependency : Array[String]
+  public_dependency : Array[Int32]
+}
+
+pub(all) struct MethodDescriptorProto {
+  name : String
+  input_type : String
+  output_type : String
+  client_streaming : Bool
+  server_streaming : Bool
+}
+
+pub(all) struct OneofDescriptorProto {
+  name : String
+}
+
+pub(all) struct ServiceDescriptorProto {
+  name : String
+  methods : Array[MethodDescriptorProto]
+}
+
+// Type aliases
+
+// Traits

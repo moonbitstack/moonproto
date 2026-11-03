@@ -1,0 +1,13 @@
+// The well-known types, built as descriptors and registered as dynamic types.
+// https://protobuf.dev/reference/protobuf/google.protobuf/
+
+import {
+  "moonbitstack/moonproto/desc",
+  "moonbitstack/moonproto/dynamic",
+  "moonbitstack/moonproto/reflect",
+}
+
+import {
+  "moonbitstack/moonproto/json",
+  "moonbitstack/moonproto/proto",
+} for "wbtest"
