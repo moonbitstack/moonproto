@@ -1,0 +1,17 @@
+// The protoc plugin protocol: a `CodeGeneratorRequest` in, a
+// `CodeGeneratorResponse` out. The two messages are built as descriptors and
+// decoded dynamically, so the generator does not need generated descriptor
+// code of its own.
+// https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/compiler/plugin.proto
+
+import {
+  "moonbitlang/core/encoding/utf8",
+  "moonbitstack/moonproto/desc",
+  "moonbitstack/moonproto/dynamic",
+  "moonbitstack/moonproto/proto",
+  "moonbitstack/moonproto/reflect",
+}
+
+import {
+  "moonbitstack/moonproto/parser",
+} for "wbtest"

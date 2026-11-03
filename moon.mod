@@ -28,3 +28,7 @@ keywords = [
 description = "Protocol Buffers for MoonBit."
 
 source = "src"
+
+import {
+  "moonbitlang/async@0.22.5",
+}

@@ -1,0 +1,46 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonproto/gen"
+
+import {
+  "moonbitstack/moonproto/desc",
+  "moonbitstack/moonproto/proto",
+  "moonbitstack/moonproto/reflect",
+}
+
+// Values
+pub fn decode_request(Bytes) -> Request raise Refused
+
+pub fn decode_response(Bytes) -> (Array[(String, String)], String?) raise Refused
+
+pub fn encode_request(Request) -> Bytes raise Refused
+
+pub fn encode_response(Array[(String, String)], String?) -> Bytes raise Refused
+
+pub fn generate_source(@desc.FileDescriptorProto) -> String raise Refused
+
+pub fn plugin_main(Bytes) -> Bytes
+
+pub let plugin_types : @reflect.Types
+
+pub fn types() -> @reflect.Types
+
+// Errors
+pub(all) suberror Refused {
+  Protocol(String)
+  Proto(@proto.Refused)
+  Desc(@desc.Refused)
+}
+pub fn Refused::output(Self, &Logger) -> Unit
+pub fn Refused::to_string(Self) -> String
+pub impl Show for Refused
+
+// Types and methods
+pub(all) struct Request {
+  files_to_generate : Array[String]
+  parameter : String
+  proto_file : Array[@desc.FileDescriptorProto]
+}
+
+// Type aliases
+
+// Traits

@@ -758,7 +758,7 @@ fn decode_value(
       let (body, next) = @wire.consume_bytes(bytes, at~, limit=end) catch {
         err => raise Wire(err)
       }
-      let value = @reflect.new_field_value(field)
+      let value = @reflect.new_element_value(field.kind, field.message_type)
       let target = value.message()
       decode_message(target, body, 0, body.length(), depth + 1, opts)
       (value, next)

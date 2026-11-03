@@ -1,0 +1,13 @@
+// The protoc plugin binary: a CodeGeneratorRequest on standard input, a
+// CodeGeneratorResponse on standard output.
+import {
+  "moonbitlang/async",
+  "moonbitlang/async/stdio",
+  "moonbitstack/moonproto/gen",
+}
+
+pkgtype(kind: "executable")
+
+options(
+  supported_targets: "native",
+)
