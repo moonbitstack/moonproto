@@ -1,0 +1,13 @@
+// The text format: `name: value` for scalars, braces for messages, every
+// repeated element on its own line. https://protobuf.dev/reference/protobuf/textformat-spec/
+
+import {
+  "moonbitlang/core/double",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/float",
+  "moonbitstack/moonproto/reflect",
+}
+
+import {
+  "moonbitstack/moonproto/dynamic",
+} for "wbtest"

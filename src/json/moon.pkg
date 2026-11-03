@@ -1,0 +1,15 @@
+// The JSON mapping, built on core's `Json` type.
+// https://protobuf.dev/programming-guides/json/
+
+import {
+  "moonbitlang/core/double",
+  "moonbitlang/core/encoding/base64",
+  "moonbitlang/core/float",
+  "moonbitlang/core/json" @cjson,
+  "moonbitstack/moonproto/proto",
+  "moonbitstack/moonproto/reflect",
+}
+
+import {
+  "moonbitstack/moonproto/dynamic",
+} for "wbtest"

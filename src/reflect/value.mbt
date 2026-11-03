@@ -2,6 +2,7 @@
 // of unknown fields. https://protobuf.dev/programming-guides/proto3/
 
 // The language version a file declares.
+
 ///|
 #derive(Eq)
 pub(all) enum Syntax {

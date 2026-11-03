@@ -1,0 +1,53 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonproto/json"
+
+import {
+  "moonbitstack/moonproto/reflect",
+}
+
+// Values
+pub fn[M : @reflect.Message] decode(StringView, M, unmarshal_options? : UnmarshalOptions) -> Unit raise Refused
+
+pub fn[M : @reflect.Message] encode(M, marshal_options? : MarshalOptions) -> String raise Refused
+
+pub fn[M : @reflect.Message] from_json(M, @moonbitlang/core/json.Json, unmarshal_options? : UnmarshalOptions) -> Unit raise Refused
+
+pub let marshal_options : MarshalOptions
+
+pub fn[M : @reflect.Message] to_json(M, marshal_options? : MarshalOptions) -> @moonbitlang/core/json.Json raise Refused
+
+pub let unmarshal_options : UnmarshalOptions
+
+// Errors
+pub(all) suberror Refused {
+  Syntax(String)
+  UnknownField(String)
+  BadValue(String)
+  BadBase64(String)
+  Recursion(Int32)
+  NoType(String)
+}
+pub fn Refused::output(Self, &Logger) -> Unit
+pub fn Refused::to_string(Self) -> String
+pub impl Show for Refused
+
+// Types and methods
+pub(all) struct MarshalOptions {
+  multiline : Bool
+  indent : String
+  allow_partial : Bool
+  use_proto_names : Bool
+  use_enum_numbers : Bool
+  emit_unpopulated : Bool
+  emit_default_values : Bool
+}
+
+pub(all) struct UnmarshalOptions {
+  allow_partial : Bool
+  discard_unknown : Bool
+  recursion_limit : Int32
+}
+
+// Type aliases
+
+// Traits

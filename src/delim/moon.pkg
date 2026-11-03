@@ -1,0 +1,12 @@
+// Varint size-delimited messages over a byte stream.
+// https://protobuf.dev/programming-guides/techniques/#streaming
+
+import {
+  "moonbitstack/moonproto/proto",
+  "moonbitstack/moonproto/reflect",
+  "moonbitstack/moonproto/wire",
+}
+
+import {
+  "moonbitstack/moonproto/dynamic",
+} for "wbtest"

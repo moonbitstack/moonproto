@@ -1,0 +1,66 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonproto/delim"
+
+import {
+  "moonbitlang/core/buffer",
+  "moonbitstack/moonproto/proto",
+  "moonbitstack/moonproto/reflect",
+  "moonbitstack/moonproto/wire",
+}
+
+// Values
+pub fn[M : @reflect.Message] decode_from(&Reader, M, unmarshal_options? : UnmarshalOptions) -> Unit raise Refused
+
+pub fn[M : @reflect.Message] encode_to(&Writer, M, marshal_options? : MarshalOptions) -> Int32 raise Refused
+
+pub let marshal_options : MarshalOptions
+
+pub let unmarshal_options : UnmarshalOptions
+
+// Errors
+pub(all) suberror Refused {
+  Wire(@wire.Refused)
+  Proto(@proto.Refused)
+  Size(Int32, Int32)
+  Truncated
+}
+pub fn Refused::output(Self, &Logger) -> Unit
+pub fn Refused::to_string(Self) -> String
+pub impl Show for Refused
+
+// Types and methods
+pub struct BytesReader {
+  bytes : Bytes
+  mut pos : Int32
+}
+pub fn BytesReader::new(Bytes) -> Self
+pub fn BytesReader::read_byte(Self) -> Int32?
+pub impl Reader for BytesReader
+
+pub struct BytesWriter {
+  buf : @buffer.Buffer
+}
+pub fn BytesWriter::new() -> Self
+pub fn BytesWriter::to_bytes(Self) -> Bytes
+pub fn BytesWriter::write(Self, BytesView) -> Unit raise Refused
+pub impl Writer for BytesWriter
+
+pub(all) struct MarshalOptions {
+  marshal : @proto.MarshalOptions
+}
+
+pub(all) struct UnmarshalOptions {
+  unmarshal : @proto.UnmarshalOptions
+  max_size : Int32
+}
+
+// Type aliases
+
+// Traits
+pub(open) trait Reader {
+  fn read_byte(Self) -> Int32?
+}
+
+pub(open) trait Writer {
+  fn write(Self, BytesView) -> Unit raise Refused
+}

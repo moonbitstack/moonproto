@@ -1,0 +1,45 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonproto/text"
+
+import {
+  "moonbitstack/moonproto/reflect",
+}
+
+// Values
+pub fn[M : @reflect.Message] decode(StringView, M, unmarshal_options? : UnmarshalOptions) -> Unit raise Refused
+
+pub fn[M : @reflect.Message] encode(M, marshal_options? : MarshalOptions) -> String raise Refused
+
+pub let marshal_options : MarshalOptions
+
+pub let unmarshal_options : UnmarshalOptions
+
+// Errors
+pub(all) suberror Refused {
+  Syntax(String, Int32)
+  UnknownField(String)
+  BadValue(String)
+  Recursion(Int32)
+}
+pub fn Refused::output(Self, &Logger) -> Unit
+pub fn Refused::to_string(Self) -> String
+pub impl Show for Refused
+
+// Types and methods
+pub(all) struct MarshalOptions {
+  multiline : Bool
+  indent : String
+  emit_ascii : Bool
+  allow_partial : Bool
+  emit_unknown : Bool
+}
+
+pub(all) struct UnmarshalOptions {
+  allow_partial : Bool
+  discard_unknown : Bool
+  recursion_limit : Int32
+}
+
+// Type aliases
+
+// Traits
