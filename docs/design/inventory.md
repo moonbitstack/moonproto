@@ -153,10 +153,10 @@ used for.
 
 | Ref | Name | What it does | Cost | Home |
 |:--|:--|:--|:--|:--|
-| known | `anypb`, `apipb`, `durationpb`, `emptypb`, `fieldmaskpb`, `sourcecontextpb`, `structpb`, `timestamppb`, `typepb`, `wrapperspb` | the well-known messages | O(1) | known: one package each |
-| descriptorpb | `descriptor.proto` messages | `FileDescriptorProto` and the rest, including `FeatureSet` and `FeatureSetDefaults` | O(1) | known: `known/descriptor` |
-| pluginpb | `plugin.proto` messages | `CodeGeneratorRequest`, `CodeGeneratorResponse`, `Version` | O(1) | known: `known/plugin` |
-| gofeaturespb | `go_features.proto` and edition defaults | the feature messages this module reads | O(1) | known: `known/features` |
+| known | `anypb`, `durationpb`, `emptypb`, `fieldmaskpb`, `structpb`, `timestamppb`, `wrapperspb` | the well-known messages | O(1) | known: `known/google/protobuf` |
+| descriptorpb | `descriptor.proto` messages | `FileDescriptorProto` and the rest, including `FeatureSet` and `FeatureSetDefaults` | O(1) | known: `known/google/protobuf` |
+| pluginpb | `plugin.proto` messages | `CodeGeneratorRequest`, `CodeGeneratorResponse`, `Version` | O(1) | gen: `protocol` builds them at run time, which keeps the bootstrap one step shorter |
+| gofeaturespb | `go_features.proto` and edition defaults | the feature messages this module reads | O(1) | desc: `Features`, resolved while parsing |
 
 ## `compiler/protogen`
 
@@ -193,9 +193,9 @@ used for.
 | `internal/detrand` | stable pseudo-randomisation of defaults | **drop.** Not observable in the output this module promises; excluded deliberately. |
 | `internal/genid` | reserved identifiers for generated code | **drop as a package.** The generator prefixes its own names; the list is a constant in `gen`. |
 | `internal/errors` | the `proto.Error` chain | **drop.** Each package owns its `Refused`. |
-| `internal/descopts` | typed accessors for descriptor options | **drop.** `Descriptor::options` returns `&Message?`; the caller couples it. |
+| `internal/descopts` | typed accessors for descriptor options | **drop.** Descriptors keep the options as (name, value) pairs and `FileDescriptor::option_of` reads one; no typed wrapper per options message. |
 | `internal/descfmt` | descriptor formatting for `%v` | **drop.** `Show` implementations on the descriptor traits replace it. |
-| `internal/editiondefaults`, `internal/editionssupport` | compiled-in feature defaults and the supported-edition range | **fold into `known/features` and `desc`.** |
+| `internal/editiondefaults`, `internal/editionssupport` | compiled-in feature defaults and the supported-edition range | **fold into `desc`.** `Features` carries the six values and zero means inherit, so the edition default is the fallback rather than a table. |
 | `internal/pragma` | `DoNotImplement`, `NoUnkeyedLiterals` | **drop.** Sealing is not possible with open traits; unkeyed literals do not exist. |
 | `internal/weakdeps` | weak field support | **drop.** Weak fields were removed from the protobuf language. |
 | `internal/testprotos`, `internal/fuzz`, `internal/benchmarks`, `internal/conformance` | test and benchmark fixtures, conformance driver | **drop as library packages; read as test sources.** The conformance runner drives the module from outside; the fixtures become test vectors. |
