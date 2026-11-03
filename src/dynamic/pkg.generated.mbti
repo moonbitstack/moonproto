@@ -1,0 +1,81 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonproto/dynamic"
+
+import {
+  "moonbitstack/moonproto/reflect",
+}
+
+// Values
+pub fn new_enum_type(@reflect.EnumDescriptor) -> &@reflect.EnumType
+
+pub fn new_extension_type(@reflect.FieldDescriptor) -> &@reflect.ExtensionType
+
+pub fn new_message_type(@reflect.MessageDescriptor) -> &@reflect.MessageType
+
+// Errors
+
+// Types and methods
+pub struct EnumType {
+  desc : @reflect.EnumDescriptor
+}
+pub fn EnumType::descriptor(Self) -> @reflect.EnumDescriptor
+pub fn EnumType::new(@reflect.EnumDescriptor) -> Self
+pub fn EnumType::new_enum(Self, Int32) -> &@reflect.Enum
+pub impl @reflect.EnumType for EnumType
+
+pub struct EnumValue {
+  desc : @reflect.EnumDescriptor
+  enum_type : &@reflect.EnumType
+  number_value : Int32
+}
+pub fn EnumValue::descriptor(Self) -> @reflect.EnumDescriptor
+pub fn EnumValue::enum_type(Self) -> &@reflect.EnumType
+pub fn EnumValue::number(Self) -> Int32
+pub impl @reflect.Enum for EnumValue
+
+pub struct ExtensionType {
+  desc : @reflect.FieldDescriptor
+}
+pub fn ExtensionType::descriptor(Self) -> @reflect.FieldDescriptor
+pub fn ExtensionType::is_valid_value(Self, @reflect.Value) -> Bool
+pub fn ExtensionType::new_value(Self) -> @reflect.Value
+pub fn ExtensionType::zero(Self) -> @reflect.Value
+pub impl @reflect.ExtensionType for ExtensionType
+
+pub struct Message {
+  desc : @reflect.MessageDescriptor
+  msg_type : &@reflect.MessageType
+  fields : Array[(Int32, @reflect.Value)]
+  mut unknown : Bytes
+}
+pub fn Message::clear(Self, @reflect.FieldDescriptor) -> Unit
+pub fn Message::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn Message::fresh(Self) -> Self
+pub fn Message::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Message::get_unknown(Self) -> @reflect.RawFields
+pub fn Message::has(Self, @reflect.FieldDescriptor) -> Bool
+pub fn Message::is_valid(Self) -> Bool
+pub fn Message::message_type(Self) -> &@reflect.MessageType
+pub fn Message::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Message::new(@reflect.MessageDescriptor) -> Self
+pub fn Message::new_field(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Message::new_with_type(@reflect.MessageDescriptor, &@reflect.MessageType) -> Self
+pub fn Message::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Message::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
+pub fn Message::set_unknown(Self, @reflect.RawFields) -> Unit
+pub fn Message::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
+pub impl @reflect.Fresh for Message
+pub impl @reflect.Message for Message
+
+pub struct MessageType {
+  desc : @reflect.MessageDescriptor
+}
+pub fn MessageType::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn MessageType::new(@reflect.MessageDescriptor) -> Self
+pub fn MessageType::new_message(Self) -> &@reflect.Message
+pub fn MessageType::zero(Self) -> &@reflect.Message
+pub impl @reflect.MessageType for MessageType
+
+// Type aliases
+
+// Traits

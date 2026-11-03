@@ -1,0 +1,368 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonproto/reflect"
+
+// Values
+pub fn default_for(FieldDescriptor) -> Value
+
+pub let global_files : Files
+
+pub let global_types : Types
+
+pub let invalid : Value
+
+pub fn new_element_value(Kind, String?) -> Value
+
+pub fn new_field_value(FieldDescriptor) -> Value
+
+pub fn parent_name(String) -> String
+
+pub fn qualify(String, String) -> String
+
+pub fn short_name(String) -> String
+
+pub fn zero_value(Kind) -> Value
+
+// Errors
+pub(all) suberror Refused {
+  Conflict(String)
+}
+pub fn Refused::output(Self, &Logger) -> Unit
+pub fn Refused::to_string(Self) -> String
+pub impl Show for Refused
+
+// Types and methods
+#derive(Eq)
+pub(all) enum Cardinality {
+  Optional
+  Required
+  Repeated
+}
+pub fn Cardinality::code(Self) -> Int32
+pub fn Cardinality::equal(Self, Self) -> Bool
+pub fn Cardinality::not_equal(Self, Self) -> Bool
+pub fn Cardinality::of(Int32) -> Self?
+
+pub(all) struct EnumDescriptor {
+  name : String
+  full_name : String
+  values : Array[EnumValueDescriptor]
+  closed : Bool
+  file_path : String
+}
+pub fn EnumDescriptor::value_by_name(Self, String) -> EnumValueDescriptor?
+pub fn EnumDescriptor::value_by_number(Self, Int32) -> EnumValueDescriptor?
+
+pub(all) struct EnumValueDescriptor {
+  name : String
+  number : Int32
+  full_name : String
+}
+
+pub(all) struct FieldDescriptor {
+  name : String
+  full_name : String
+  number : Int32
+  kind : Kind
+  cardinality : Cardinality
+  json_name : String
+  text_name : String
+  has_presence : Bool
+  is_extension : Bool
+  is_map : Bool
+  packed : Bool
+  oneof_index : Int32?
+  message_type : String?
+  enum_type : String?
+  has_default : Bool
+  default_value : Value
+  default_enum_name : String?
+  containing_message : String
+  map_key_field : FieldDescriptor?
+  map_value_field : FieldDescriptor?
+}
+pub fn FieldDescriptor::is_list(Self) -> Bool
+pub fn FieldDescriptor::is_map_field(Self) -> Bool
+
+pub(all) struct FileDescriptor {
+  path : String
+  package_name : String
+  syntax : Syntax
+  messages : Array[MessageDescriptor]
+  enums : Array[EnumDescriptor]
+  services : Array[ServiceDescriptor]
+  extensions : Array[FieldDescriptor]
+  dependencies : Array[String]
+  public_dependencies : Array[String]
+}
+pub fn FileDescriptor::name(Self) -> String
+
+pub struct Files {
+  files : Array[FileDescriptor]
+}
+pub fn Files::all(Self) -> Array[FileDescriptor]
+pub fn Files::find_enum_by_name(Self, String) -> EnumDescriptor?
+pub fn Files::find_file_by_path(Self, String) -> FileDescriptor?
+pub fn Files::find_message_by_name(Self, String) -> MessageDescriptor?
+pub fn Files::length(Self) -> Int32
+pub fn Files::new() -> Self
+pub fn Files::register(Self, FileDescriptor) -> Unit raise Refused
+
+#derive(Eq)
+pub(all) enum Kind {
+  Double
+  Float
+  Int64
+  Uint64
+  Int32
+  Fixed64
+  Fixed32
+  Bool
+  String
+  Group
+  Message
+  Bytes
+  Uint32
+  Enum
+  Sfixed32
+  Sfixed64
+  Sint32
+  Sint64
+}
+pub fn Kind::code(Self) -> Int32
+pub fn Kind::equal(Self, Self) -> Bool
+pub fn Kind::is_enum(Self) -> Bool
+pub fn Kind::is_message(Self) -> Bool
+pub fn Kind::is_numeric(Self) -> Bool
+pub fn Kind::not_equal(Self, Self) -> Bool
+pub fn Kind::of(Int32) -> Self?
+
+#derive(Eq)
+pub(all) enum MapKey {
+  Bool(Bool)
+  Int32(Int32)
+  Int64(Int64)
+  Uint32(UInt32)
+  Uint64(UInt64)
+  String(String)
+}
+pub fn MapKey::equal(Self, Self) -> Bool
+pub fn MapKey::not_equal(Self, Self) -> Bool
+pub fn MapKey::value(Self) -> Value
+
+pub(all) struct MessageDescriptor {
+  name : String
+  full_name : String
+  syntax : Syntax
+  fields : Array[FieldDescriptor]
+  oneofs : Array[OneofDescriptor]
+  is_map_entry : Bool
+  reserved_names : Array[String]
+  reserved_ranges : Array[(Int32, Int32)]
+  required_numbers : Array[Int32]
+  extension_ranges : Array[(Int32, Int32)]
+  nested_messages : Array[MessageDescriptor]
+  nested_enums : Array[EnumDescriptor]
+  nested_extensions : Array[FieldDescriptor]
+  file_path : String
+  map_key : FieldDescriptor?
+  map_value : FieldDescriptor?
+}
+pub fn MessageDescriptor::field_by_json_name(Self, String) -> FieldDescriptor?
+pub fn MessageDescriptor::field_by_name(Self, String) -> FieldDescriptor?
+pub fn MessageDescriptor::field_by_number(Self, Int32) -> FieldDescriptor?
+pub fn MessageDescriptor::oneof_of_field(Self, Int32) -> OneofDescriptor?
+
+pub(all) struct MethodDescriptor {
+  name : String
+  full_name : String
+  input_type : String
+  output_type : String
+  streaming_client : Bool
+  streaming_server : Bool
+}
+
+pub(all) struct OneofDescriptor {
+  name : String
+  synthetic : Bool
+  field_numbers : Array[Int32]
+}
+
+pub(all) struct RawFields(Bytes)
+pub fn RawFields::bytes(Self) -> Bytes
+pub fn RawFields::from_bytes(Bytes) -> Self
+pub fn RawFields::is_empty(Self) -> Bool
+pub fn RawFields::is_valid(Self) -> Bool
+
+pub(all) struct ServiceDescriptor {
+  name : String
+  full_name : String
+  methods : Array[MethodDescriptor]
+  file_path : String
+}
+
+#derive(Eq)
+pub(all) enum Syntax {
+  Proto2
+  Proto3
+  Editions
+}
+pub fn Syntax::code(Self) -> Int32
+pub fn Syntax::equal(Self, Self) -> Bool
+pub fn Syntax::not_equal(Self, Self) -> Bool
+pub fn Syntax::of(Int32) -> Self?
+
+pub struct Types {
+  messages : Array[(String, &MessageType)]
+  enums : Array[(String, &EnumType)]
+  extensions : Array[(String, &ExtensionType)]
+  extensions_by_number : Array[(String, &ExtensionType)]
+}
+pub fn Types::find_enum_by_name(Self, String) -> &EnumType?
+pub fn Types::find_extension_by_name(Self, String) -> &ExtensionType?
+pub fn Types::find_extension_by_number(Self, String, Int32) -> &ExtensionType?
+pub fn Types::find_message_by_name(Self, String) -> &MessageType?
+pub fn Types::new() -> Self
+pub fn Types::num_enums(Self) -> Int32
+pub fn Types::num_extensions(Self) -> Int32
+pub fn Types::num_messages(Self) -> Int32
+pub fn Types::range_enums(Self, (&EnumType) -> Bool) -> Unit
+pub fn Types::range_extensions(Self, (&ExtensionType) -> Bool) -> Unit
+pub fn Types::range_messages(Self, (&MessageType) -> Bool) -> Unit
+pub fn Types::register_enum(Self, &EnumType) -> Unit raise Refused
+pub fn Types::register_extension(Self, &ExtensionType) -> Unit raise Refused
+pub fn Types::register_message(Self, &MessageType) -> Unit raise Refused
+
+pub(all) enum Value {
+  Invalid
+  Bool(Bool)
+  Int32(Int32)
+  Int64(Int64)
+  Uint32(UInt32)
+  Uint64(UInt64)
+  Float(Float)
+  Double(Double)
+  String(String)
+  Bytes(Bytes)
+  Enum(Int32)
+  Message(&Message)
+  ListView(&ListField)
+  MapView(&MapField)
+}
+pub fn Value::bool(Self) -> Bool
+pub fn Value::bytes(Self) -> Bytes
+pub fn Value::enum_number(Self) -> Int32
+pub fn Value::equal(Self, Self) -> Bool
+pub fn Value::float(Self) -> Double
+pub fn Value::int(Self) -> Int64
+pub fn Value::is_valid(Self) -> Bool
+pub fn Value::list(Self) -> &ListField
+pub fn Value::map(Self) -> &MapField
+pub fn Value::map_key(Self) -> MapKey?
+pub fn Value::message(Self) -> &Message
+pub fn Value::string(Self) -> String
+pub fn Value::uint(Self) -> UInt64
+
+pub struct ValueList {
+  element_kind : Kind
+  element_message_type : String?
+  items : Array[Value]
+}
+pub fn ValueList::append(Self, Value) -> Unit
+pub fn ValueList::append_mutable(Self) -> Value
+pub fn ValueList::from_array(FieldDescriptor, Array[Value]) -> Self
+pub fn ValueList::get(Self, Int32) -> Value
+pub fn ValueList::is_valid(Self) -> Bool
+pub fn ValueList::length(Self) -> Int32
+pub fn ValueList::new(FieldDescriptor) -> Self
+pub fn ValueList::new_element(Self) -> Value
+pub fn ValueList::set(Self, Int32, Value) -> Unit
+pub fn ValueList::truncate(Self, Int32) -> Unit
+pub impl ListField for ValueList
+
+pub struct ValueMap {
+  key_kind : Kind
+  value_kind : Kind
+  value_message_type : String?
+  entries : Array[(MapKey, Value)]
+}
+pub fn ValueMap::clear(Self, MapKey) -> Unit
+pub fn ValueMap::get(Self, MapKey) -> Value
+pub fn ValueMap::has(Self, MapKey) -> Bool
+pub fn ValueMap::is_valid(Self) -> Bool
+pub fn ValueMap::length(Self) -> Int32
+pub fn ValueMap::mutable(Self, MapKey) -> Value
+pub fn ValueMap::new(FieldDescriptor) -> Self
+pub fn ValueMap::new_value(Self) -> Value
+pub fn ValueMap::range(Self, (MapKey, Value) -> Bool) -> Unit
+pub fn ValueMap::set(Self, MapKey, Value) -> Unit
+pub impl MapField for ValueMap
+
+// Type aliases
+
+// Traits
+pub(open) trait Enum {
+  fn descriptor(Self) -> EnumDescriptor
+  fn enum_type(Self) -> &EnumType
+  fn number(Self) -> Int32
+}
+
+pub(open) trait EnumType {
+  fn new_enum(Self, Int32) -> &Enum
+  fn descriptor(Self) -> EnumDescriptor
+}
+
+pub(open) trait ExtensionType {
+  fn new_value(Self) -> Value
+  fn zero(Self) -> Value
+  fn descriptor(Self) -> FieldDescriptor
+  fn is_valid_value(Self, Value) -> Bool
+}
+
+pub(open) trait Fresh {
+  fn fresh(Self) -> Self
+}
+
+pub(open) trait ListField {
+  fn length(Self) -> Int32
+  fn get(Self, Int32) -> Value
+  fn set(Self, Int32, Value) -> Unit
+  fn append(Self, Value) -> Unit
+  fn append_mutable(Self) -> Value
+  fn truncate(Self, Int32) -> Unit
+  fn new_element(Self) -> Value
+  fn is_valid(Self) -> Bool
+}
+
+pub(open) trait MapField {
+  fn length(Self) -> Int32
+  fn range(Self, (MapKey, Value) -> Bool) -> Unit
+  fn has(Self, MapKey) -> Bool
+  fn clear(Self, MapKey) -> Unit
+  fn get(Self, MapKey) -> Value
+  fn set(Self, MapKey, Value) -> Unit
+  fn mutable(Self, MapKey) -> Value
+  fn new_value(Self) -> Value
+  fn is_valid(Self) -> Bool
+}
+
+pub(open) trait Message {
+  fn descriptor(Self) -> MessageDescriptor
+  fn message_type(Self) -> &MessageType
+  fn is_valid(Self) -> Bool
+  fn range(Self, (FieldDescriptor, Value) -> Bool) -> Unit
+  fn has(Self, FieldDescriptor) -> Bool
+  fn clear(Self, FieldDescriptor) -> Unit
+  fn get(Self, FieldDescriptor) -> Value
+  fn set(Self, FieldDescriptor, Value) -> Unit
+  fn mutable(Self, FieldDescriptor) -> Value
+  fn new_field(Self, FieldDescriptor) -> Value
+  fn which_oneof(Self, OneofDescriptor) -> Int32?
+  fn get_unknown(Self) -> RawFields
+  fn set_unknown(Self, RawFields) -> Unit
+}
+
+pub(open) trait MessageType {
+  fn new_message(Self) -> &Message
+  fn zero(Self) -> &Message
+  fn descriptor(Self) -> MessageDescriptor
+}

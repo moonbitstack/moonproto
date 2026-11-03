@@ -1,0 +1,8 @@
+// Messages, enums and extensions whose shape comes from a descriptor at run
+// time. This is the one `Message` implementation that is generic rather than
+// generated, and the one tests use to build cases the generator does not name.
+// https://protobuf.dev/reference/go/faq/#reflection
+
+import {
+  "moonbitstack/moonproto/reflect",
+}

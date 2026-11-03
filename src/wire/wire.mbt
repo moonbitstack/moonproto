@@ -1,4 +1,5 @@
 // Field numbers are the 29-bit integers a tag carries.
+
 ///|
 pub type FieldNumber = Int32
 
@@ -452,4 +453,17 @@ fn min_int(a : Int32, b : Int32) -> Int32 {
   } else {
     b
   }
+}
+
+///|
+/// Read a group body after its start tag. `at` is the offset just past the
+/// start tag; the returned view excludes both tags.
+pub fn consume_group(
+  b : BytesView,
+  number : FieldNumber,
+  at~ : Int32 = 0,
+  limit~ : Int32 = 0x7FFF_FFFF,
+  limits~ : Limits = limits,
+) -> (BytesView, Int32) raise Refused {
+  consume_group_body(b, number, at, min_int(b.length(), limit), 0, limits)
 }

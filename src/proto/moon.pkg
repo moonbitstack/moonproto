@@ -1,0 +1,12 @@
+// Binary encoding and decoding over the reflective model.
+// https://protobuf.dev/programming-guides/encoding/
+
+import {
+  "moonbitlang/core/float",
+  "moonbitstack/moonproto/reflect",
+  "moonbitstack/moonproto/wire",
+}
+
+import {
+  "moonbitstack/moonproto/dynamic",
+} for "wbtest"

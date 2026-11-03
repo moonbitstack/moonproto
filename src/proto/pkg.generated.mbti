@@ -1,0 +1,70 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonproto/proto"
+
+import {
+  "moonbitlang/core/buffer",
+  "moonbitstack/moonproto/reflect",
+  "moonbitstack/moonproto/wire",
+}
+
+// Values
+pub fn[M : @reflect.Message] check_initialized(M) -> Unit raise Refused
+
+pub fn[M : @reflect.Message] clear_extension(M, &@reflect.ExtensionType) -> Unit
+
+pub fn[M : @reflect.Message + @reflect.Fresh] clone(M) -> M
+
+pub fn[M : @reflect.Message] decode(BytesView, M, unmarshal_options? : UnmarshalOptions) -> Unit raise Refused
+
+pub fn[M : @reflect.Message] encode(M, marshal_options? : MarshalOptions) -> Bytes raise Refused
+
+pub fn[M : @reflect.Message] encode_to(@buffer.Buffer, M, marshal_options? : MarshalOptions) -> Unit raise Refused
+
+pub fn[M : @reflect.Message] equal(M, M) -> Bool
+
+pub fn[M : @reflect.Message] get_extension(M, &@reflect.ExtensionType) -> @reflect.Value?
+
+pub fn[M : @reflect.Message] has_extension(M, &@reflect.ExtensionType) -> Bool
+
+pub let marshal_options : MarshalOptions
+
+pub fn[M : @reflect.Message] merge(M, &@reflect.Message) -> Unit
+
+pub fn[M : @reflect.Message] range_extensions(M, (&@reflect.ExtensionType, @reflect.Value) -> Bool) -> Unit
+
+pub fn[M : @reflect.Message] reset(M) -> Unit
+
+pub fn[M : @reflect.Message] set_extension(M, &@reflect.ExtensionType, @reflect.Value) -> Unit
+
+pub fn[M : @reflect.Message] size(M) -> Int32
+
+pub let unmarshal_options : UnmarshalOptions
+
+// Errors
+pub(all) suberror Refused {
+  Wire(@wire.Refused)
+  Required(String)
+  NoType(String)
+  Recursion(Int32)
+  Mismatch(String)
+}
+pub fn Refused::output(Self, &Logger) -> Unit
+pub fn Refused::to_string(Self) -> String
+pub impl Show for Refused
+
+// Types and methods
+pub(all) struct MarshalOptions {
+  allow_partial : Bool
+  deterministic : Bool
+}
+
+pub(all) struct UnmarshalOptions {
+  merge : Bool
+  allow_partial : Bool
+  discard_unknown : Bool
+  recursion_limit : Int32
+}
+
+// Type aliases
+
+// Traits

@@ -26,6 +26,8 @@ pub fn consume_fixed32(BytesView, at? : Int32, limit? : Int32) -> (UInt32, Int32
 
 pub fn consume_fixed64(BytesView, at? : Int32, limit? : Int32) -> (UInt64, Int32) raise Refused
 
+pub fn consume_group(BytesView, Int32, at? : Int32, limit? : Int32, limits? : Limits) -> (BytesView, Int32) raise Refused
+
 pub fn consume_string(BytesView, at? : Int32, limit? : Int32) -> (String, Int32) raise Refused
 
 pub fn consume_tag(BytesView, at? : Int32, limit? : Int32) -> (Int32, WireType, Int32) raise Refused

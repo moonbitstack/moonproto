@@ -1,0 +1,8 @@
+// The protobuf data model: field kinds, the value union, descriptors, the
+// reflective message contract, and the global registries.
+// https://protobuf.dev/programming-guides/proto3/
+
+import {
+  "moonbitlang/core/float",
+  "moonbitstack/moonproto/wire",
+}
