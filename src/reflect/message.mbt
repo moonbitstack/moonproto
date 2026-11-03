@@ -159,3 +159,50 @@ pub fn new_element_value(kind : Kind, message_type : String?) -> Value {
     zero_value(kind)
   }
 }
+
+///|
+/// The dotted path of the first required field that has no value, or `None`
+/// when the message and its nested messages are complete. The encoders use
+/// this so each can report the omission in its own error type.
+pub fn missing_required(message : &Message) -> String? {
+  missing_required_at(message, "")
+}
+
+///|
+fn missing_required_at(message : &Message, prefix : String) -> String? {
+  let desc = message.descriptor()
+  for number in desc.required_numbers {
+    match desc.field_by_number(number) {
+      Some(field) =>
+        if !message.has(field) {
+          return Some(join_path(prefix, field.name))
+        }
+      None => ()
+    }
+  }
+  for field in desc.fields {
+    if field.kind.is_message() &&
+      !field.is_map &&
+      !field.is_list() &&
+      message.has(field) {
+      match
+        missing_required_at(
+          message.get(field).message(),
+          join_path(prefix, field.name),
+        ) {
+        Some(path) => return Some(path)
+        None => ()
+      }
+    }
+  }
+  None
+}
+
+///|
+fn join_path(prefix : String, name : String) -> String {
+  if prefix.length() == 0 {
+    name
+  } else {
+    prefix + "." + name
+  }
+}

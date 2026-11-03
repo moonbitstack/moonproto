@@ -62,6 +62,9 @@ pub fn[M : @reflect.Message] encode(
   message : M,
   marshal_options~ : MarshalOptions = marshal_options,
 ) -> Bytes raise Refused {
+  if !marshal_options.allow_partial {
+    check_initialized(message)
+  }
   let buf = Buffer()
   encode_message(buf, message, marshal_options, 0)
   buf.to_bytes()
@@ -74,6 +77,9 @@ pub fn[M : @reflect.Message] encode_to(
   message : M,
   marshal_options~ : MarshalOptions = marshal_options,
 ) -> Unit raise Refused {
+  if !marshal_options.allow_partial {
+    check_initialized(message)
+  }
   encode_message(buf, message, marshal_options, 0)
 }
 
@@ -99,6 +105,9 @@ pub fn[M : @reflect.Message] decode(
     reset(message)
   }
   decode_message(message, bytes, 0, bytes.length(), 0, unmarshal_options)
+  if !unmarshal_options.allow_partial {
+    check_initialized(message)
+  }
 }
 
 ///|
@@ -118,26 +127,12 @@ pub fn[M : @reflect.Message] merge(
   source : &@reflect.Message,
 ) -> Unit {
   source.range(fn(field, value) {
-    if field.is_map {
-      let target = destination.mutable(field).map()
-      value
-      .map()
-      .range(fn(key, item) {
-        target.set(key, item)
-        true
-      })
-    } else if field.is_list() {
-      let target = destination.mutable(field).list()
-      let items = value.list()
-      for i in 0..<items.length() {
-        target.append(items.get(i))
-      }
-    } else if field.kind.is_message() {
-      let target = destination.mutable(field).message()
-      merge(target, value.message())
-    } else {
-      destination.set(field, value)
-    }
+    merge_field(destination, field, value)
+    true
+  })
+  // An extension is not in `desc.fields`, so it needs its own pass.
+  source.range_extensions(fn(field, value) {
+    merge_field(destination, field, value)
     true
   })
   let unknown = source.get_unknown().bytes()
@@ -158,6 +153,34 @@ pub fn[M : @reflect.Message + @reflect.Fresh] clone(message : M) -> M {
 }
 
 ///|
+fn merge_field(
+  destination : &@reflect.Message,
+  field : @reflect.FieldDescriptor,
+  value : @reflect.Value,
+) -> Unit {
+  if field.is_map {
+    let target = destination.mutable(field).map()
+    value
+    .map()
+    .range(fn(key, item) {
+      target.set(key, item)
+      true
+    })
+  } else if field.is_list() {
+    let target = destination.mutable(field).list()
+    let items = value.list()
+    for i in 0..<items.length() {
+      target.append(items.get(i))
+    }
+  } else if field.kind.is_message() {
+    let target = destination.mutable(field).message()
+    merge(target, value.message())
+  } else {
+    destination.set(field, value)
+  }
+}
+
+///|
 /// Whether two messages have the same fields and values.
 pub fn[M : @reflect.Message] equal(left : M, right : M) -> Bool {
   equal_messages(left as &@reflect.Message, right as &@reflect.Message)
@@ -167,56 +190,90 @@ pub fn[M : @reflect.Message] equal(left : M, right : M) -> Bool {
 fn equal_messages(left : &@reflect.Message, right : &@reflect.Message) -> Bool {
   let desc = left.descriptor()
   for field in desc.fields {
-    let has_left = left.has(field)
-    let has_right = right.has(field)
-    if has_left != has_right {
+    if !equal_field(left, right, field) {
       return false
     }
-    if !has_left {
-      continue
-    }
-    let a = left.get(field)
-    let b = right.get(field)
-    if field.is_map {
-      let ma = a.map()
-      let mb = b.map()
-      if ma.length() != mb.length() {
-        return false
-      }
-      let mut same = true
-      ma.range(fn(key, value) {
-        if !mb.has(key) {
-          same = false
-          false
-        } else {
-          let other = mb.get(key)
-          if !equal_field_value(field, value, other) {
-            same = false
-            false
-          } else {
-            true
-          }
-        }
-      })
-      if !same {
-        return false
-      }
-    } else if field.is_list() {
-      let la = a.list()
-      let lb = b.list()
-      if la.length() != lb.length() {
-        return false
-      }
-      for i in 0..<la.length() {
-        if !equal_field_value(field, la.get(i), lb.get(i)) {
-          return false
-        }
-      }
-    } else if !equal_field_value(field, a, b) {
+  }
+  let left_ext = extension_fields(left)
+  let right_ext = extension_fields(right)
+  if left_ext.length() != right_ext.length() {
+    return false
+  }
+  for field in left_ext {
+    if !equal_field(left, right, field) {
       return false
     }
   }
   left.get_unknown().bytes() == right.get_unknown().bytes()
+}
+
+///|
+fn extension_fields(
+  message : &@reflect.Message,
+) -> Array[@reflect.FieldDescriptor] {
+  let out : Array[@reflect.FieldDescriptor] = []
+  message.range_extensions(fn(field, _value) {
+    out.push(field)
+    true
+  })
+  out
+}
+
+///|
+fn equal_field(
+  left : &@reflect.Message,
+  right : &@reflect.Message,
+  field : @reflect.FieldDescriptor,
+) -> Bool {
+  let has_left = left.has(field)
+  let has_right = right.has(field)
+  if has_left != has_right {
+    return false
+  }
+  if !has_left {
+    return true
+  }
+  let a = left.get(field)
+  let b = right.get(field)
+  if field.is_map {
+    let ma = a.map()
+    let mb = b.map()
+    if ma.length() != mb.length() {
+      return false
+    }
+    let mut same = true
+    ma.range(fn(key, value) {
+      if !mb.has(key) {
+        same = false
+        false
+      } else {
+        let other = mb.get(key)
+        if !equal_field_value(field, value, other) {
+          same = false
+          false
+        } else {
+          true
+        }
+      }
+    })
+    if !same {
+      return false
+    }
+  } else if field.is_list() {
+    let la = a.list()
+    let lb = b.list()
+    if la.length() != lb.length() {
+      return false
+    }
+    for i in 0..<la.length() {
+      if !equal_field_value(field, la.get(i), lb.get(i)) {
+        return false
+      }
+    }
+  } else if !equal_field_value(field, a, b) {
+    return false
+  }
+  true
 }
 
 ///|
@@ -237,43 +294,9 @@ fn equal_field_value(
 pub fn[M : @reflect.Message] check_initialized(
   message : M,
 ) -> Unit raise Refused {
-  check_initialized_message(message as &@reflect.Message, "")
-}
-
-///|
-fn check_initialized_message(
-  message : &@reflect.Message,
-  prefix : String,
-) -> Unit raise Refused {
-  let desc = message.descriptor()
-  for number in desc.required_numbers {
-    match desc.field_by_number(number) {
-      Some(field) =>
-        if !message.has(field) {
-          raise Required(join_name(prefix, field.name))
-        }
-      None => ()
-    }
-  }
-  for field in desc.fields {
-    if field.kind.is_message() &&
-      !field.is_map &&
-      !field.is_list() &&
-      message.has(field) {
-      check_initialized_message(
-        message.get(field).message(),
-        join_name(prefix, field.name),
-      )
-    }
-  }
-}
-
-///|
-fn join_name(prefix : String, name : String) -> String {
-  if prefix.length() == 0 {
-    name
-  } else {
-    prefix + "." + name
+  match @reflect.missing_required(message as &@reflect.Message) {
+    Some(path) => raise Required(path)
+    None => ()
   }
 }
 

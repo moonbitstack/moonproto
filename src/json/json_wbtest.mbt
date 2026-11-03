@@ -335,3 +335,42 @@ fn message_descriptor_with_extensions(
     map_value: None,
   }
 }
+
+///|
+test "JSON refuses a required field that is unset" {
+  let field = make_field(1, "must", @reflect.Int32, None, "test.Req")
+  let desc : @reflect.MessageDescriptor = {
+    name: "Req",
+    full_name: "test.Req",
+    syntax: @reflect.Proto2,
+    fields: [field],
+    oneofs: [],
+    is_map_entry: false,
+    reserved_names: [],
+    reserved_ranges: [],
+    required_numbers: [1],
+    extension_ranges: [],
+    nested_messages: [],
+    nested_enums: [],
+    nested_extensions: [],
+    file_path: "test.proto",
+    map_key: None,
+    map_value: None,
+  }
+  let message = @dynamic.Message::new(desc)
+  let refused = try {
+    let _ = encode(message)
+    false
+  } catch {
+    Required(_) => true
+    _ => false
+  }
+  assert_true(refused)
+  let text = encode(message, marshal_options={
+    ..marshal_options,
+    allow_partial: true,
+  }) catch {
+    _ => abort("allow_partial still refused")
+  }
+  assert_eq(text, "{}")
+}

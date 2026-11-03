@@ -10,6 +10,8 @@ pub let global_types : Types
 
 pub let invalid : Value
 
+pub fn missing_required(&Message) -> String?
+
 pub fn new_element_value(Kind, String?) -> Value
 
 pub fn new_field_value(FieldDescriptor) -> Value

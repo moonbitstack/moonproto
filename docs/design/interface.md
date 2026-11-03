@@ -715,7 +715,6 @@ pub(all) struct MarshalOptions {
   indent : String
   emit_ascii : Bool
   allow_partial : Bool
-  emit_unknown : Bool
   resolver : &Resolver?
 }
 pub let marshal_options : MarshalOptions = { … }

@@ -49,6 +49,7 @@ pub(all) suberror Refused {
   BadBase64(String)
   Recursion(Int32)
   NoType(String)
+  Required(String)
 }
 
 ///|
@@ -61,6 +62,8 @@ pub impl Show for Refused with fn output(self, logger) {
     Recursion(limit) =>
       logger.write_string("recursion limit " + limit.to_string())
     NoType(name) => logger.write_string("no type registered for " + name)
+    Required(name) =>
+      logger.write_string("required field " + name + " is unset")
   }
 }
 
@@ -73,6 +76,12 @@ pub fn[M : @reflect.Message] encode(
   message : M,
   marshal_options~ : MarshalOptions = marshal_options,
 ) -> String raise Refused {
+  if !marshal_options.allow_partial {
+    match @reflect.missing_required(message as &@reflect.Message) {
+      Some(path) => raise Required(path)
+      None => ()
+    }
+  }
   let value = message_to_json(message as &@reflect.Message, marshal_options, 0)
   if marshal_options.multiline || marshal_options.indent.length() > 0 {
     let width = if marshal_options.indent.length() > 0 {
@@ -117,6 +126,12 @@ pub fn[M : @reflect.Message] from_json(
 ) -> Unit raise Refused {
   proto_reset(message)
   message_from_json(message as &@reflect.Message, value, unmarshal_options, 0)
+  if !unmarshal_options.allow_partial {
+    match @reflect.missing_required(message as &@reflect.Message) {
+      Some(path) => raise Required(path)
+      None => ()
+    }
+  }
 }
 
 ///|

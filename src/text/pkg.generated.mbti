@@ -20,6 +20,7 @@ pub(all) suberror Refused {
   UnknownField(String)
   BadValue(String)
   NoType(String)
+  Required(String)
   Recursion(Int32)
 }
 pub fn Refused::output(Self, &Logger) -> Unit
@@ -32,7 +33,6 @@ pub(all) struct MarshalOptions {
   indent : String
   emit_ascii : Bool
   allow_partial : Bool
-  emit_unknown : Bool
 }
 
 pub(all) struct UnmarshalOptions {

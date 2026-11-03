@@ -26,6 +26,7 @@ pub(all) suberror Refused {
   BadBase64(String)
   Recursion(Int32)
   NoType(String)
+  Required(String)
 }
 pub fn Refused::output(Self, &Logger) -> Unit
 pub fn Refused::to_string(Self) -> String

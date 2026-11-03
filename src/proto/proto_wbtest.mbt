@@ -383,3 +383,67 @@ test "range_extensions reports each extension once" {
   assert_eq(seen[0], 100)
   assert_eq(values[0], 2L)
 }
+
+///|
+test "merge, clone and equal see extensions" {
+  let desc = extension_descriptor()
+  let ext = extension_field(100, "my_ext")
+  let extension_type = @dynamic.new_extension_type(ext)
+  @reflect.global_types.register_extension(extension_type) catch {
+    _ => ()
+  }
+  let a = @dynamic.Message::new(desc)
+  set_extension(a, extension_type, @reflect.Int32(1))
+  let b = @dynamic.Message::new(desc)
+  merge(b, a)
+  assert_true(has_extension(b, extension_type))
+  assert_true(equal(a, b))
+  let copy = clone(b)
+  assert_true(equal(b, copy))
+  set_extension(b, extension_type, @reflect.Int32(2))
+  assert_true(!equal(a, b))
+}
+
+///|
+fn required_descriptor() -> @reflect.MessageDescriptor {
+  let source = "syntax = \"proto2\";\npackage r;\nmessage P { required int32 must = 1; }\n"
+  let file = @parser.parse("r.proto", source) catch {
+    _ => abort("parse failed")
+  }
+  let built = @desc.build_file(file) catch { _ => abort("build failed") }
+  @reflect.global_types.register_message(
+    @dynamic.new_message_type(built.messages[0]),
+  ) catch {
+    _ => ()
+  }
+  built.messages[0]
+}
+
+///|
+test "a missing required field is refused, and allow_partial lets it through" {
+  let message = @dynamic.Message::new(required_descriptor())
+  let refused = try {
+    let _ = encode(message)
+    false
+  } catch {
+    Required(_) => true
+    _ => false
+  }
+  assert_true(refused)
+  let bytes = encode(message, marshal_options={
+    ..marshal_options,
+    allow_partial: true,
+  }) catch {
+    _ => abort("allow_partial still refused")
+  }
+  assert_eq(bytes.length(), 0)
+  let decoded = @dynamic.Message::new(required_descriptor())
+  let decode_refused = try {
+    decode(b"", decoded)
+    false
+  } catch {
+    Required(_) => true
+    _ => false
+  }
+  assert_true(decode_refused)
+}

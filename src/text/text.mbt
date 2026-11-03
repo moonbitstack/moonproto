@@ -6,7 +6,6 @@ pub(all) struct MarshalOptions {
   indent : String
   emit_ascii : Bool
   allow_partial : Bool
-  emit_unknown : Bool
 }
 
 ///|
@@ -15,7 +14,6 @@ pub let marshal_options : MarshalOptions = {
   indent: "  ",
   emit_ascii: false,
   allow_partial: false,
-  emit_unknown: false,
 }
 
 ///|
@@ -39,6 +37,7 @@ pub(all) suberror Refused {
   UnknownField(String)
   BadValue(String)
   NoType(String)
+  Required(String)
   Recursion(Int32)
 }
 
@@ -50,6 +49,8 @@ pub impl Show for Refused with fn output(self, logger) {
     UnknownField(name) => logger.write_string("unknown field " + name)
     BadValue(name) => logger.write_string("bad value for " + name)
     NoType(name) => logger.write_string("no message type " + name)
+    Required(name) =>
+      logger.write_string("required field " + name + " is unset")
     Recursion(limit) =>
       logger.write_string("recursion limit " + limit.to_string())
   }
@@ -69,6 +70,12 @@ pub fn[M : @reflect.Message] encode(
   message : M,
   marshal_options~ : MarshalOptions = marshal_options,
 ) -> String raise Refused {
+  if !marshal_options.allow_partial {
+    match @reflect.missing_required(message as &@reflect.Message) {
+      Some(path) => raise Required(path)
+      None => ()
+    }
+  }
   let buf = Buffer()
   encode_message(buf, message as &@reflect.Message, marshal_options, 0)
   @utf8.decode(buf.to_bytes()) catch {
@@ -90,6 +97,12 @@ pub fn[M : @reflect.Message] decode(
   let parser = Parser::new(text.to_owned())
   message_from_text(message as &@reflect.Message, parser, unmarshal_options, 0)
   parser.finish()
+  if !unmarshal_options.allow_partial {
+    match @reflect.missing_required(message as &@reflect.Message) {
+      Some(path) => raise Required(path)
+      None => ()
+    }
+  }
 }
 
 // -- encoding ---------------------------------------------------------------
