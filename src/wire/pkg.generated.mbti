@@ -1,0 +1,97 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonproto/wire"
+
+import {
+  "moonbitlang/core/buffer",
+}
+
+// Values
+pub fn append_bytes(@buffer.Buffer, BytesView) -> Unit
+
+pub fn append_fixed32(@buffer.Buffer, UInt32) -> Unit
+
+pub fn append_fixed64(@buffer.Buffer, UInt64) -> Unit
+
+pub fn append_group(@buffer.Buffer, Int32, BytesView) -> Unit
+
+pub fn append_string(@buffer.Buffer, StringView) -> Unit
+
+pub fn append_tag(@buffer.Buffer, Int32, WireType) -> Unit
+
+pub fn append_varint(@buffer.Buffer, UInt64) -> Unit
+
+pub fn consume_bytes(BytesView, at? : Int32, limit? : Int32) -> (BytesView, Int32) raise Refused
+
+pub fn consume_fixed32(BytesView, at? : Int32, limit? : Int32) -> (UInt32, Int32) raise Refused
+
+pub fn consume_fixed64(BytesView, at? : Int32, limit? : Int32) -> (UInt64, Int32) raise Refused
+
+pub fn consume_string(BytesView, at? : Int32, limit? : Int32) -> (String, Int32) raise Refused
+
+pub fn consume_tag(BytesView, at? : Int32, limit? : Int32) -> (Int32, WireType, Int32) raise Refused
+
+pub fn consume_varint(BytesView, at? : Int32, limit? : Int32) -> (UInt64, Int32) raise Refused
+
+pub fn decode_bool(UInt64) -> Bool
+
+pub fn decode_tag(UInt64) -> (Int32, WireType) raise Refused
+
+pub fn decode_zigzag(UInt64) -> Int64
+
+pub fn encode_bool(Bool) -> UInt64
+
+pub fn encode_tag(Int32, WireType) -> UInt64
+
+pub fn encode_zigzag(Int64) -> UInt64
+
+pub let limits : Limits
+
+pub let max_field_number : Int32
+
+pub fn size_bytes(Int32) -> Int32
+
+pub fn size_group(Int32, Int32) -> Int32
+
+pub fn size_tag(Int32) -> Int32
+
+pub fn size_varint(UInt64) -> Int32
+
+pub fn skip_field(BytesView, at? : Int32, limit? : Int32, limits? : Limits) -> Int32 raise Refused
+
+// Errors
+pub(all) suberror Refused {
+  Incomplete(Int32)
+  Malformed(Int32, Int32, Int32)
+  Overflow(Int32)
+  FieldNumber(Int32, Int32)
+  WireType(Int32, Int32)
+  Recursion(Int32)
+}
+pub fn Refused::output(Self, &Logger) -> Unit
+pub fn Refused::to_string(Self) -> String
+pub impl Show for Refused
+
+// Types and methods
+pub(all) struct Limits {
+  depth : Int32
+  size : Int32
+}
+
+#derive(Eq)
+pub(all) enum WireType {
+  Varint
+  Fixed64
+  LengthDelimited
+  StartGroup
+  EndGroup
+  Fixed32
+}
+pub fn WireType::code(Self) -> Int32
+pub fn WireType::equal(Self, Self) -> Bool
+pub fn WireType::not_equal(Self, Self) -> Bool
+pub fn WireType::of(Int32) -> Self?
+
+// Type aliases
+pub type FieldNumber = Int32
+
+// Traits

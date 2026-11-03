@@ -1,0 +1,7 @@
+// The protobuf wire format: base-128 varints, zig-zag, the five wire types,
+// little-endian fixed-width numbers, length-delimited bodies and groups.
+// https://protobuf.dev/programming-guides/encoding/
+
+import {
+  "moonbitlang/core/encoding/utf8",
+}
