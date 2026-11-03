@@ -55,6 +55,7 @@ pub(open) trait Message {
   fn message_type(Self) -> &MessageType
   fn is_valid(Self) -> Bool
   fn range(Self, (FieldDescriptor, Value) -> Bool) -> Unit
+  fn range_extensions(Self, (FieldDescriptor, Value) -> Bool) -> Unit
   fn has(Self, FieldDescriptor) -> Bool
   fn clear(Self, FieldDescriptor) -> Unit
   fn get(Self, FieldDescriptor) -> Value

@@ -28,6 +28,34 @@ fn escape(text : String) -> String {
 }
 
 ///|
+fn emit_features(f : @desc.Features) -> String {
+  "@desc.Features::{ field_presence: " +
+  f.field_presence.to_string() +
+  ", enum_type: " +
+  f.enum_type.to_string() +
+  ", repeated_field_encoding: " +
+  f.repeated_field_encoding.to_string() +
+  ", message_encoding: " +
+  f.message_encoding.to_string() +
+  ", utf8_validation: " +
+  f.utf8_validation.to_string() +
+  ", json_format: " +
+  f.json_format.to_string() +
+  " }"
+}
+
+///|
+fn emit_options(options : Array[(String, String)]) -> String {
+  let out = Buffer()
+  for pair in options {
+    out.write_string_utf8(
+      "(\"" + escape(pair.0) + "\", \"" + escape(pair.1) + "\"), ",
+    )
+  }
+  "[" + utf8_of(out.to_bytes()) + "]"
+}
+
+///|
 fn emit_field(
   field : @desc.FieldDescriptorProto,
   indentation : String,
@@ -69,6 +97,10 @@ fn emit_field(
   (if field.proto3_optional { "true" } else { "false" }) +
   ", packed_off: " +
   (if field.packed_off { "true" } else { "false" }) +
+  ", features: " +
+  emit_features(field.features) +
+  ", options: " +
+  emit_options(field.options) +
   " }"
 }
 
@@ -99,6 +131,14 @@ fn emit_enum_proto(
   utf8_of(values.to_bytes()) +
   indentation +
   "  ],\n" +
+  indentation +
+  "  features: " +
+  emit_features(item.features) +
+  ",\n" +
+  indentation +
+  "  options: " +
+  emit_options(item.options) +
+  ",\n" +
   indentation +
   "}"
 }
@@ -204,6 +244,14 @@ fn emit_message_proto(
   "map_entry: " +
   (if message.map_entry { "true" } else { "false" }) +
   ",\n" +
+  inner +
+  "features: " +
+  emit_features(message.features) +
+  ",\n" +
+  inner +
+  "options: " +
+  emit_options(message.options) +
+  ",\n" +
   indentation +
   "}"
 }
@@ -294,7 +342,50 @@ fn emit_file_proto(file : @desc.FileDescriptorProto) -> String {
   utf8_of(dependencies.to_bytes()) +
   "],\n" +
   "  public_dependency: [],\n" +
+  "  edition: " +
+  (match file.edition {
+    Some(text) => "Some(\"" + escape(text) + "\")"
+    None => "None"
+  }) +
+  ",\n" +
+  "  features: " +
+  emit_features(file.features) +
+  ",\n" +
+  "  options: " +
+  emit_options(file.options) +
+  ",\n" +
   "}"
+}
+
+///|
+/// MoonBit's reserved words cannot be method names, so a field called `type`
+/// becomes `type_`. The descriptor keeps the proto name.
+fn field_ident(name : String) -> String {
+  let keywords : Array[String] = [
+    "type", "package", "fn", "let", "mut", "match", "if", "else", "while", "for",
+    "in", "return", "break", "continue", "true", "false", "async", "await", "impl",
+    "trait", "struct", "enum", "pub", "priv", "extern", "test", "init", "const",
+    "guard", "is", "as", "derive", "with", "raise", "catch", "throw", "try", "not",
+    "and", "or", "null", "self", "Self", "super", "do", "loop", "method", "lazy",
+    "defer", "sealed", "operator", "macro", "static", "virtual", "override", "final",
+    "interface", "namespace", "using", "import", "export", "auto", "inline", "register",
+    "signed", "unsigned", "volatile", "template", "this", "rethrow", "box", "typeof",
+    "sizeof",
+  ]
+  // The reflective contract owns these names on every message, so a field with
+  // one of them takes a suffix instead of shadowing the method.
+  let reserved : Array[String] = [
+    "descriptor", "message_type", "is_valid", "range", "range_extensions", "has",
+    "clear", "get", "set", "mutable", "new_field", "which_oneof", "get_unknown",
+    "set_unknown", "to_json", "from_json", "message", "new", "fresh",
+  ]
+  if keywords.contains(name) {
+    name + "_"
+  } else if reserved.contains(name) {
+    name + "_field"
+  } else {
+    name
+  }
 }
 
 ///|
@@ -384,11 +475,10 @@ fn emit_enum(
 ) -> Unit {
   let name = wrapper_name(prefix, item.name)
   buf.write_string_utf8("///|\npub(all) enum " + name + " {\n")
-  let mut has_unknown = false
+  // An open enum carries numbers it does not declare, so every generated enum
+  // keeps a variant that can hold one.
+  let has_unknown = true
   for value in item.value {
-    if value.number < 0 {
-      has_unknown = true
-    }
     buf.write_string_utf8("  " + value.name + "\n")
   }
   if has_unknown {
@@ -426,6 +516,7 @@ fn emit_enum(
 fn emit_message(
   message : @reflect.MessageDescriptor,
   prefix : String,
+  tag : String,
   buf : Buffer,
 ) -> Unit {
   let name = wrapper_name(prefix, message.name)
@@ -439,7 +530,9 @@ fn emit_message(
     "::new() -> " +
     name +
     " {\n" +
-    "  { inner: @dynamic.Message::new(find_message(" +
+    "  { inner: @dynamic.Message::new(find_message_" +
+    tag +
+    "(" +
     full +
     ")) }\n}\n\n",
   )
@@ -452,7 +545,7 @@ fn emit_message(
   )
   // Accessors.
   for field in message.fields {
-    let field_name = field.name
+    let field_name = field_ident(field.name)
     let number = field.number.to_string()
     if field.is_map {
       buf.write_string_utf8(
@@ -462,7 +555,9 @@ fn emit_message(
         field_name +
         "(self : " +
         name +
-        ") -> @reflect.MapField {\n  let f = field_of(self.inner, " +
+        ") -> &@reflect.MapField {\n  let f = field_of_" +
+        tag +
+        "(self.inner, " +
         number +
         ")\n  self.inner.mutable(f).map()\n}\n\n",
       )
@@ -474,7 +569,9 @@ fn emit_message(
         field_name +
         "(self : " +
         name +
-        ") -> @reflect.ListField {\n  let f = field_of(self.inner, " +
+        ") -> &@reflect.ListField {\n  let f = field_of_" +
+        tag +
+        "(self.inner, " +
         number +
         ")\n  self.inner.mutable(f).list()\n}\n\n",
       )
@@ -486,7 +583,9 @@ fn emit_message(
         field_name +
         "(self : " +
         name +
-        ") -> @reflect.Value {\n  let f = field_of(self.inner, " +
+        ") -> @reflect.Value {\n  let f = field_of_" +
+        tag +
+        "(self.inner, " +
         number +
         ")\n  if self.inner.has(f) { self.inner.get(f) } else { self.inner.mutable(f) }\n}\n\n",
       )
@@ -501,7 +600,9 @@ fn emit_message(
         name +
         ") -> " +
         type_name +
-        " {\n  let f = field_of(self.inner, " +
+        " {\n  let f = field_of_" +
+        tag +
+        "(self.inner, " +
         number +
         ")\n  if self.inner.has(f) { " +
         read_expr(field.kind.code(), "self.inner.get(f)") +
@@ -524,7 +625,9 @@ fn emit_message(
         name +
         ", value : " +
         type_name +
-        ") -> Unit {\n  self.inner.set(field_of(self.inner, " +
+        ") -> Unit {\n  self.inner.set(field_of_" +
+        tag +
+        "(self.inner, " +
         number +
         "), " +
         value_expr(field.kind.code(), "value") +
@@ -538,16 +641,43 @@ fn emit_message(
         field_name +
         "(self : " +
         name +
-        ", value : @reflect.Value) -> Unit {\n  self.inner.set(field_of(self.inner, " +
+        ", value : @reflect.Value) -> Unit {\n  self.inner.set(field_of_" +
+        tag +
+        "(self.inner, " +
         number +
         "), value)\n}\n\n",
       )
     }
   }
+  // Oneof accessors: an enum over the members, a reader and a writer.
+  for index in 0..<message.oneofs.length() {
+    let oneof = message.oneofs[index]
+    if !oneof.synthetic && oneof.field_numbers.length() > 0 {
+      emit_oneof(message, name, tag, oneof, buf)
+    }
+  }
+  // JSON, through the shared mapping.
+  buf.write_string_utf8(
+    "///|\npub fn " +
+    name +
+    "::to_json(self : " +
+    name +
+    ") -> String raise @json.Refused {\n  @json.encode(self)\n}\n\n",
+  )
+  buf.write_string_utf8(
+    "///|\npub fn " +
+    name +
+    "::from_json(text : String) -> " +
+    name +
+    " raise @json.Refused {\n  let message = " +
+    name +
+    "::new()\n  @json.decode(text, message)\n  message\n}\n\n",
+  )
   // Message implementation, delegating to the dynamic message.
   let signatures : Array[String] = [
     "fn descriptor(self) -> @reflect.MessageDescriptor", "fn message_type(self) -> &@reflect.MessageType",
     "fn is_valid(self) -> Bool", "fn range(self, f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit",
+    "fn range_extensions(self, f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit",
     "fn has(self, field : @reflect.FieldDescriptor) -> Bool", "fn clear(self, field : @reflect.FieldDescriptor) -> Unit",
     "fn get(self, field : @reflect.FieldDescriptor) -> @reflect.Value", "fn set(self, field : @reflect.FieldDescriptor, value : @reflect.Value) -> Unit",
     "fn mutable(self, field : @reflect.FieldDescriptor) -> @reflect.Value", "fn new_field(self, field : @reflect.FieldDescriptor) -> @reflect.Value",
@@ -559,6 +689,7 @@ fn emit_message(
     "let _ = self\n  " + lower_name(name) + "_type",
     "self.inner.is_valid()",
     "self.inner.range(f)",
+    "self.inner.range_extensions(f)",
     "self.inner.has(field)",
     "self.inner.clear(field)",
     "self.inner.get(field)",
@@ -583,7 +714,7 @@ fn emit_message(
   buf.write_string_utf8(
     "///|\npub extend " +
     name +
-    " with @reflect.Message::{descriptor, message_type, is_valid, range, has, clear, get, set, mutable, new_field, which_oneof, get_unknown, set_unknown}\n\n",
+    " with @reflect.Message::{descriptor, message_type, is_valid, range, range_extensions, has, clear, get, set, mutable, new_field, which_oneof, get_unknown, set_unknown}\n\n",
   )
   buf.write_string_utf8(
     "///|\npub impl @reflect.Fresh for " +
@@ -625,7 +756,9 @@ fn emit_message(
   buf.write_string_utf8(
     "///|\npub impl @reflect.MessageType for " +
     name +
-    "Type with fn descriptor(_self) -> @reflect.MessageDescriptor {\n  find_message(" +
+    "Type with fn descriptor(_self) -> @reflect.MessageDescriptor {\n  find_message_" +
+    tag +
+    "(" +
     full +
     ")\n}\n\n",
   )
@@ -659,16 +792,207 @@ fn lower_name(name : String) -> String {
 }
 
 ///|
+fn upper_first(name : String) -> String {
+  if name.length() == 0 {
+    return "Unnamed"
+  }
+  let first = name[0].to_int().to_char().unwrap_or('A')
+  let upper = if first >= 'a' && first <= 'z' {
+    (first.to_int() - 32).to_char().unwrap_or(first)
+  } else {
+    first
+  }
+  upper.to_string() + name[1:name.length()].to_owned()
+}
+
+///|
+fn oneof_variant(field : @reflect.FieldDescriptor) -> String {
+  upper_first(field.name)
+}
+
+///|
+fn emit_oneof(
+  message : @reflect.MessageDescriptor,
+  name : String,
+  tag : String,
+  oneof : @reflect.OneofDescriptor,
+  buf : Buffer,
+) -> Unit {
+  let members : Array[@reflect.FieldDescriptor] = []
+  for number in oneof.field_numbers {
+    match message.field_by_number(number) {
+      Some(field) => members.push(field)
+      None => ()
+    }
+  }
+  let choice = name + "_" + upper_first(oneof.name)
+  buf.write_string_utf8("///|\npub(all) enum " + choice + " {\n")
+  for field in members {
+    let payload = if field.kind == @reflect.Message ||
+      field.kind == @reflect.Group ||
+      field.kind == @reflect.Enum {
+      "@reflect.Value"
+    } else {
+      scalar_type(field.kind.code()).unwrap_or("Int32")
+    }
+    buf.write_string_utf8("  " + oneof_variant(field) + "(" + payload + ")\n")
+  }
+  buf.write_string_utf8("  No" + upper_first(oneof.name) + "\n}\n\n")
+  // Reader.
+  buf.write_string_utf8(
+    "///|\npub fn " +
+    name +
+    "::" +
+    field_ident(oneof.name) +
+    "(self : " +
+    name +
+    ") -> " +
+    choice +
+    " {\n  let oneof = oneof_of_" +
+    tag +
+    "(self.inner, \"" +
+    escape(oneof.name) +
+    "\")\n  match self.inner.which_oneof(oneof) {\n",
+  )
+  for field in members {
+    let payload = if field.kind == @reflect.Message ||
+      field.kind == @reflect.Group ||
+      field.kind == @reflect.Enum {
+      "@reflect.Value"
+    } else {
+      scalar_type(field.kind.code()).unwrap_or("Int32")
+    }
+    let expr = if payload == "@reflect.Value" {
+      "self.inner.get(field)"
+    } else {
+      read_expr(field.kind.code(), "self.inner.get(field)")
+    }
+    buf.write_string_utf8(
+      "    Some(" +
+      field.number.to_string() +
+      ") => {\n      let field = field_of_" +
+      tag +
+      "(self.inner, " +
+      field.number.to_string() +
+      ")\n      " +
+      choice +
+      "::" +
+      oneof_variant(field) +
+      "(" +
+      expr +
+      ")\n    }\n",
+    )
+  }
+  buf.write_string_utf8(
+    "    _ => " + choice + "::No" + upper_first(oneof.name) + "\n  }\n}\n\n",
+  )
+  // Writer.
+  buf.write_string_utf8(
+    "///|\npub fn " +
+    name +
+    "::set_" +
+    field_ident(oneof.name) +
+    "(self : " +
+    name +
+    ", value : " +
+    choice +
+    ") -> Unit {\n  match value {\n",
+  )
+  for field in members {
+    let payload = if field.kind == @reflect.Message ||
+      field.kind == @reflect.Group ||
+      field.kind == @reflect.Enum {
+      "@reflect.Value"
+    } else {
+      scalar_type(field.kind.code()).unwrap_or("Int32")
+    }
+    let bound = if payload == "@reflect.Value" {
+      "item"
+    } else {
+      value_expr(field.kind.code(), "item")
+    }
+    buf.write_string_utf8(
+      "    " +
+      choice +
+      "::" +
+      oneof_variant(field) +
+      "(item) =>\n      self.inner.set(field_of_" +
+      tag +
+      "(self.inner, " +
+      field.number.to_string() +
+      "), " +
+      bound +
+      ")\n",
+    )
+  }
+  buf.write_string_utf8(
+    "    _" +
+    " => self.inner.clear(field_of_" +
+    tag +
+    "(self.inner, " +
+    members[0].number.to_string() +
+    "))\n  }\n}\n\n",
+  )
+}
+
+///|
 fn emit_messages(
   messages : Array[@reflect.MessageDescriptor],
   prefix : String,
+  tag : String,
   buf : Buffer,
 ) -> Unit {
   for message in messages {
     let name = wrapper_name(prefix, message.name)
-    emit_message(message, prefix, buf)
-    emit_messages(message.nested_messages, name, buf)
+    emit_message(message, prefix, tag, buf)
+    emit_messages(message.nested_messages, name, tag, buf)
   }
+}
+
+///|
+fn has_field(messages : Array[@reflect.MessageDescriptor]) -> Bool {
+  for message in messages {
+    if message.fields.length() > 0 {
+      return true
+    }
+    if has_field(message.nested_messages) {
+      return true
+    }
+  }
+  false
+}
+
+///|
+fn has_real_oneof(messages : Array[@reflect.MessageDescriptor]) -> Bool {
+  for message in messages {
+    for oneof in message.oneofs {
+      if !oneof.synthetic && oneof.field_numbers.length() > 0 {
+        return true
+      }
+    }
+    if has_real_oneof(message.nested_messages) {
+      return true
+    }
+  }
+  false
+}
+
+///|
+/// A file's stem with everything but letters and digits folded to `_`, so its
+/// package-level helpers cannot collide with another file's.
+fn file_tag(path : String) -> String {
+  let out = Buffer()
+  for i in 0..<path.length() {
+    let ch = path[i].to_int().to_char().unwrap_or('x')
+    if (ch >= 'a' && ch <= 'z') ||
+      (ch >= 'A' && ch <= 'Z') ||
+      (ch >= '0' && ch <= '9') {
+      out.write_string_utf8(ch.to_string())
+    } else {
+      out.write_string_utf8("_")
+    }
+  }
+  utf8_of(out.to_bytes())
 }
 
 ///|
@@ -685,23 +1009,51 @@ pub fn generate_source(
     escape(file.name) +
     ". Do not edit.\n\n",
   )
+  let tag = file_tag(file.name)
   buf.write_string_utf8(
-    "pub fn file_descriptor() -> @reflect.FileDescriptor raise @desc.Refused {\n  @desc.build_file(" +
+    "pub fn file_descriptor_" +
+    tag +
+    "() -> @reflect.FileDescriptor raise @desc.Refused {\n  @desc.build_file(" +
     emit_file_proto(file) +
     ")\n}\n\n",
   )
   buf.write_string_utf8(
-    "let cached_file : @reflect.FileDescriptor = file_descriptor() catch {\n  _ => abort(\"moonproto: descriptor could not be built\")\n}\n\n",
+    "let cached_" +
+    tag +
+    " : @reflect.FileDescriptor = file_descriptor_" +
+    tag +
+    "() catch {\n  _ => abort(\"moonproto: descriptor could not be built\")\n}\n\n",
   )
   buf.write_string_utf8(
-    "fn find_in(items : Array[@reflect.MessageDescriptor], name : String) -> @reflect.MessageDescriptor? {\n  for item in items {\n    if item.full_name == name {\n      return Some(item)\n    }\n    match find_in(item.nested_messages, name) {\n      Some(found) => return Some(found)\n      None => ()\n    }\n  }\n  None\n}\n\n",
+    "fn find_in_" +
+    tag +
+    "(items : Array[@reflect.MessageDescriptor], name : String) -> @reflect.MessageDescriptor? {\n  for item in items {\n    if item.full_name == name {\n      return Some(item)\n    }\n    match find_in_" +
+    tag +
+    "(item.nested_messages, name) {\n      Some(found) => return Some(found)\n      None => ()\n    }\n  }\n  None\n}\n\n",
   )
   buf.write_string_utf8(
-    "fn find_message(name : String) -> @reflect.MessageDescriptor {\n  match find_in(cached_file.messages, name) {\n    Some(found) => found\n    None => abort(\"moonproto: missing \" + name)\n  }\n}\n\n",
+    "fn find_message_" +
+    tag +
+    "(name : String) -> @reflect.MessageDescriptor {\n  match find_in_" +
+    tag +
+    "(cached_" +
+    tag +
+    ".messages, name) {\n    Some(found) => found\n    None => abort(\"moonproto: missing \" + name)\n  }\n}\n\n",
   )
-  buf.write_string_utf8(
-    "fn field_of(message : @dynamic.Message, number : Int32) -> @reflect.FieldDescriptor {\n  match message.descriptor().field_by_number(number) {\n    Some(field) => field\n    None => abort(\"moonproto: missing field \" + number.to_string())\n  }\n}\n\n",
-  )
+  if has_field(built.messages) {
+    buf.write_string_utf8(
+      "fn field_of_" +
+      tag +
+      "(message : @dynamic.Message, number : Int32) -> @reflect.FieldDescriptor {\n  match message.descriptor().field_by_number(number) {\n    Some(field) => field\n    None => abort(\"moonproto: missing field \" + number.to_string())\n  }\n}\n\n",
+    )
+  }
+  if has_real_oneof(built.messages) {
+    buf.write_string_utf8(
+      "fn oneof_of_" +
+      tag +
+      "(message : @dynamic.Message, name : String) -> @reflect.OneofDescriptor {\n  for item in message.descriptor().oneofs {\n    if item.name == name {\n      return item\n    }\n  }\n  abort(\"moonproto: missing oneof \" + name)\n}\n\n",
+    )
+  }
   for item in built.enums {
     emit_enum(
       {
@@ -713,12 +1065,14 @@ pub fn generate_source(
           }
           values
         },
+        features: @desc.features_auto,
+        options: [],
       },
       "",
       buf,
     )
   }
-  emit_messages(built.messages, "", buf)
+  emit_messages(built.messages, "", tag, buf)
   utf8_of(buf.to_bytes())
 }
 

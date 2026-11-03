@@ -10,3 +10,8 @@ import {
 import {
   "moonbitstack/moonproto/dynamic",
 } for "wbtest"
+
+import {
+  "moonbitstack/moonproto/desc",
+  "moonbitstack/moonproto/parser",
+} for "wbtest"

@@ -8,6 +8,8 @@ import {
 // Values
 pub fn build_file(FileDescriptorProto) -> @reflect.FileDescriptor raise Refused
 
+pub let features_auto : Features
+
 pub fn to_file_descriptor_proto(@reflect.FileDescriptor) -> FileDescriptorProto
 
 pub fn to_json_name(String) -> String
@@ -35,17 +37,32 @@ pub(all) struct DescriptorProto {
   reserved_name : Array[String]
   extension_range : Array[(Int32, Int32)]
   map_entry : Bool
+  features : Features
+  options : Array[(String, String)]
 }
 
 pub(all) struct EnumDescriptorProto {
   name : String
   value : Array[EnumValueDescriptorProto]
+  features : Features
+  options : Array[(String, String)]
 }
 
 pub(all) struct EnumValueDescriptorProto {
   name : String
   number : Int32
 }
+
+pub(all) struct Features {
+  field_presence : Int32
+  enum_type : Int32
+  repeated_field_encoding : Int32
+  message_encoding : Int32
+  utf8_validation : Int32
+  json_format : Int32
+}
+pub fn Features::merge(Self, Self) -> Self
+pub fn Features::set(Self, String, String) -> Self
 
 pub(all) struct FieldDescriptorProto {
   name : String
@@ -58,6 +75,8 @@ pub(all) struct FieldDescriptorProto {
   oneof_index : Int32?
   proto3_optional : Bool
   packed_off : Bool
+  features : Features
+  options : Array[(String, String)]
 }
 
 pub(all) struct FileDescriptorProto {
@@ -70,6 +89,9 @@ pub(all) struct FileDescriptorProto {
   extension : Array[FieldDescriptorProto]
   dependency : Array[String]
   public_dependency : Array[Int32]
+  edition : String?
+  features : Features
+  options : Array[(String, String)]
 }
 
 pub(all) struct MethodDescriptorProto {

@@ -1,9 +1,11 @@
-// The well-known types, built as descriptors and registered as dynamic types.
+// The well-known types, taken from the generated package rather than built by
+// hand: the plugin produces them from the `.proto` files protobuf ships.
 // https://protobuf.dev/reference/protobuf/google.protobuf/
 
 import {
   "moonbitstack/moonproto/desc",
   "moonbitstack/moonproto/dynamic",
+  "moonbitstack/moonproto/known/google/protobuf" @gp,
   "moonbitstack/moonproto/reflect",
 }
 

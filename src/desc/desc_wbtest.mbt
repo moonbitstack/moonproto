@@ -20,6 +20,8 @@ fn field(
     oneof_index: None,
     proto3_optional: false,
     packed_off: false,
+    features: features_auto,
+    options: [],
   }
 }
 
@@ -36,6 +38,8 @@ test "proto3 fields, a map, an enum and a nested message" {
     reserved_name: [],
     extension_range: [],
     map_entry: true,
+    features: features_auto,
+    options: [],
   }
   let inner : DescriptorProto = {
     name: "Inner",
@@ -48,6 +52,8 @@ test "proto3 fields, a map, an enum and a nested message" {
     reserved_name: [],
     extension_range: [],
     map_entry: false,
+    features: features_auto,
+    options: [],
   }
   let message : DescriptorProto = {
     name: "M",
@@ -64,6 +70,8 @@ test "proto3 fields, a map, an enum and a nested message" {
       {
         name: "Color",
         value: [{ name: "RED", number: 0, }, { name: "BLUE", number: 1, }],
+        features: features_auto,
+        options: [],
       },
     ],
     extension: [],
@@ -72,6 +80,8 @@ test "proto3 fields, a map, an enum and a nested message" {
     reserved_name: [],
     extension_range: [],
     map_entry: false,
+    features: features_auto,
+    options: [],
   }
   let file : FileDescriptorProto = {
     name: "test.proto",
@@ -83,6 +93,9 @@ test "proto3 fields, a map, an enum and a nested message" {
     extension: [],
     dependency: [],
     public_dependency: [],
+    edition: None,
+    features: features_auto,
+    options: [],
   }
   let built = build_file(file)
   assert_eq(built.path, "test.proto")
@@ -132,6 +145,8 @@ test "proto2 required fields land in the required set" {
     reserved_name: [],
     extension_range: [],
     map_entry: false,
+    features: features_auto,
+    options: [],
   }
   let file : FileDescriptorProto = {
     name: "p.proto",
@@ -143,6 +158,9 @@ test "proto2 required fields land in the required set" {
     extension: [],
     dependency: [],
     public_dependency: [],
+    edition: None,
+    features: features_auto,
+    options: [],
   }
   let built = build_file(file)
   assert_eq(built.syntax == @reflect.Proto2, true)

@@ -448,6 +448,8 @@ fn make_field(
   oneof_index : Int32?,
   proto3_optional : Bool,
   packed_off : Bool,
+  features~ : @desc.Features = @desc.features_auto,
+  options~ : Array[(String, String)] = [],
 ) -> @desc.FieldDescriptorProto {
   {
     name,
@@ -460,6 +462,8 @@ fn make_field(
     oneof_index,
     proto3_optional,
     packed_off,
+    features,
+    options,
   }
 }
 
@@ -480,6 +484,9 @@ pub fn parse(
     extension: [],
     dependency: [],
     public_dependency: [],
+    edition: None,
+    features: @desc.features_auto,
+    options: [],
   }
   while !parser.eof() {
     let word = parser.read_ident()
@@ -491,8 +498,8 @@ pub fn parse(
       }
       "edition" => {
         parser.expect('=')
-        let _ = parser.read_string()
-        result = { ..result, syntax: "editions", }
+        let edition = parser.read_string()
+        result = { ..result, syntax: "editions", edition: Some(edition), }
         parser.expect(';')
       }
       "package" => {
@@ -515,24 +522,43 @@ pub fn parse(
           result = {
             ..result,
             public_dependency: append(result.public_dependency, index),
+            edition: None,
+            features: @desc.features_auto,
+            options: [],
           }
         }
       }
       "option" => {
-        let _ = parser.read_option_name()
+        let name = parser.read_option_name()
         parser.expect('=')
-        let _ = parser.read_constant_text()
+        let value = parser.read_constant_text()
+        if name_has_prefix(name, "features.") {
+          result = {
+            ..result,
+            features: result.features.set(
+              name[9:name.length()].to_owned(),
+              value,
+            ),
+          }
+        } else {
+          result = { ..result, options: append(result.options, (name, value)), }
+        }
         parser.expect(';')
       }
       "message" => {
-        let message = parse_message(parser, result.package_name, result.syntax)
+        let message = parse_message(
+          parser,
+          result.package_name,
+          result.syntax,
+          inherited=result.features,
+        )
         result = {
           ..result,
           message_type: append(result.message_type, message),
         }
       }
       "enum" => {
-        let item = parse_enum(parser)
+        let item = parse_enum(parser, inherited=result.features)
         result = { ..result, enum_type: append(result.enum_type, item), }
       }
       "service" => {
@@ -578,9 +604,10 @@ fn parse_message(
   parser : Parser,
   scope : String,
   syntax : String,
+  inherited~ : @desc.Features = @desc.features_auto,
 ) -> @desc.DescriptorProto raise Refused {
   let name = parser.read_ident()
-  parse_message_body(parser, scope, name, syntax, false)
+  parse_message_body(parser, scope, name, syntax, false, inherited~)
 }
 
 ///|
@@ -590,6 +617,7 @@ fn parse_message_body(
   name : String,
   syntax : String,
   map_entry : Bool,
+  inherited~ : @desc.Features = @desc.features_auto,
 ) -> @desc.DescriptorProto raise Refused {
   let full = if scope.length() == 0 { name } else { scope + "." + name }
   let fields : Array[@desc.FieldDescriptorProto] = []
@@ -601,6 +629,8 @@ fn parse_message_body(
   let reserved_names : Array[String] = []
   let extension_ranges : Array[(Int32, Int32)] = []
   let mut is_map_entry = map_entry
+  let mut features = inherited
+  let options : Array[(String, String)] = []
   parser.expect('{')
   while true {
     parser.skip()
@@ -617,11 +647,11 @@ fn parse_message_body(
     let word = parser.read_ident()
     match word {
       "message" => {
-        let item = parse_message(parser, full, syntax)
+        let item = parse_message(parser, full, syntax, inherited=features)
         nested.push(item)
       }
       "enum" => {
-        let item = parse_enum(parser)
+        let item = parse_enum(parser, inherited=features)
         enums.push(item)
       }
       "oneof" => {
@@ -642,6 +672,7 @@ fn parse_message_body(
             full,
             syntax,
             Some(index),
+            inherited=features,
           )
           fields.push(field)
           for item in synthesized {
@@ -674,6 +705,10 @@ fn parse_message_body(
         let value = parser.read_constant_text()
         if name == "map_entry" && value == "true" {
           is_map_entry = true
+        } else if name_has_prefix(name, "features.") {
+          features = features.set(name[9:name.length()].to_owned(), value)
+        } else {
+          options.push((name, value))
         }
         parser.expect(';')
       }
@@ -689,7 +724,13 @@ fn parse_message_body(
       }
       _ => {
         parser.pos = start
-        let (field, synthesized) = parse_field(parser, full, syntax, None)
+        let (field, synthesized) = parse_field(
+          parser,
+          full,
+          syntax,
+          None,
+          inherited=features,
+        )
         fields.push(field)
         for item in synthesized {
           nested.push(item)
@@ -708,6 +749,8 @@ fn parse_message_body(
     reserved_name: reserved_names,
     extension_range: extension_ranges,
     map_entry: is_map_entry,
+    features,
+    options,
   }
 }
 
@@ -717,6 +760,7 @@ fn parse_field(
   scope : String,
   syntax : String,
   oneof_index : Int32?,
+  inherited~ : @desc.Features = @desc.features_auto,
 ) -> (@desc.FieldDescriptorProto, Array[@desc.DescriptorProto]) raise Refused {
   parser.skip()
   let start = parser.pos
@@ -731,7 +775,14 @@ fn parse_field(
       }
       return (
         parse_field_tail(
-          parser, scope, syntax, 1, type_name, oneof_index, false,
+          parser,
+          scope,
+          syntax,
+          1,
+          type_name,
+          oneof_index,
+          false,
+          inherited~,
         ),
         [],
       )
@@ -759,7 +810,14 @@ fn parse_field(
   }
   (
     parse_field_tail(
-      parser, scope, syntax, label, type_name, oneof_index, false,
+      parser,
+      scope,
+      syntax,
+      label,
+      type_name,
+      oneof_index,
+      false,
+      inherited~,
     ),
     [],
   )
@@ -774,11 +832,14 @@ fn parse_field_tail(
   type_word : String,
   oneof_index : Int32?,
   is_group : Bool,
+  inherited~ : @desc.Features = @desc.features_auto,
 ) -> @desc.FieldDescriptorProto raise Refused {
   let name = parser.read_ident()
   parser.expect('=')
   let number = parser.read_int()
-  let (json_name, default_value, packed_off) = parse_field_options(parser)
+  let (json_name, default_value, packed_off, features, options) = parse_field_options(
+    parser,
+  )
   parser.expect(';')
   let scalar = scalar_code(type_word)
   let (type_code, type_name) = match scalar {
@@ -798,6 +859,8 @@ fn parse_field_tail(
     oneof_index,
     proto3_optional,
     packed_off,
+    features=@desc.Features::merge(inherited, features),
+    options~,
   )
 }
 
@@ -811,12 +874,22 @@ fn lower_first_if_group(name : String, is_group : Bool) -> String {
 }
 
 ///|
+fn name_has_prefix(name : String, prefix : String) -> Bool {
+  if name.length() < prefix.length() {
+    return false
+  }
+  name[:prefix.length()] == prefix
+}
+
+///|
 fn parse_field_options(
   parser : Parser,
-) -> (String?, String?, Bool) raise Refused {
+) -> (String?, String?, Bool, @desc.Features, Array[(String, String)]) raise Refused {
   let mut json_name : String? = None
   let mut default_value : String? = None
   let mut packed_off = false
+  let mut features = @desc.features_auto
+  let options : Array[(String, String)] = []
   if parser.accept('[') {
     while true {
       let key = parser.read_option_name()
@@ -828,6 +901,10 @@ fn parse_field_options(
         default_value = Some(value)
       } else if key == "packed" {
         packed_off = value != "true"
+      } else if name_has_prefix(key, "features.") {
+        features = features.set(key[9:key.length()].to_owned(), value)
+      } else {
+        options.push((key, value))
       }
       if !parser.accept(',') {
         break
@@ -835,7 +912,7 @@ fn parse_field_options(
     }
     parser.expect(']')
   }
-  (json_name, default_value, packed_off)
+  (json_name, default_value, packed_off, features, options)
 }
 
 ///|
@@ -855,7 +932,9 @@ fn parse_map_field(
   let name = parser.read_ident()
   parser.expect('=')
   let number = parser.read_int()
-  let (json_name, default_value, packed_off) = parse_field_options(parser)
+  let (json_name, default_value, packed_off, _features, _options) = parse_field_options(
+    parser,
+  )
   parser.expect(';')
   let entry = entry_name(name)
   let entry_full = if scope.length() == 0 { entry } else { scope + "." + entry }
@@ -906,6 +985,8 @@ fn parse_map_field(
     reserved_name: [],
     extension_range: [],
     map_entry: true,
+    features: @desc.features_auto,
+    options: [],
   }
   let field = make_field(
     name,
@@ -933,7 +1014,9 @@ fn parse_group(
   let group_name = parser.read_ident()
   parser.expect('=')
   let number = parser.read_int()
-  let (json_name, default_value, packed_off) = parse_field_options(parser)
+  let (json_name, default_value, packed_off, _features, _options) = parse_field_options(
+    parser,
+  )
   let body = parse_message_body(parser, scope, group_name, syntax, false)
   (
     make_field(
@@ -965,10 +1048,15 @@ fn parse_enums_value(
 }
 
 ///|
-fn parse_enum(parser : Parser) -> @desc.EnumDescriptorProto raise Refused {
+fn parse_enum(
+  parser : Parser,
+  inherited~ : @desc.Features = @desc.features_auto,
+) -> @desc.EnumDescriptorProto raise Refused {
   let name = parser.read_ident()
   let values : Array[@desc.EnumValueDescriptorProto] = []
   parser.expect('{')
+  let mut features = inherited
+  let options : Array[(String, String)] = []
   while true {
     parser.skip()
     if parser.eof() {
@@ -985,9 +1073,14 @@ fn parse_enum(parser : Parser) -> @desc.EnumDescriptorProto raise Refused {
     if word == "option" {
       parser.pos = start
       let _ = parser.read_ident()
-      let _ = parser.read_option_name()
+      let name = parser.read_option_name()
       parser.expect('=')
-      let _ = parser.read_constant_text()
+      let value = parser.read_constant_text()
+      if name_has_prefix(name, "features.") {
+        features = features.set(name[9:name.length()].to_owned(), value)
+      } else {
+        options.push((name, value))
+      }
       parser.expect(';')
     } else if word == "reserved" {
       parser.pos = start
@@ -998,7 +1091,7 @@ fn parse_enum(parser : Parser) -> @desc.EnumDescriptorProto raise Refused {
       values.push(parse_enums_value(parser))
     }
   }
-  { name, value: values, }
+  { name, value: values, features, options, }
 }
 
 ///|

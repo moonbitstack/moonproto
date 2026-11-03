@@ -290,3 +290,96 @@ test "nested messages round-trip through the global type registry" {
   decode(bytes, back)
   assert_eq(back.get(outer_field).message().get(inner_i).int(), 7L)
 }
+
+// -- extensions --------------------------------------------------------------
+
+///|
+fn extension_field(number : Int32, name : String) -> @reflect.FieldDescriptor {
+  {
+    ..make_field(
+      number,
+      name,
+      @reflect.Int32,
+      @reflect.Optional,
+      false,
+      false,
+      None,
+      None,
+      None,
+      "test.Ext",
+    ),
+    full_name: "test." + name,
+    is_extension: true,
+  }
+}
+
+///|
+fn extension_descriptor() -> @reflect.MessageDescriptor {
+  {
+    name: "Ext",
+    full_name: "test.Ext",
+    syntax: @reflect.Proto2,
+    fields: [],
+    oneofs: [],
+    is_map_entry: false,
+    reserved_names: [],
+    reserved_ranges: [],
+    required_numbers: [],
+    extension_ranges: [(100, 200)],
+    nested_messages: [],
+    nested_enums: [],
+    nested_extensions: [],
+    file_path: "test.proto",
+    map_key: None,
+    map_value: None,
+  }
+}
+
+///|
+test "an extension is written to the wire and read back" {
+  let desc = extension_descriptor()
+  let ext = extension_field(100, "my_ext")
+  let extension_type = @dynamic.new_extension_type(ext)
+  @reflect.global_types.register_extension(extension_type) catch {
+    _ => ()
+  }
+  let m = @dynamic.Message::new(desc)
+  set_extension(m, extension_type, @reflect.Int32(42))
+  assert_true(has_extension(m, extension_type))
+  let bytes = encode(m)
+  // Field 100, varint: tag a0 06, value 2a.
+  assert_eq(bytes, b"\xa0\x06\x2a")
+  assert_eq(size(m), 3)
+  let back = @dynamic.Message::new(desc)
+  decode(bytes, back)
+  assert_true(has_extension(back, extension_type))
+  match get_extension(back, extension_type) {
+    Some(value) => assert_eq(value.int(), 42L)
+    None => abort("extension dropped on decode")
+  }
+  assert_eq(back.get_unknown().bytes().length(), 0)
+  assert_eq(encode(back), bytes)
+}
+
+///|
+test "range_extensions reports each extension once" {
+  let desc = extension_descriptor()
+  let ext = extension_field(100, "my_ext")
+  let extension_type = @dynamic.new_extension_type(ext)
+  @reflect.global_types.register_extension(extension_type) catch {
+    _ => ()
+  }
+  let m = @dynamic.Message::new(desc)
+  set_extension(m, extension_type, @reflect.Int32(1))
+  set_extension(m, extension_type, @reflect.Int32(2))
+  let seen : Array[Int32] = []
+  let values : Array[Int64] = []
+  range_extensions(m, fn(item, value) {
+    seen.push(item.descriptor().number)
+    values.push(value.int())
+    true
+  })
+  assert_eq(seen.length(), 1)
+  assert_eq(seen[0], 100)
+  assert_eq(values[0], 2L)
+}

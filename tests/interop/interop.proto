@@ -1,0 +1,38 @@
+syntax = "proto3";
+package interop;
+
+enum Color {
+  RED = 0;
+  BLUE = 1;
+}
+
+message Inner {
+  int32 x = 1;
+}
+
+message All {
+  int32 i32 = 1;
+  int64 i64 = 2;
+  uint32 u32 = 3;
+  uint64 u64 = 4;
+  sint32 s32 = 5;
+  sint64 s64 = 6;
+  fixed32 f32 = 7;
+  fixed64 f64 = 8;
+  sfixed32 sf32 = 9;
+  sfixed64 sf64 = 10;
+  float flt = 11;
+  double dbl = 12;
+  bool flag = 13;
+  string text = 14;
+  bytes blob = 15;
+  repeated int32 nums = 16;
+  repeated string names = 17;
+  map<string, int32> counts = 18;
+  Inner inner = 19;
+  Color color = 20;
+  oneof pick {
+    int32 pick_i = 21;
+    string pick_s = 22;
+  }
+}

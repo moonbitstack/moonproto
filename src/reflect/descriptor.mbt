@@ -204,6 +204,40 @@ pub(all) struct FileDescriptor {
   extensions : Array[FieldDescriptor]
   dependencies : Array[String]
   public_dependencies : Array[String]
+  /// `edition = "2023"` when the file declares one.
+  edition : String?
+  /// Options written in the file, keyed by the declared name they belong to;
+  /// the file's own options sit under the empty key.
+  option_map : Array[(String, Array[(String, String)])]
+}
+
+///|
+/// The options written on `name` in this file, as (name, value) pairs.
+pub fn FileDescriptor::options_of(
+  self : FileDescriptor,
+  name : String,
+) -> Array[(String, String)] {
+  for entry in self.option_map {
+    if entry.0 == name {
+      return entry.1
+    }
+  }
+  []
+}
+
+///|
+/// The value of one option on `name`, if it was written.
+pub fn FileDescriptor::option_of(
+  self : FileDescriptor,
+  name : String,
+  option : String,
+) -> String? {
+  for pair in self.options_of(name) {
+    if pair.0 == option {
+      return Some(pair.1)
+    }
+  }
+  None
 }
 
 ///|

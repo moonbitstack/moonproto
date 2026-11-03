@@ -1,23 +1,18 @@
 // The well-known types build, register, and encode through the shared codecs.
 
 ///|
-fn find(
-  file : @reflect.FileDescriptor,
-  name : String,
-) -> @reflect.MessageDescriptor {
-  for message in file.messages {
-    if message.full_name == name {
-      return message
-    }
+fn find(name : String) -> @reflect.MessageDescriptor {
+  let found = message_descriptor(name) catch { _ => None }
+  match found {
+    Some(message) => message
+    None => abort("missing " + name)
   }
-  abort("missing " + name)
 }
 
 ///|
 test "Timestamp encodes as its JSON string" {
   register_all()
-  let file = file_descriptor() catch { _ => abort("build failed") }
-  let desc = find(file, "google.protobuf.Timestamp")
+  let desc = find("google.protobuf.Timestamp")
   let m = @dynamic.Message::new(desc)
   for field in desc.fields {
     if field.name == "seconds" {
@@ -30,8 +25,7 @@ test "Timestamp encodes as its JSON string" {
 ///|
 test "Duration encodes as its JSON string" {
   register_all()
-  let file = file_descriptor() catch { _ => abort("build failed") }
-  let desc = find(file, "google.protobuf.Duration")
+  let desc = find("google.protobuf.Duration")
   let m = @dynamic.Message::new(desc)
   for field in desc.fields {
     if field.name == "seconds" {
@@ -47,8 +41,7 @@ test "Duration encodes as its JSON string" {
 ///|
 test "the wrappers carry one scalar" {
   register_all()
-  let file = file_descriptor() catch { _ => abort("build failed") }
-  let desc = find(file, "google.protobuf.Int32Value")
+  let desc = find("google.protobuf.Int32Value")
   let m = @dynamic.Message::new(desc)
   for field in desc.fields {
     m.set(field, @reflect.Int32(42))
@@ -65,13 +58,12 @@ test "the wrappers carry one scalar" {
 ///|
 test "Value, Struct and ListValue exist with the right shape" {
   register_all()
-  let file = file_descriptor() catch { _ => abort("build failed") }
-  let value = find(file, "google.protobuf.Value")
+  let value = find("google.protobuf.Value")
   assert_eq(value.oneofs.length(), 1)
   assert_eq(value.fields.length(), 6)
-  let struct_ = find(file, "google.protobuf.Struct")
+  let struct_ = find("google.protobuf.Struct")
   assert_eq(struct_.fields.length(), 1)
   assert_true(struct_.fields[0].is_map)
-  let list = find(file, "google.protobuf.ListValue")
+  let list = find("google.protobuf.ListValue")
   assert_eq(list.fields.length(), 1)
 }

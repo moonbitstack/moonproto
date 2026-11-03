@@ -4,6 +4,7 @@
 
 import {
   "moonbitstack/moonproto/desc",
+  "moonbitstack/moonproto/known",
   "moonbitstack/moonproto/dynamic",
   "moonbitstack/moonproto/json",
   "moonbitstack/moonproto/proto",

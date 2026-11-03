@@ -38,6 +38,7 @@ pub(all) suberror Refused {
   Syntax(String, Int32)
   UnknownField(String)
   BadValue(String)
+  NoType(String)
   Recursion(Int32)
 }
 
@@ -48,6 +49,7 @@ pub impl Show for Refused with fn output(self, logger) {
       logger.write_string("syntax at " + at.to_string() + ": " + message)
     UnknownField(name) => logger.write_string("unknown field " + name)
     BadValue(name) => logger.write_string("bad value for " + name)
+    NoType(name) => logger.write_string("no message type " + name)
     Recursion(limit) =>
       logger.write_string("recursion limit " + limit.to_string())
   }
@@ -101,6 +103,12 @@ fn encode_message(
 ) -> Unit raise Refused {
   if depth > 100 {
     raise Recursion(100)
+  }
+  // An Any prints as the type's own text inside a bracketed type URL, so the
+  // reader sees the payload rather than an opaque byte string.
+  if message.descriptor().full_name == "google.protobuf.Any" &&
+    encode_any_text(buf, message, opts, depth) {
+    return
   }
   for field in message.descriptor().fields {
     if field.is_map {
@@ -161,6 +169,105 @@ fn encode_message(
       }
     }
   }
+  // An extension is named by its full name in brackets.
+  let extensions : Array[@reflect.FieldDescriptor] = []
+  message.range_extensions(fn(field, _value) {
+    extensions.push(field)
+    true
+  })
+  for field in extensions {
+    write_extension_text(buf, message, field, opts, depth)
+  }
+}
+
+///|
+fn write_extension_text(
+  buf : Buffer,
+  message : &@reflect.Message,
+  field : @reflect.FieldDescriptor,
+  opts : MarshalOptions,
+  depth : Int32,
+) -> Unit raise Refused {
+  let label = "[" + field.full_name + "]"
+  if field.is_list() {
+    let list = message.get(field).list()
+    for i in 0..<list.length() {
+      write_indent(buf, opts, depth)
+      buf.write_string_utf8(label + ": ")
+      value_text(buf, field, list.get(i), opts, depth)
+      buf.write_string_utf8("\n")
+    }
+  } else {
+    write_indent(buf, opts, depth)
+    match field.kind {
+      @reflect.Message | @reflect.Group => {
+        buf.write_string_utf8(label + " {\n")
+        encode_message(buf, message.get(field).message(), opts, depth + 1)
+        write_indent(buf, opts, depth)
+        buf.write_string_utf8("}\n")
+      }
+      _ => {
+        buf.write_string_utf8(label + ": ")
+        scalar_text(buf, field, message.get(field), opts)
+        buf.write_string_utf8("\n")
+      }
+    }
+  }
+}
+
+///|
+/// The last path segment of a type URL, which is the type's full name.
+fn type_url_name(url : String) -> String {
+  let mut start = 0
+  let mut i = 0
+  while i < url.length() {
+    if char_at(url, i) == '/' {
+      start = i + 1
+    }
+    i = i + 1
+  }
+  url[start:url.length()].to_owned()
+}
+
+///|
+/// Write the expanded form of an `Any`, returning false when there is nothing
+/// to expand (no type URL, or a type that is not registered).
+fn encode_any_text(
+  buf : Buffer,
+  message : &@reflect.Message,
+  opts : MarshalOptions,
+  depth : Int32,
+) -> Bool raise Refused {
+  let desc = message.descriptor()
+  let type_field = match desc.field_by_number(1) {
+    Some(field) => field
+    None => return false
+  }
+  let value_field = match desc.field_by_number(2) {
+    Some(field) => field
+    None => return false
+  }
+  if !message.has(type_field) {
+    return false
+  }
+  let url = message.get(type_field).string()
+  let name = type_url_name(url)
+  let message_type = match @reflect.global_types.find_message_by_name(name) {
+    Some(found) => found
+    None => return false
+  }
+  let nested = message_type.new_message()
+  if message.has(value_field) {
+    @proto.decode(message.get(value_field).bytes(), nested) catch {
+      _ => return false
+    }
+  }
+  write_indent(buf, opts, depth)
+  buf.write_string_utf8("[" + url + "] {\n")
+  encode_message(buf, nested, opts, depth + 1)
+  write_indent(buf, opts, depth)
+  buf.write_string_utf8("}\n")
+  true
 }
 
 ///|
@@ -389,6 +496,25 @@ fn Parser::expect(self : Parser, ch : Char) -> Unit raise Refused {
 }
 
 ///|
+/// A bracketed name: a type URL may contain `/`, an extension name may contain
+/// dots, so it runs to the closing bracket.
+fn Parser::read_type_url(self : Parser) -> String raise Refused {
+  self.skip()
+  let start = self.pos
+  while self.pos < self.text.length() && char_at(self.text, self.pos) != ']' {
+    self.pos = self.pos + 1
+  }
+  if self.pos >= self.text.length() {
+    raise Syntax("unterminated name", start)
+  }
+  let name = self.text[start:self.pos].to_owned()
+  if name.length() == 0 {
+    raise Syntax("empty name", start)
+  }
+  name
+}
+
+///|
 fn is_ident_start(ch : Char) -> Bool {
   (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_'
 }
@@ -540,16 +666,36 @@ fn message_from_text(
     if parser.eof() || parser.peek() == Some('}') || parser.peek() == Some('>') {
       return
     }
+    let mut qualified : String? = None
     let name = if parser.peek() == Some('[') {
       parser.expect('[')
-      let qualified = parser.read_ident()
+      let key = parser.read_type_url()
       parser.expect(']')
-      qualified
+      qualified = Some(key)
+      key
     } else {
       parser.read_ident()
     }
     if parser.peek() == Some(':') {
       parser.expect(':')
+    }
+    match qualified {
+      Some(key) => {
+        if message.descriptor().full_name == "google.protobuf.Any" &&
+          key.contains("/") {
+          parse_any_text(message, key, parser, opts, depth)
+          continue
+        }
+        match @reflect.global_types.find_extension_by_name(key) {
+          Some(extension) => {
+            let field = extension.descriptor()
+            parse_field(message, field, parser, opts, depth)
+            continue
+          }
+          None => if !opts.discard_unknown { raise UnknownField(key) }
+        }
+      }
+      None => ()
     }
     match message.descriptor().field_by_json_name(name) {
       Some(field) => parse_field(message, field, parser, opts, depth)
@@ -565,6 +711,37 @@ fn message_from_text(
         }
     }
   }
+}
+
+///|
+/// Read the expanded body of an `Any`: the payload becomes the type's own text,
+/// and the type URL is restored from the bracket.
+fn parse_any_text(
+  message : &@reflect.Message,
+  url : String,
+  parser : Parser,
+  opts : UnmarshalOptions,
+  depth : Int32,
+) -> Unit raise Refused {
+  let desc = message.descriptor()
+  let type_field = match desc.field_by_number(1) {
+    Some(field) => field
+    None => raise Syntax("Any has no type_url", parser.pos)
+  }
+  let value_field = match desc.field_by_number(2) {
+    Some(field) => field
+    None => raise Syntax("Any has no value", parser.pos)
+  }
+  let name = type_url_name(url)
+  let message_type = match @reflect.global_types.find_message_by_name(name) {
+    Some(found) => found
+    None => raise NoType(name)
+  }
+  let nested = message_type.new_message()
+  parse_message_value(nested, parser, opts, depth + 1)
+  let body = @proto.encode(nested) catch { _ => raise BadValue("Any.value") }
+  message.set(type_field, @reflect.String(url))
+  message.set(value_field, @reflect.Bytes(body))
 }
 
 ///|

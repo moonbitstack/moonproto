@@ -81,6 +81,8 @@ fn register_enum() -> Unit {
     extensions: [],
     dependencies: [],
     public_dependencies: [],
+    edition: None,
+    option_map: [],
   }
   @reflect.global_files.register(file) catch {
     _ => ()
@@ -213,4 +215,123 @@ test "Duration is a seconds string" {
   decode("\"1.500000000s\"", back)
   assert_eq(back.get(seconds).int(), 1L)
   assert_eq(back.get(nanos).int(), 500_000_000L)
+}
+
+// -- arbitrary JSON through Struct, Value and ListValue ----------------------
+
+///|
+fn known_desc(name : String) -> @reflect.MessageDescriptor {
+  @known.register_all()
+  match (@known.message_descriptor(name) catch { _ => None }) {
+    Some(desc) => desc
+    None => abort("missing " + name)
+  }
+}
+
+///|
+test "Struct carries arbitrary JSON both ways" {
+  let desc = known_desc("google.protobuf.Struct")
+  let m = @dynamic.Message::new(desc)
+  let source = "{\"a\":1,\"b\":[\"x\",true,null],\"c\":{\"d\":2}}"
+  decode(source, m)
+  let text = encode(m)
+  // Object key order is not part of the format, so compare through a parse.
+  let expected = @cjson.parse(source) catch { _ => abort("bad fixture") }
+  let got = @cjson.parse(text) catch { _ => abort("bad output") }
+  assert_true(got == expected)
+}
+
+///|
+test "a Value holds whichever JSON kind it was given" {
+  let desc = known_desc("google.protobuf.Value")
+  let cases : Array[(String, String)] = [
+    ("null", "null"),
+    ("true", "true"),
+    ("7", "7"),
+    ("\"hi\"", "\"hi\""),
+    ("[1,2]", "[1,2]"),
+    ("{\"k\":false}", "{\"k\":false}"),
+  ]
+  for item in cases {
+    let m = @dynamic.Message::new(desc)
+    decode(item.0, m)
+    assert_eq(encode(m), item.1)
+  }
+}
+
+///|
+test "ListValue is an array" {
+  let desc = known_desc("google.protobuf.ListValue")
+  let m = @dynamic.Message::new(desc)
+  decode("[1,\"two\",null]", m)
+  assert_eq(encode(m), "[1,\"two\",null]")
+}
+
+///|
+test "a Struct field inside a message uses the same mapping" {
+  let struct_desc = known_desc("google.protobuf.Struct")
+  let struct_type = @dynamic.new_message_type(struct_desc)
+  @reflect.global_types.register_message(struct_type) catch {
+    _ => ()
+  }
+  let field : @reflect.FieldDescriptor = {
+    ..make_field(1, "s", @reflect.Message, None, "test.Holder"),
+    message_type: Some("google.protobuf.Struct"),
+  }
+  let desc = message_descriptor("test.Holder", [field])
+  let m = @dynamic.Message::new(desc)
+  decode("{\"s\":{\"n\":3}}", m)
+  assert_eq(encode(m), "{\"s\":{\"n\":3}}")
+}
+
+// -- extensions in JSON ------------------------------------------------------
+
+///|
+test "an extension is keyed by its bracketed full name" {
+  let desc = message_descriptor_with_extensions("test.JsonExt")
+  let ext : @reflect.FieldDescriptor = {
+    ..make_field(100, "my_ext", @reflect.Int32, None, "test.JsonExt"),
+    full_name: "test.my_ext",
+    is_extension: true,
+  }
+  let extension_type = @dynamic.new_extension_type(ext)
+  @reflect.global_types.register_extension(extension_type) catch {
+    _ => ()
+  }
+  let m = @dynamic.Message::new(desc)
+  let field = match desc.field_by_number(1) {
+    Some(found) => found
+    None => abort("missing field")
+  }
+  m.set(field, @reflect.Int32(1))
+  m.set(ext, @reflect.Int32(42))
+  let text = encode(m)
+  assert_true(text.contains("\"[test.my_ext]\":42"))
+  let back = @dynamic.Message::new(desc)
+  decode(text, back)
+  assert_eq(back.get(ext).int(), 42L)
+}
+
+///|
+fn message_descriptor_with_extensions(
+  full_name : String,
+) -> @reflect.MessageDescriptor {
+  {
+    name: "JsonExt",
+    full_name,
+    syntax: @reflect.Proto2,
+    fields: [make_field(1, "i", @reflect.Int32, None, full_name)],
+    oneofs: [],
+    is_map_entry: false,
+    reserved_names: [],
+    reserved_ranges: [],
+    required_numbers: [],
+    extension_ranges: [(100, 200)],
+    nested_messages: [],
+    nested_enums: [],
+    nested_extensions: [],
+    file_path: "test.proto",
+    map_key: None,
+    map_value: None,
+  }
 }

@@ -6,12 +6,22 @@ pub struct Message {
   msg_type : &@reflect.MessageType
   fields : Array[(Int32, @reflect.Value)]
   mut unknown : Bytes
+  /// Extension descriptors that have been written, in write order. An
+  /// extension is not part of `desc.fields`, so the descriptor has to ride
+  /// along with the value.
+  ext_fields : Array[@reflect.FieldDescriptor]
 }
 
 ///|
 pub fn Message::new(desc : @reflect.MessageDescriptor) -> Message {
   let mt = MessageType::new(desc)
-  { desc, msg_type: mt as &@reflect.MessageType, fields: [], unknown: b"", }
+  {
+    desc,
+    msg_type: mt as &@reflect.MessageType,
+    fields: [],
+    unknown: b"",
+    ext_fields: [],
+  }
 }
 
 ///|
@@ -19,7 +29,7 @@ pub fn Message::new_with_type(
   desc : @reflect.MessageDescriptor,
   msg_type : &@reflect.MessageType,
 ) -> Message {
-  { desc, msg_type, fields: [], unknown: b"", }
+  { desc, msg_type, fields: [], unknown: b"", ext_fields: [], }
 }
 
 ///|
@@ -90,6 +100,24 @@ pub impl @reflect.Message for Message with fn range(
 }
 
 ///|
+pub impl @reflect.Message for Message with fn range_extensions(
+  self,
+  f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
+) -> Unit {
+  let mut i = 0
+  while i < self.ext_fields.length() {
+    let field = self.ext_fields[i]
+    let index = self.index_of(field.number)
+    if index >= 0 {
+      if !f(field, self.fields[index].1) {
+        break
+      }
+    }
+    i = i + 1
+  }
+}
+
+///|
 pub impl @reflect.Message for Message with fn has(
   self,
   field : @reflect.FieldDescriptor,
@@ -135,14 +163,26 @@ pub impl @reflect.Message for Message with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  match field.oneof_index {
-    Some(index) =>
-      if index >= 0 && index < self.desc.oneofs.length() {
-        for number in self.desc.oneofs[index].field_numbers {
-          self.remove_field(number)
-        }
+  if field.is_extension {
+    let mut known = false
+    for item in self.ext_fields {
+      if item.number == field.number {
+        known = true
       }
-    None => ()
+    }
+    if !known {
+      self.ext_fields.push(field)
+    }
+  } else {
+    match field.oneof_index {
+      Some(index) =>
+        if index >= 0 && index < self.desc.oneofs.length() {
+          for number in self.desc.oneofs[index].field_numbers {
+            self.remove_field(number)
+          }
+        }
+      None => ()
+    }
   }
   self.put_field(field.number, value)
 }
@@ -206,6 +246,7 @@ pub extend Message with @reflect.Message::{
   message_type,
   is_valid,
   range,
+  range_extensions,
   has,
   clear,
   get,

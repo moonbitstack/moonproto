@@ -106,3 +106,69 @@ test "services and rpcs" {
   assert_true(file.service[0].methods[1].client_streaming)
   assert_true(file.service[0].methods[1].server_streaming)
 }
+
+// -- editions and options ----------------------------------------------------
+
+///|
+test "editions default to explicit presence" {
+  let source = "edition = \"2023\";\npackage e;\nmessage M { int32 a = 1; }\n"
+  let file = parse("e.proto", source) catch { _ => abort("parse failed") }
+  assert_true(file.edition == Some("2023"))
+  let built = @desc.build_file(file) catch { _ => abort("build failed") }
+  assert_true(built.syntax == @reflect.Editions)
+  assert_eq(built.messages[0].fields[0].has_presence, true)
+}
+
+///|
+test "features.field_presence = IMPLICIT removes presence" {
+  let source = "edition = \"2023\";\npackage e;\noption features.field_presence = IMPLICIT;\nmessage M { int32 a = 1; }\n"
+  let file = parse("e.proto", source) catch { _ => abort("parse failed") }
+  let built = @desc.build_file(file) catch { _ => abort("build failed") }
+  assert_eq(built.messages[0].fields[0].has_presence, false)
+}
+
+///|
+test "features.repeated_field_encoding = EXPANDED turns packing off" {
+  let source = "edition = \"2023\";\npackage e;\noption features.repeated_field_encoding = EXPANDED;\nmessage M { repeated int32 nums = 1; }\n"
+  let file = parse("e.proto", source) catch { _ => abort("parse failed") }
+  let built = @desc.build_file(file) catch { _ => abort("build failed") }
+  assert_eq(built.messages[0].fields[0].packed, false)
+  assert_eq(built.messages[0].fields[0].has_presence, true)
+}
+
+///|
+test "a field feature overrides the message and the file" {
+  let source = "edition = \"2023\";\npackage e;\noption features.field_presence = IMPLICIT;\nmessage M {\n  int32 implicit = 1;\n  int32 explicit = 2 [features.field_presence = EXPLICIT];\n}\n"
+  let file = parse("e.proto", source) catch { _ => abort("parse failed") }
+  let built = @desc.build_file(file) catch { _ => abort("build failed") }
+  assert_eq(built.messages[0].fields[0].has_presence, false)
+  assert_eq(built.messages[0].fields[1].has_presence, true)
+}
+
+///|
+test "features.enum_type = CLOSED closes the enum" {
+  let source = "edition = \"2023\";\npackage e;\nenum Color { option features.enum_type = CLOSED; RED = 0; }\n"
+  let file = parse("e.proto", source) catch { _ => abort("parse failed") }
+  let built = @desc.build_file(file) catch { _ => abort("build failed") }
+  assert_eq(built.enums[0].closed, true)
+}
+
+///|
+test "features.message_encoding = DELIMITED is a group on the wire" {
+  let source = "edition = \"2023\";\npackage e;\nmessage Inner { int32 i = 1; }\nmessage M {\n  option features.message_encoding = DELIMITED;\n  Inner inner = 1;\n}\n"
+  let file = parse("e.proto", source) catch { _ => abort("parse failed") }
+  let built = @desc.build_file(file) catch { _ => abort("build failed") }
+  let m = built.messages[1]
+  assert_true(m.fields[0].kind == @reflect.Group)
+}
+
+///|
+test "custom options survive on the declaration they were written on" {
+  let source = "syntax = \"proto3\";\npackage o;\noption (test.file_opt) = \"f\";\nmessage M {\n  option (test.msg_opt) = true;\n  int32 a = 1 [(test.field_opt) = 7, deprecated = true];\n}\n"
+  let file = parse("o.proto", source) catch { _ => abort("parse failed") }
+  let built = @desc.build_file(file) catch { _ => abort("build failed") }
+  assert_eq(built.option_of("", "(test.file_opt)"), Some("f"))
+  assert_eq(built.option_of("o.M", "(test.msg_opt)"), Some("true"))
+  assert_eq(built.option_of("o.M.a", "(test.field_opt)"), Some("7"))
+  assert_eq(built.option_of("o.M.a", "deprecated"), Some("true"))
+}

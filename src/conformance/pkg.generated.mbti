@@ -8,6 +8,8 @@ import {
 // Values
 pub fn handle(Bytes) -> Bytes
 
+pub fn register_known_types() -> Unit
+
 pub fn register_test_types() -> Unit
 
 pub fn test_descriptor() -> @desc.FileDescriptorProto

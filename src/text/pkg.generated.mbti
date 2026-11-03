@@ -19,6 +19,7 @@ pub(all) suberror Refused {
   Syntax(String, Int32)
   UnknownField(String)
   BadValue(String)
+  NoType(String)
   Recursion(Int32)
 }
 pub fn Refused::output(Self, &Logger) -> Unit

@@ -292,15 +292,36 @@ fn encode_message(
   let desc = message.descriptor()
   let fields = sorted_fields(desc.fields)
   for field in fields {
-    if field.is_map {
-      encode_map(buf, message, field, opts, depth)
-    } else if field.is_list() {
-      encode_list(buf, message, field, opts, depth)
-    } else if message.has(field) {
-      encode_singular(buf, message.get(field), field, opts, depth)
-    }
+    encode_one_of(buf, message, field, opts, depth)
+  }
+  // Extensions sit in the message's extension ranges and are keyed by number
+  // like any other field, so they encode through the same path.
+  let extensions : Array[@reflect.FieldDescriptor] = []
+  message.range_extensions(fn(field, _value) {
+    extensions.push(field)
+    true
+  })
+  for field in sorted_fields(extensions) {
+    encode_one_of(buf, message, field, opts, depth)
   }
   buf.write_bytes(message.get_unknown().bytes())
+}
+
+///|
+fn encode_one_of(
+  buf : Buffer,
+  message : &@reflect.Message,
+  field : @reflect.FieldDescriptor,
+  opts : MarshalOptions,
+  depth : Int32,
+) -> Unit raise Refused {
+  if field.is_map {
+    encode_map(buf, message, field, opts, depth)
+  } else if field.is_list() {
+    encode_list(buf, message, field, opts, depth)
+  } else if message.has(field) {
+    encode_singular(buf, message.get(field), field, opts, depth)
+  }
 }
 
 ///|
@@ -551,7 +572,7 @@ fn decode_message(
     let (number, wire_type, next) = @wire.consume_tag(bytes, at~, limit=end) catch {
       err => raise Wire(err)
     }
-    match desc.field_by_number(number) {
+    match field_lookup(message, desc, number) {
       None => {
         let after = @wire.skip_field(bytes, at~, limit=end) catch {
           err => raise Wire(err)
@@ -574,6 +595,35 @@ fn decode_message(
     joined.write_bytes(existing)
     joined.write_bytes(unknown.to_bytes())
     message.set_unknown(@reflect.RawFields::from_bytes(joined.to_bytes()))
+  }
+}
+
+///|
+/// The declared field, or the registered extension declared for this message
+/// with that number. An extension's descriptor is not in `desc.fields`.
+fn field_lookup(
+  message : &@reflect.Message,
+  desc : @reflect.MessageDescriptor,
+  number : Int32,
+) -> @reflect.FieldDescriptor? {
+  match desc.field_by_number(number) {
+    Some(field) => Some(field)
+    None =>
+      match
+        @reflect.global_types.find_extension_by_number(desc.full_name, number) {
+        Some(extension) => {
+          let field = extension.descriptor()
+          // An extension is registered for the message it extends, but a
+          // message may also be a group's body, whose name differs.
+          if field.is_extension {
+            Some(field)
+          } else {
+            let _ = message
+            None
+          }
+        }
+        None => None
+      }
   }
 }
 
@@ -914,13 +964,16 @@ pub fn[M : @reflect.Message] range_extensions(
   f : (&@reflect.ExtensionType, @reflect.Value) -> Bool,
 ) -> Unit {
   let desc = message.descriptor()
-  message.range(fn(field, _value) {
-    if field.is_extension {
-      let _ = desc
-      let _ = f
-      true
-    } else {
-      true
+  let mut keep_going = true
+  message.range_extensions(fn(field, value) {
+    if !field.is_extension {
+      return true
     }
+    match @reflect.global_types.find_extension_by_name(field.full_name) {
+      Some(extension) => if !f(extension, value) { keep_going = false }
+      None => ()
+    }
+    keep_going
   })
+  let _ = desc
 }

@@ -906,9 +906,23 @@ The implementation settled several points the draft left open.
   produces the descriptor shape directly; the generator speaks the `protoc`
   protocol and emits MoonBit source; the conformance harness reads one format
   and writes another.
-- **Known gaps.** Extension accessors work, but the binary encoder walks a
-  message's own fields only, so an extension is not yet written to the wire.
-  `Struct`, `Value` and `ListValue` have descriptors and round-trip in binary,
-  but the JSON encoder does not yet treat them as arbitrary JSON. The official
-  conformance runner was not executed; the harness and its tests cover binary,
-  JSON and text interchange for a message that exercises every scalar kind.
+- **Extensions are fields with a flag.** `Message` grew `range_extensions`, so
+  the encoder writes an extension through the same path as a declared field,
+  and the decoder resolves an unknown number against the extension registry
+  before it decides the bytes are unknown. JSON keys an extension by its
+  bracketed full name and the text format by its bracketed name.
+- **`Struct`, `Value` and `ListValue` are JSON.** The encoders special-case the
+  three full names: a `Struct` is an object, a `ListValue` an array, and a
+  `Value` whichever JSON kind its oneof holds. `Any` prints expanded in the text
+  format.
+- **Editions are resolved while parsing.** `Features` carries the six edition
+  features, `Features::merge` layers a child over its parent, and the builder
+  turns the result into the booleans the runtime already had: presence,
+  packing, `Group` for a delimited field, and `closed` on an enum.
+- **Options are preserved, not interpreted.** A declaration's options are kept
+  as (name, value) pairs on the file descriptor's `option_map`, reachable by
+  `option_of(declaration, name)`; a feature option is applied rather than kept.
+- **The well-known types are generated.** `known/google/protobuf` is the
+  plugin's output for the `.proto` files protobuf 36.2 ships, checked in;
+  `known` is a thin lookup over it. `descriptor.proto` alone is eleven thousand
+  generated lines, so this is also the generator's real-schema test.

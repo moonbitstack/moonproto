@@ -152,6 +152,9 @@ fn message_to_json(
     | "google.protobuf.BytesValue" => wrapper_to_json(message, opts)
     "google.protobuf.FieldMask" => field_mask_to_json(message)
     "google.protobuf.Empty" => @cjson.Json::empty_object()
+    "google.protobuf.Struct" => struct_to_json(message, opts, depth)
+    "google.protobuf.Value" => value_to_json(message, opts, depth)
+    "google.protobuf.ListValue" => list_value_to_json(message, opts, depth)
     _ => object_to_json(message, opts, depth)
   }
 }
@@ -186,6 +189,21 @@ fn object_to_json(
       fields.set(name, singular_to_json(field, message.get(field), opts, depth))
     } else if opts.emit_unpopulated || opts.emit_default_values {
       fields.set(name, default_to_json(field, opts, depth))
+    }
+  }
+  // An extension is keyed by its full name in brackets, which is how the JSON
+  // form keeps it from colliding with a declared field.
+  let extensions : Array[@reflect.FieldDescriptor] = []
+  message.range_extensions(fn(field, _value) {
+    extensions.push(field)
+    true
+  })
+  for field in extensions {
+    let name = "[" + field.full_name + "]"
+    if field.is_list() {
+      fields.set(name, list_to_json(field, message, opts, depth))
+    } else {
+      fields.set(name, singular_to_json(field, message.get(field), opts, depth))
     }
   }
   @cjson.Json::object(fields)
@@ -512,6 +530,10 @@ fn message_from_json(
     | "google.protobuf.BytesValue" => wrapper_from_json(message, value, opts)
     "google.protobuf.FieldMask" => field_mask_from_json(message, value)
     "google.protobuf.Empty" => ()
+    "google.protobuf.Struct" => struct_from_json(message, value, opts, depth)
+    "google.protobuf.Value" => value_from_json(message, value, opts, depth)
+    "google.protobuf.ListValue" =>
+      list_value_from_json(message, value, opts, depth)
     _ => object_from_json(message, value, opts, depth)
   }
 }
@@ -530,6 +552,17 @@ fn object_from_json(
   }
   for pair in object {
     let name = pair.0
+    if name.has_prefix("[") && name.has_suffix("]") {
+      let qualified = name[1:name.length() - 1].to_owned()
+      match @reflect.global_types.find_extension_by_name(qualified) {
+        Some(extension) => {
+          let field = extension.descriptor()
+          field_from_json(message, field, pair.1, opts, depth)
+        }
+        None => if !opts.discard_unknown { raise UnknownField(name) }
+      }
+      continue
+    }
     let field = match message.descriptor().field_by_json_name(name) {
       Some(field) => Some(field)
       None => message.descriptor().field_by_name(name)
@@ -538,6 +571,200 @@ fn object_from_json(
       Some(found) => field_from_json(message, found, pair.1, opts, depth)
       None => if !opts.discard_unknown { raise UnknownField(name) }
     }
+  }
+}
+
+// -- Struct, Value and ListValue --------------------------------------------
+//
+// These three carry arbitrary JSON rather than a fixed message shape: Struct is
+// an object, ListValue an array, and Value whichever JSON kind its oneof holds.
+
+///|
+fn message_field_by_name(
+  message : &@reflect.Message,
+  name : String,
+) -> @reflect.FieldDescriptor? {
+  message.descriptor().field_by_name(name)
+}
+
+///|
+fn struct_to_json(
+  message : &@reflect.Message,
+  opts : MarshalOptions,
+  depth : Int32,
+) -> @cjson.Json raise Refused {
+  let out : Map[String, @cjson.Json] = Map([])
+  match message_field_by_name(message, "fields") {
+    Some(field) =>
+      if message.has(field) {
+        let entries : Array[(@reflect.MapKey, @reflect.Value)] = []
+        message
+        .get(field)
+        .map()
+        .range(fn(key, value) {
+          entries.push((key, value))
+          true
+        })
+        for entry in entries {
+          out.set(
+            map_key_to_string(entry.0),
+            value_to_json(entry.1.message(), opts, depth),
+          )
+        }
+      }
+    None => ()
+  }
+  @cjson.Json::object(out)
+}
+
+///|
+fn list_value_to_json(
+  message : &@reflect.Message,
+  opts : MarshalOptions,
+  depth : Int32,
+) -> @cjson.Json raise Refused {
+  let items : Array[@cjson.Json] = []
+  match message_field_by_name(message, "values") {
+    Some(field) =>
+      if message.has(field) {
+        let list = message.get(field).list()
+        for i in 0..<list.length() {
+          items.push(value_to_json(list.get(i).message(), opts, depth))
+        }
+      }
+    None => ()
+  }
+  @cjson.Json::array(items)
+}
+
+///|
+fn value_to_json(
+  message : &@reflect.Message,
+  opts : MarshalOptions,
+  depth : Int32,
+) -> @cjson.Json raise Refused {
+  for field in message.descriptor().fields {
+    if message.has(field) {
+      let value = message.get(field)
+      return match field.name {
+        "null_value" => @cjson.Json::null()
+        "number_value" => float_json(value.float())
+        "string_value" => @cjson.Json::string(value.string())
+        "bool_value" => @cjson.Json::boolean(value.bool())
+        "struct_value" => struct_to_json(value.message(), opts, depth)
+        "list_value" => list_value_to_json(value.message(), opts, depth)
+        _ => @cjson.Json::null()
+      }
+    }
+  }
+  // An unset Value is JSON null, not an error.
+  @cjson.Json::null()
+}
+
+///|
+fn struct_from_json(
+  message : &@reflect.Message,
+  value : @cjson.Json,
+  opts : UnmarshalOptions,
+  depth : Int32,
+) -> Unit raise Refused {
+  let object = match value {
+    @cjson.Json::Object(fields) => fields
+    @cjson.Json::Null => return
+    _ => raise Syntax("expected an object for Struct")
+  }
+  let field = match message_field_by_name(message, "fields") {
+    Some(field) => field
+    None => return
+  }
+  let map = message.mutable(field).map()
+  for pair in object {
+    let nested = map.mutable(@reflect.String(pair.0))
+    value_from_json(nested.message(), pair.1, opts, depth + 1)
+  }
+}
+
+///|
+fn list_value_from_json(
+  message : &@reflect.Message,
+  value : @cjson.Json,
+  opts : UnmarshalOptions,
+  depth : Int32,
+) -> Unit raise Refused {
+  let items = match value {
+    @cjson.Json::Array(items) => items
+    @cjson.Json::Null => return
+    _ => raise Syntax("expected an array for ListValue")
+  }
+  let field = match message_field_by_name(message, "values") {
+    Some(field) => field
+    None => return
+  }
+  let list = message.mutable(field).list()
+  for item in items {
+    let element = list.append_mutable()
+    value_from_json(element.message(), item, opts, depth + 1)
+  }
+}
+
+///|
+fn value_from_json(
+  message : &@reflect.Message,
+  value : @cjson.Json,
+  opts : UnmarshalOptions,
+  depth : Int32,
+) -> Unit raise Refused {
+  if depth > opts.recursion_limit {
+    raise Recursion(opts.recursion_limit)
+  }
+  match value {
+    @cjson.Json::Null =>
+      match message_field_by_name(message, "null_value") {
+        Some(field) => message.set(field, @reflect.Enum(0))
+        None => ()
+      }
+    @cjson.Json::True =>
+      match message_field_by_name(message, "bool_value") {
+        Some(field) => message.set(field, @reflect.Bool(true))
+        None => ()
+      }
+    @cjson.Json::False =>
+      match message_field_by_name(message, "bool_value") {
+        Some(field) => message.set(field, @reflect.Bool(false))
+        None => ()
+      }
+    @cjson.Json::Number(number, ..) =>
+      match message_field_by_name(message, "number_value") {
+        Some(field) => message.set(field, @reflect.Double(number))
+        None => ()
+      }
+    @cjson.Json::String(text) =>
+      match message_field_by_name(message, "string_value") {
+        Some(field) => message.set(field, @reflect.String(text))
+        None => ()
+      }
+    @cjson.Json::Array(_) =>
+      match message_field_by_name(message, "list_value") {
+        Some(field) =>
+          list_value_from_json(
+            message.mutable(field).message(),
+            value,
+            opts,
+            depth + 1,
+          )
+        None => ()
+      }
+    @cjson.Json::Object(_) =>
+      match message_field_by_name(message, "struct_value") {
+        Some(field) =>
+          struct_from_json(
+            message.mutable(field).message(),
+            value,
+            opts,
+            depth + 1,
+          )
+        None => ()
+      }
   }
 }
 

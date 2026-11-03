@@ -13,3 +13,7 @@ import {
 import {
   "moonbitstack/moonproto/dynamic",
 } for "wbtest"
+
+import {
+  "moonbitstack/moonproto/known",
+} for "wbtest"

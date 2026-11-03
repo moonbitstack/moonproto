@@ -21,6 +21,8 @@ fn f(
     oneof_index,
     proto3_optional: false,
     packed_off: false,
+    features: @desc.features_auto,
+    options: [],
   }
 }
 
@@ -44,6 +46,8 @@ fn m(
     reserved_name: [],
     extension_range: [],
     map_entry,
+    features: @desc.features_auto,
+    options: [],
   }
 }
 
@@ -103,6 +107,8 @@ fn request_descriptor() -> @desc.FileDescriptorProto {
           { name: "JSPB", number: 3, },
           { name: "TEXT_FORMAT", number: 4, },
         ],
+        features: @desc.features_auto,
+        options: [],
       },
       {
         name: "TestCategory",
@@ -113,12 +119,17 @@ fn request_descriptor() -> @desc.FileDescriptorProto {
           { name: "JSON_IGNORE_UNKNOWN_PARSING_TEST", number: 3, },
           { name: "TEXT_FORMAT_TEST", number: 4, },
         ],
+        features: @desc.features_auto,
+        options: [],
       },
     ],
     service: [],
     extension: [],
     dependency: [],
     public_dependency: [],
+    edition: None,
+    features: @desc.features_auto,
+    options: [],
   }
 }
 
@@ -182,12 +193,17 @@ pub fn test_descriptor() -> @desc.FileDescriptorProto {
       {
         name: "Color",
         value: [{ name: "RED", number: 0, }, { name: "BLUE", number: 1, }],
+        features: @desc.features_auto,
+        options: [],
       },
     ],
     service: [],
     extension: [],
     dependency: [],
     public_dependency: [],
+    edition: None,
+    features: @desc.features_auto,
+    options: [],
   }
 }
 
@@ -224,6 +240,14 @@ fn register_messages(
 ///|
 /// Register the test message into the global registry, so a `Message` can be
 /// built from its name.
+
+///|
+/// Register the well-known types too, so a request that names one resolves.
+pub fn register_known_types() -> Unit {
+  @known.register_all()
+}
+
+///|
 pub fn register_test_types() -> Unit {
   let built = @desc.build_file(test_descriptor()) catch { _ => return }
   @reflect.global_files.register(built) catch {

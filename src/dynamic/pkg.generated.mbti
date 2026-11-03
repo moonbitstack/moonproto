@@ -47,6 +47,7 @@ pub struct Message {
   msg_type : &@reflect.MessageType
   fields : Array[(Int32, @reflect.Value)]
   mut unknown : Bytes
+  ext_fields : Array[@reflect.FieldDescriptor]
 }
 pub fn Message::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn Message::descriptor(Self) -> @reflect.MessageDescriptor
@@ -61,6 +62,7 @@ pub fn Message::new(@reflect.MessageDescriptor) -> Self
 pub fn Message::new_field(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Message::new_with_type(@reflect.MessageDescriptor, &@reflect.MessageType) -> Self
 pub fn Message::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Message::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn Message::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
 pub fn Message::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn Message::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?

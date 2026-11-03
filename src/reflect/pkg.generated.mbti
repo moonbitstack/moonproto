@@ -93,8 +93,12 @@ pub(all) struct FileDescriptor {
   extensions : Array[FieldDescriptor]
   dependencies : Array[String]
   public_dependencies : Array[String]
+  edition : String?
+  option_map : Array[(String, Array[(String, String)])]
 }
 pub fn FileDescriptor::name(Self) -> String
+pub fn FileDescriptor::option_of(Self, String, String) -> String?
+pub fn FileDescriptor::options_of(Self, String) -> Array[(String, String)]
 
 pub struct Files {
   files : Array[FileDescriptor]
@@ -350,6 +354,7 @@ pub(open) trait Message {
   fn message_type(Self) -> &MessageType
   fn is_valid(Self) -> Bool
   fn range(Self, (FieldDescriptor, Value) -> Bool) -> Unit
+  fn range_extensions(Self, (FieldDescriptor, Value) -> Bool) -> Unit
   fn has(Self, FieldDescriptor) -> Bool
   fn clear(Self, FieldDescriptor) -> Unit
   fn get(Self, FieldDescriptor) -> Value

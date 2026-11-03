@@ -1,0 +1,23 @@
+i32: 150
+i64: 10000000000
+u32: 7
+u64: 8
+s32: -1
+s64: -2
+f32: 1065353216
+f64: 4607182418800017408
+sf32: -3
+sf64: -4
+flt: 2.5
+dbl: 3.5
+flag: true
+text: "hi"
+blob: "\001\002"
+nums: 1
+nums: 300
+names: "a"
+names: "b"
+counts { key: "k" value: 5 }
+inner { x: 9 }
+color: BLUE
+pick_s: "x"

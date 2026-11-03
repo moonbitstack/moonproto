@@ -5,9 +5,18 @@ import {
   "moonbitlang/core/double",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/float",
+  "moonbitstack/moonproto/proto",
   "moonbitstack/moonproto/reflect",
 }
 
 import {
   "moonbitstack/moonproto/dynamic",
+} for "wbtest"
+
+import {
+  "moonbitstack/moonproto/proto",
+} for "wbtest"
+
+import {
+  "moonbitstack/moonproto/known",
 } for "wbtest"

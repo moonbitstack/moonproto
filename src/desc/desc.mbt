@@ -1,6 +1,95 @@
 // Descriptor construction from the proto form.
 
 ///|
+/// The edition feature values that change how a declaration is interpreted.
+/// Zero means "inherit", which is what proto2 and proto3 files use.
+pub(all) struct Features {
+  /// 0 inherit, 1 EXPLICIT, 2 IMPLICIT, 3 LEGACY_REQUIRED.
+  field_presence : Int32
+  /// 0 inherit, 1 OPEN, 2 CLOSED.
+  enum_type : Int32
+  /// 0 inherit, 1 PACKED, 2 EXPANDED.
+  repeated_field_encoding : Int32
+  /// 0 inherit, 1 LENGTH_PREFIXED, 2 DELIMITED.
+  message_encoding : Int32
+  /// 0 inherit, 1 VERIFY, 2 NONE.
+  utf8_validation : Int32
+  /// 0 inherit, 1 ALLOW, 2 LEGACY_BEST_EFFORT.
+  json_format : Int32
+}
+
+///|
+pub let features_auto : Features = {
+  field_presence: 0,
+  enum_type: 0,
+  repeated_field_encoding: 0,
+  message_encoding: 0,
+  utf8_validation: 0,
+  json_format: 0,
+}
+
+///|
+/// Set one `features.<name>` value, leaving the name alone when it is not a
+/// feature. `value` is the identifier or boolean as written.
+pub fn Features::set(
+  self : Features,
+  name : String,
+  value : String,
+) -> Features {
+  let code = match value {
+    "EXPLICIT" | "true" => 1
+    "IMPLICIT" | "false" => 2
+    "LEGACY_REQUIRED" => 3
+    "OPEN" => 1
+    "CLOSED" => 2
+    "PACKED" => 1
+    "EXPANDED" => 2
+    "LENGTH_PREFIXED" => 1
+    "DELIMITED" => 2
+    "VERIFY" => 1
+    "NONE" => 2
+    "ALLOW" => 1
+    "LEGACY_BEST_EFFORT" => 2
+    _ => 0
+  }
+  match name {
+    "field_presence" => { ..self, field_presence: code, }
+    "enum_type" => { ..self, enum_type: code, }
+    "repeated_field_encoding" => { ..self, repeated_field_encoding: code, }
+    "message_encoding" => { ..self, message_encoding: code, }
+    "utf8_validation" => { ..self, utf8_validation: code, }
+    "json_format" => { ..self, json_format: code, }
+    _ => self
+  }
+}
+
+///|
+
+///|
+/// A child's features on top of its parent's: anything the child sets wins,
+/// anything it leaves at zero is inherited.
+pub fn Features::merge(parent : Features, child : Features) -> Features {
+  fn pick(a : Int32, b : Int32) -> Int32 {
+    if b != 0 {
+      b
+    } else {
+      a
+    }
+  }
+  {
+    field_presence: pick(parent.field_presence, child.field_presence),
+    enum_type: pick(parent.enum_type, child.enum_type),
+    repeated_field_encoding: pick(
+      parent.repeated_field_encoding,
+      child.repeated_field_encoding,
+    ),
+    message_encoding: pick(parent.message_encoding, child.message_encoding),
+    utf8_validation: pick(parent.utf8_validation, child.utf8_validation),
+    json_format: pick(parent.json_format, child.json_format),
+  }
+}
+
+///|
 pub(all) struct FieldDescriptorProto {
   name : String
   number : Int32
@@ -16,6 +105,10 @@ pub(all) struct FieldDescriptorProto {
   proto3_optional : Bool
   /// `[packed = false]` on a repeated numeric field.
   packed_off : Bool
+  /// `features.*` written on the field, already merged with its parents.
+  features : Features
+  /// Options written on the field that are not features, as (name, value).
+  options : Array[(String, String)]
 }
 
 ///|
@@ -33,6 +126,8 @@ pub(all) struct EnumValueDescriptorProto {
 pub(all) struct EnumDescriptorProto {
   name : String
   value : Array[EnumValueDescriptorProto]
+  features : Features
+  options : Array[(String, String)]
 }
 
 ///|
@@ -48,6 +143,8 @@ pub(all) struct DescriptorProto {
   extension_range : Array[(Int32, Int32)]
   /// `options.map_entry`: this nested message is a map field's entry.
   map_entry : Bool
+  features : Features
+  options : Array[(String, String)]
 }
 
 ///|
@@ -77,6 +174,10 @@ pub(all) struct FileDescriptorProto {
   extension : Array[FieldDescriptorProto]
   dependency : Array[String]
   public_dependency : Array[Int32]
+  /// `edition = "2023"` when the file declares one.
+  edition : String?
+  features : Features
+  options : Array[(String, String)]
 }
 
 ///|
@@ -116,7 +217,14 @@ pub fn build_file(
   }
   let enums : Array[@reflect.EnumDescriptor] = []
   for item in proto.enum_type {
-    enums.push(build_enum(item, proto.package_name, proto.name))
+    enums.push(
+      build_enum(
+        item,
+        proto.package_name,
+        proto.name,
+        syntax == @reflect.Proto2,
+      ),
+    )
   }
   let services : Array[@reflect.ServiceDescriptor] = []
   for service in proto.service {
@@ -146,6 +254,57 @@ pub fn build_file(
     extensions,
     dependencies: proto.dependency,
     public_dependencies: [],
+    edition: proto.edition,
+    option_map: collect_options(proto),
+  }
+}
+
+///|
+/// Every option written in the file, keyed by the declaration it sits on: the
+/// file itself under the empty key, a message by its full name, a field as
+/// `Message.field`.
+fn collect_options(
+  proto : FileDescriptorProto,
+) -> Array[(String, Array[(String, String)])] {
+  let out : Array[(String, Array[(String, String)])] = []
+  if proto.options.length() > 0 {
+    out.push(("", proto.options))
+  }
+  for message in proto.message_type {
+    collect_message_options(message, proto.package_name, out)
+  }
+  for item in proto.enum_type {
+    let full = @reflect.qualify(proto.package_name, item.name)
+    if item.options.length() > 0 {
+      out.push((full, item.options))
+    }
+  }
+  out
+}
+
+///|
+fn collect_message_options(
+  message : DescriptorProto,
+  scope : String,
+  out : Array[(String, Array[(String, String)])],
+) -> Unit {
+  let full = @reflect.qualify(scope, message.name)
+  if message.options.length() > 0 {
+    out.push((full, message.options))
+  }
+  for field in message.field {
+    if field.options.length() > 0 {
+      out.push((full + "." + field.name, field.options))
+    }
+  }
+  for nested in message.nested_type {
+    collect_message_options(nested, full, out)
+  }
+  for item in message.enum_type {
+    let enum_full = full + "." + item.name
+    if item.options.length() > 0 {
+      out.push((enum_full, item.options))
+    }
   }
 }
 
@@ -181,7 +340,14 @@ fn build_message(
   }
   let enums : Array[@reflect.EnumDescriptor] = []
   for item in proto.enum_type {
-    enums.push(build_enum(item, package_name + "." + proto.name, file_path))
+    enums.push(
+      build_enum(
+        item,
+        package_name + "." + proto.name,
+        file_path,
+        syntax == @reflect.Proto2,
+      ),
+    )
   }
   let oneofs : Array[@reflect.OneofDescriptor] = []
   for oneof in proto.oneof_decl {
@@ -307,9 +473,14 @@ fn build_field(
   siblings : Array[@reflect.MessageDescriptor]?,
 ) -> @reflect.FieldDescriptor raise Refused {
   let _ = file_path
-  let kind = match @reflect.Kind::of(proto.type_code) {
+  let mut kind = match @reflect.Kind::of(proto.type_code) {
     Some(kind) => kind
     None => raise Type(proto.name)
+  }
+  // `features.message_encoding = DELIMITED` is the editions spelling of a
+  // group: the same start/end tags, a different declaration.
+  if proto.features.message_encoding == 2 && kind == @reflect.Message {
+    kind = @reflect.Group
   }
   let cardinality = match proto.label {
     2 => @reflect.Required
@@ -358,9 +529,14 @@ fn build_field(
     proto.name
   }
   let packed = if cardinality == @reflect.Repeated && kind.is_numeric() {
-    match syntax {
-      @reflect.Proto3 | @reflect.Editions => !proto.packed_off
-      @reflect.Proto2 => false
+    match proto.features.repeated_field_encoding {
+      1 => true
+      2 => false
+      _ =>
+        match syntax {
+          @reflect.Proto3 | @reflect.Editions => !proto.packed_off
+          @reflect.Proto2 => false
+        }
     }
   } else {
     false
@@ -377,11 +553,18 @@ fn build_field(
   } else {
     @reflect.zero_value(kind)
   }
-  let has_presence = syntax == @reflect.Proto2 ||
-    cardinality == @reflect.Required ||
-    proto.oneof_index is Some(_) ||
-    proto.proto3_optional ||
-    kind.is_message()
+  let has_presence = match proto.features.field_presence {
+    1 | 3 => true
+    2 => false
+    _ =>
+      syntax == @reflect.Proto2 ||
+      // Editions default to explicit presence, unlike proto3.
+      syntax == @reflect.Editions ||
+      cardinality == @reflect.Required ||
+      proto.oneof_index is Some(_) ||
+      proto.proto3_optional ||
+      kind.is_message()
+  }
   {
     name: proto.name,
     full_name: containing + "." + proto.name,
@@ -535,6 +718,7 @@ fn build_enum(
   proto : EnumDescriptorProto,
   scope : String,
   file_path : String,
+  closed_by_default : Bool,
 ) -> @reflect.EnumDescriptor {
   let full_name = @reflect.qualify(scope, proto.name)
   let values : Array[@reflect.EnumValueDescriptor] = []
@@ -545,7 +729,12 @@ fn build_enum(
       full_name: @reflect.qualify(scope, value.name),
     })
   }
-  { name: proto.name, full_name, values, closed: false, file_path, }
+  let closed = if proto.features.enum_type == 0 {
+    closed_by_default
+  } else {
+    proto.features.enum_type == 2
+  }
+  { name: proto.name, full_name, values, closed, file_path, }
 }
 
 ///|
@@ -702,6 +891,9 @@ pub fn to_file_descriptor_proto(
     extension: [],
     dependency: file.dependencies,
     public_dependency: [],
+    edition: file.edition,
+    features: features_auto,
+    options: [],
   }
 }
 
@@ -734,6 +926,8 @@ fn to_message_proto(message : @reflect.MessageDescriptor) -> DescriptorProto {
     reserved_name: message.reserved_names,
     extension_range: message.extension_ranges,
     map_entry: message.is_map_entry,
+    features: features_auto,
+    options: [],
   }
 }
 
@@ -762,6 +956,8 @@ fn to_field_proto(field : @reflect.FieldDescriptor) -> FieldDescriptorProto {
     oneof_index: field.oneof_index,
     proto3_optional: false,
     packed_off: !field.packed,
+    features: features_auto,
+    options: [],
   }
 }
 
@@ -771,5 +967,5 @@ fn to_enum_proto(item : @reflect.EnumDescriptor) -> EnumDescriptorProto {
   for value in item.values {
     values.push({ name: value.name, number: value.number, })
   }
-  { name: item.name, value: values, }
+  { name: item.name, value: values, features: features_auto, options: [], }
 }

@@ -153,3 +153,118 @@ test "unknown names are refused unless discarded" {
     discard_unknown: true,
   })
 }
+
+// -- Any and extensions ------------------------------------------------------
+
+///|
+fn known_desc(name : String) -> @reflect.MessageDescriptor {
+  @known.register_all()
+  match (@known.message_descriptor(name) catch { _ => None }) {
+    Some(desc) => desc
+    None => abort("missing " + name)
+  }
+}
+
+///|
+test "an Any prints the payload's own text under its type URL" {
+  let ts_desc = known_desc("google.protobuf.Timestamp")
+  let ts_type = @dynamic.new_message_type(ts_desc)
+  @reflect.global_types.register_message(ts_type) catch {
+    _ => ()
+  }
+  let any_desc = known_desc("google.protobuf.Any")
+  let stamp = @dynamic.Message::new(ts_desc)
+  for field in ts_desc.fields {
+    if field.name == "seconds" {
+      stamp.set(field, @reflect.Int64(1L))
+    }
+  }
+  let body = @proto.encode(stamp) catch { _ => abort("encode timestamp") }
+  let any = @dynamic.Message::new(any_desc)
+  let type_field = match any_desc.field_by_number(1) {
+    Some(field) => field
+    None => abort("no type_url")
+  }
+  let value_field = match any_desc.field_by_number(2) {
+    Some(field) => field
+    None => abort("no value")
+  }
+  any.set(
+    type_field,
+    @reflect.String("type.googleapis.com/google.protobuf.Timestamp"),
+  )
+  any.set(value_field, @reflect.Bytes(body))
+  let text = encode(any)
+  assert_eq(
+    text, "[type.googleapis.com/google.protobuf.Timestamp] {\n  seconds: 1\n}\n",
+  )
+  let back = @dynamic.Message::new(any_desc)
+  decode(text, back)
+  assert_eq(
+    back.get(type_field).string(),
+    "type.googleapis.com/google.protobuf.Timestamp",
+  )
+  let payload = @dynamic.Message::new(ts_desc)
+  @proto.decode(back.get(value_field).bytes(), payload) catch {
+    _ => abort("decode payload")
+  }
+  for field in ts_desc.fields {
+    if field.name == "seconds" {
+      assert_eq(payload.get(field).int(), 1L)
+    }
+  }
+}
+
+///|
+test "an extension is named in brackets" {
+  let desc : @reflect.MessageDescriptor = {
+    name: "TextExt",
+    full_name: "test.TextExt",
+    syntax: @reflect.Proto2,
+    fields: [],
+    oneofs: [],
+    is_map_entry: false,
+    reserved_names: [],
+    reserved_ranges: [],
+    required_numbers: [],
+    extension_ranges: [(100, 200)],
+    nested_messages: [],
+    nested_enums: [],
+    nested_extensions: [],
+    file_path: "test.proto",
+    map_key: None,
+    map_value: None,
+  }
+  let ext : @reflect.FieldDescriptor = {
+    name: "my_ext",
+    full_name: "test.my_ext",
+    number: 100,
+    kind: @reflect.Int32,
+    cardinality: @reflect.Optional,
+    json_name: "myExt",
+    text_name: "my_ext",
+    has_presence: false,
+    is_extension: true,
+    is_map: false,
+    packed: false,
+    oneof_index: None,
+    message_type: None,
+    enum_type: None,
+    has_default: false,
+    default_value: @reflect.Invalid,
+    default_enum_name: None,
+    containing_message: "test.TextExt",
+    map_key_field: None,
+    map_value_field: None,
+  }
+  let extension_type = @dynamic.new_extension_type(ext)
+  @reflect.global_types.register_extension(extension_type) catch {
+    _ => ()
+  }
+  let m = @dynamic.Message::new(desc)
+  m.set(ext, @reflect.Int32(42))
+  assert_eq(encode(m), "[test.my_ext]: 42\n")
+  let back = @dynamic.Message::new(desc)
+  decode("[test.my_ext]: 42", back)
+  assert_eq(back.get(ext).int(), 42L)
+}

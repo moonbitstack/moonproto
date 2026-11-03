@@ -46,6 +46,8 @@ fn f(
     oneof_index: None,
     proto3_optional: false,
     packed_off: false,
+    features: @desc.features_auto,
+    options: [],
   }
 }
 
@@ -66,6 +68,8 @@ fn m(
     reserved_name: [],
     extension_range: [],
     map_entry: false,
+    features: @desc.features_auto,
+    options: [],
   }
 }
 
@@ -197,6 +201,8 @@ fn descriptor_file() -> @desc.FileDescriptorProto {
         { name: "TYPE_SINT32", number: 17, },
         { name: "TYPE_SINT64", number: 18, },
       ],
+      features: @desc.features_auto,
+      options: [],
     },
     {
       name: "Label",
@@ -205,6 +211,8 @@ fn descriptor_file() -> @desc.FileDescriptorProto {
         { name: "LABEL_REQUIRED", number: 2, },
         { name: "LABEL_REPEATED", number: 3, },
       ],
+      features: @desc.features_auto,
+      options: [],
     },
   ]
   {
@@ -221,6 +229,9 @@ fn descriptor_file() -> @desc.FileDescriptorProto {
     extension: [],
     dependency: [],
     public_dependency: [],
+    edition: None,
+    features: @desc.features_auto,
+    options: [],
   }
 }
 
@@ -269,6 +280,9 @@ fn plugin_file() -> @desc.FileDescriptorProto {
     extension: [],
     dependency: ["google/protobuf/descriptor.proto"],
     public_dependency: [],
+    edition: None,
+    features: @desc.features_auto,
+    options: [],
   }
 }
 
@@ -368,14 +382,34 @@ fn get_strings(message : &@reflect.Message, number : Int32) -> Array[String] {
   match message.descriptor().field_by_number(number) {
     Some(field) =>
       if message.has(field) {
-        let list = message.get(field).list()
-        for i in 0..<list.length() {
-          out.push(list.get(i).string())
+        match message.get(field) {
+          @reflect.ListView(list) =>
+            for i in 0..<list.length() {
+              out.push(list.get(i).string())
+            }
+          _ => ()
         }
       }
     None => ()
   }
   out
+}
+
+///|
+/// A singular message field, absent when unset.
+fn get_message(
+  message : &@reflect.Message,
+  number : Int32,
+) -> &@reflect.Message? {
+  match message.descriptor().field_by_number(number) {
+    Some(field) =>
+      if message.has(field) {
+        Some(message.get(field).message())
+      } else {
+        None
+      }
+    None => None
+  }
 }
 
 ///|
@@ -387,9 +421,12 @@ fn get_messages(
   match message.descriptor().field_by_number(number) {
     Some(field) =>
       if message.has(field) {
-        let list = message.get(field).list()
-        for i in 0..<list.length() {
-          out.push(list.get(i).message())
+        match message.get(field) {
+          @reflect.ListView(list) =>
+            for i in 0..<list.length() {
+              out.push(list.get(i).message())
+            }
+          _ => ()
         }
       }
     None => ()
@@ -446,6 +483,9 @@ fn to_file_proto(message : &@reflect.Message) -> @desc.FileDescriptorProto {
     extension: extensions,
     dependency: get_strings(message, 3),
     public_dependency: [],
+    edition: None,
+    features: @desc.features_auto,
+    options: [],
   }
 }
 
@@ -479,9 +519,9 @@ fn to_message_proto(message : &@reflect.Message) -> @desc.DescriptorProto {
   for item in get_messages(message, 9) {
     reserved_ranges.push((get_int(item, 1), get_int(item, 2)))
   }
-  let map_entry = match get_messages(message, 7) {
-    [options] => get_bool(options, 7)
-    _ => false
+  let map_entry = match get_message(message, 7) {
+    Some(options) => get_bool(options, 7)
+    None => false
   }
   {
     name: get_string(message, 1),
@@ -494,14 +534,16 @@ fn to_message_proto(message : &@reflect.Message) -> @desc.DescriptorProto {
     reserved_name: get_strings(message, 10),
     extension_range: extension_ranges,
     map_entry,
+    features: @desc.features_auto,
+    options: [],
   }
 }
 
 ///|
 fn to_field_proto(message : &@reflect.Message) -> @desc.FieldDescriptorProto {
-  let packed_off = match get_messages(message, 8) {
-    [options] => if get_bool(options, 2) { false } else { true }
-    _ => false
+  let packed_off = match get_message(message, 8) {
+    Some(options) => if get_bool(options, 2) { false } else { true }
+    None => false
   }
   {
     name: get_string(message, 1),
@@ -531,6 +573,8 @@ fn to_field_proto(message : &@reflect.Message) -> @desc.FieldDescriptorProto {
     },
     proto3_optional: get_bool(message, 17),
     packed_off,
+    features: @desc.features_auto,
+    options: [],
   }
 }
 
@@ -540,7 +584,12 @@ fn to_enum_proto(message : &@reflect.Message) -> @desc.EnumDescriptorProto {
   for item in get_messages(message, 2) {
     values.push({ name: get_string(item, 1), number: get_int(item, 2), })
   }
-  { name: get_string(message, 1), value: values, }
+  {
+    name: get_string(message, 1),
+    value: values,
+    features: @desc.features_auto,
+    options: [],
+  }
 }
 
 ///|

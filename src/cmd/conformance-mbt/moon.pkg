@@ -1,0 +1,13 @@
+// The conformance testee: 4-byte little-endian length frames on standard input
+// and standard output, one ConformanceRequest in, one ConformanceResponse out.
+import {
+  "moonbitlang/async",
+  "moonbitlang/async/stdio",
+  "moonbitstack/moonproto/conformance",
+}
+
+pkgtype(kind: "executable")
+
+options(
+  supported_targets: "native",
+)
