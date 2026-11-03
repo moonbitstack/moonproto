@@ -172,3 +172,18 @@ test "custom options survive on the declaration they were written on" {
   assert_eq(built.option_of("o.M.a", "(test.field_opt)"), Some("7"))
   assert_eq(built.option_of("o.M.a", "deprecated"), Some("true"))
 }
+
+///|
+test "an option whose value is a message keeps the aggregate" {
+  let source = "syntax = \"proto3\";\npackage a;\noption (test.file_opt) = { name: \"x\", n: 1 };\nmessage M { int32 a = 1 [(test.field_opt) = { flag: true }]; }\n"
+  let file = parse("a.proto", source) catch { _ => abort("parse failed") }
+  let built = @desc.build_file(file) catch { _ => abort("build failed") }
+  assert_eq(
+    built.option_of("", "(test.file_opt)"),
+    Some("{ name: \"x\", n: 1 }"),
+  )
+  assert_eq(
+    built.option_of("a.M.a", "(test.field_opt)"),
+    Some("{ flag: true }"),
+  )
+}

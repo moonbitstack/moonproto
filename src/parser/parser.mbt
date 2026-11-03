@@ -326,10 +326,50 @@ fn Parser::read_int(self : Parser) -> Int32 raise Refused {
 }
 
 ///|
+/// Read a balanced `{ ... }` value, skipping over quoted strings so a brace
+/// inside one does not close it.
+fn Parser::read_aggregate(self : Parser) -> String raise Refused {
+  let start = self.pos
+  let mut depth = 0
+  while self.pos < self.text.length() {
+    let ch = char_at(self.text, self.pos)
+    if ch == '"' || ch == '\'' {
+      let quote = ch
+      self.pos = self.pos + 1
+      while self.pos < self.text.length() {
+        let inner = char_at(self.text, self.pos)
+        if inner == '\\' {
+          self.pos = self.pos + 2
+        } else if inner == quote {
+          self.pos = self.pos + 1
+          break
+        } else {
+          self.pos = self.pos + 1
+        }
+      }
+    } else if ch == '{' {
+      depth = depth + 1
+      self.pos = self.pos + 1
+    } else if ch == '}' {
+      depth = depth - 1
+      self.pos = self.pos + 1
+      if depth == 0 {
+        return self.text[start:self.pos].to_owned()
+      }
+    } else {
+      self.pos = self.pos + 1
+    }
+  }
+  raise self.error("unterminated option value")
+}
+
+///|
 fn Parser::read_constant_text(self : Parser) -> String raise Refused {
   self.skip()
   match self.peek() {
     Some('"') | Some('\'') => self.read_string()
+    // An aggregate option value, `{ key: value ... }`, is kept as written.
+    Some('{') => self.read_aggregate()
     Some(_) => {
       let start = self.pos
       while self.pos < self.text.length() {
