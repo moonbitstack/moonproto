@@ -1,0 +1,23 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonproto/parser"
+
+import {
+  "moonbitstack/moonproto/desc",
+}
+
+// Values
+pub fn parse(String, String) -> @desc.FileDescriptorProto raise Refused
+
+// Errors
+pub(all) suberror Refused {
+  Syntax(String, Int32)
+}
+pub fn Refused::output(Self, &Logger) -> Unit
+pub fn Refused::to_string(Self) -> String
+pub impl Show for Refused
+
+// Types and methods
+
+// Type aliases
+
+// Traits

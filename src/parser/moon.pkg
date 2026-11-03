@@ -1,0 +1,15 @@
+// A parser for the protocol buffer language, producing the descriptor shape
+// `desc` builds from. Covers proto2, proto3 and editions: messages, fields,
+// maps, oneofs, groups, enums, services, reserved and extension ranges.
+// https://protobuf.dev/programming-guides/proto3/
+
+import {
+  "moonbitlang/core/encoding/utf8",
+  "moonbitstack/moonproto/desc",
+}
+
+import {
+  "moonbitstack/moonproto/dynamic",
+  "moonbitstack/moonproto/proto",
+  "moonbitstack/moonproto/reflect",
+} for "wbtest"

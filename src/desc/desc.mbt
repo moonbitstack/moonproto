@@ -107,10 +107,11 @@ pub fn build_file(
   proto : FileDescriptorProto,
 ) -> @reflect.FileDescriptor raise Refused {
   let syntax = parse_syntax(proto.syntax)
+  let symbols = collect_symbols(proto)
   let messages : Array[@reflect.MessageDescriptor] = []
   for message in proto.message_type {
     messages.push(
-      build_message(message, proto.package_name, proto.name, syntax),
+      build_message(message, proto.package_name, proto.name, syntax, symbols),
     )
   }
   let enums : Array[@reflect.EnumDescriptor] = []
@@ -130,6 +131,7 @@ pub fn build_file(
         proto.package_name,
         proto.name,
         syntax,
+        symbols,
         None,
       ),
     )
@@ -162,12 +164,19 @@ fn build_message(
   package_name : String,
   file_path : String,
   syntax : @reflect.Syntax,
+  symbols : Array[String],
 ) -> @reflect.MessageDescriptor raise Refused {
   let full_name = @reflect.qualify(package_name, proto.name)
   let nested : Array[@reflect.MessageDescriptor] = []
   for item in proto.nested_type {
     nested.push(
-      build_message(item, package_name + "." + proto.name, file_path, syntax),
+      build_message(
+        item,
+        package_name + "." + proto.name,
+        file_path,
+        syntax,
+        symbols,
+      ),
     )
   }
   let enums : Array[@reflect.EnumDescriptor] = []
@@ -186,6 +195,7 @@ fn build_message(
       package_name + "." + proto.name,
       file_path,
       syntax,
+      symbols,
       Some(nested),
     )
     fields.push(built)
@@ -293,6 +303,7 @@ fn build_field(
   scope : String,
   file_path : String,
   syntax : @reflect.Syntax,
+  symbols : Array[String],
   siblings : Array[@reflect.MessageDescriptor]?,
 ) -> @reflect.FieldDescriptor raise Refused {
   let _ = file_path
@@ -306,7 +317,7 @@ fn build_field(
     _ => @reflect.Optional
   }
   let resolved = match proto.type_name {
-    Some(name) => resolve_type(name, scope)
+    Some(name) => resolve_type(name, scope, symbols)
     None => None
   }
   let mut is_map = false
@@ -404,17 +415,71 @@ fn build_field(
 }
 
 ///|
-fn resolve_type(name : String, scope : String) -> String? {
+fn resolve_type(
+  name : String,
+  scope : String,
+  symbols : Array[String],
+) -> String? {
   if name.length() == 0 {
     return None
   }
   if char_at(name, 0) == '.' {
     return Some(name[1:].to_owned())
   }
-  if name.contains(".") {
+  // Try the innermost scope outward, which is how proto resolves a relative name.
+  let mut prefix = scope
+  while true {
+    let candidate = if prefix.length() == 0 {
+      name
+    } else {
+      prefix + "." + name
+    }
+    if symbols.contains(candidate) {
+      return Some(candidate)
+    }
+    if !prefix.contains(".") {
+      break
+    }
+    prefix = @reflect.parent_name(prefix)
+  }
+  if symbols.contains(name) {
     return Some(name)
   }
-  Some(scope + "." + name)
+  if name.contains(".") {
+    Some(name)
+  } else if scope.length() == 0 {
+    Some(name)
+  } else {
+    Some(scope + "." + name)
+  }
+}
+
+///|
+fn collect_symbols(proto : FileDescriptorProto) -> Array[String] {
+  let out : Array[String] = []
+  for message in proto.message_type {
+    collect_message_symbols(message, proto.package_name, out)
+  }
+  for item in proto.enum_type {
+    out.push(@reflect.qualify(proto.package_name, item.name))
+  }
+  out
+}
+
+///|
+fn collect_message_symbols(
+  message : DescriptorProto,
+  scope : String,
+  out : Array[String],
+) -> Unit {
+  let full = @reflect.qualify(scope, message.name)
+  out.push(full)
+  for nested in message.nested_type {
+    collect_message_symbols(nested, full, out)
+  }
+  for item in message.enum_type {
+    out.push(full + "." + item.name)
+  }
 }
 
 ///|
