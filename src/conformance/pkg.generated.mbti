@@ -1,0 +1,21 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitstack/moonproto/conformance"
+
+import {
+  "moonbitstack/moonproto/desc",
+}
+
+// Values
+pub fn handle(Bytes) -> Bytes
+
+pub fn register_test_types() -> Unit
+
+pub fn test_descriptor() -> @desc.FileDescriptorProto
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits

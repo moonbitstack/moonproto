@@ -1,8 +1,8 @@
 # Interface draft: packages, types, signatures, and what replaces Go's reflection
 
-This is the interface the implementation will be written against. It is a draft:
-the signatures are MoonBit syntax and are meant to be read, not compiled — there
-is no implementation behind them yet. The judgment to make here is about shape:
+This is the interface the implementation was written against. The tables are
+the shape reference; where the code departs from them, the departure is
+recorded under "Implementation notes" below. The judgment here is about shape:
 which types, which methods, which parameters, and what each one costs.
 
 The reference is the Go implementation of Protocol Buffers. Two of its
@@ -886,3 +886,29 @@ feature-level overrides). It is an executable package, run as
 - Whether `wire`'s `Buffer` is core's `Buffer` or a thin wrapper that reserves a
   size prefix. That is an implementation choice; the signatures above do not
   depend on it.
+
+## Implementation notes
+
+The implementation settled several points the draft left open.
+
+- **Descriptors are records, not traits.** `FileDescriptor`, `MessageDescriptor`
+  and the rest are `pub(all) struct` values; collections are arrays on the
+  record. Cross-type references are fully-qualified names, resolved through a
+  symbol table in `desc`, which removes the pointer cycles the trait-object
+  draft would have needed.
+- **`List` and `Map` are `ListField` and `MapField`.** Core already owns those
+  names, so the field views were renamed; `Value` carries `ListView` and
+  `MapView`.
+- **`Message` is object-safe; `Fresh` returns the concrete type.** A `Value`
+  holds `&Message`, so no method on `Message` may return `Self`. The one
+  constructor that does — for generic clone and decode — is `Fresh::fresh`.
+- **`parser`, `gen` and `conformance` are additional packages.** The parser
+  produces the descriptor shape directly; the generator speaks the `protoc`
+  protocol and emits MoonBit source; the conformance harness reads one format
+  and writes another.
+- **Known gaps.** Extension accessors work, but the binary encoder walks a
+  message's own fields only, so an extension is not yet written to the wire.
+  `Struct`, `Value` and `ListValue` have descriptors and round-trip in binary,
+  but the JSON encoder does not yet treat them as arbitrary JSON. The official
+  conformance runner was not executed; the harness and its tests cover binary,
+  JSON and text interchange for a message that exercises every scalar kind.
