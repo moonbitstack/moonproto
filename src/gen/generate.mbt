@@ -464,6 +464,23 @@ fn read_expr(kind : Int32, variable : String) -> String {
 }
 
 ///|
+/// A message named after a MoonBit built-in type would shadow it, so the
+/// generated name takes a suffix. `google.protobuf.Option` is the case that
+/// exists in the wild.
+fn type_ident(name : String) -> String {
+  let reserved : Array[String] = [
+    "Option", "Result", "String", "StringView", "Bytes", "BytesView", "Array", "FixedArray",
+    "Map", "Int", "Int64", "UInt", "UInt64", "Double", "Float", "Bool", "Unit", "Char",
+    "Byte", "Error", "Json", "Buffer", "Logger",
+  ]
+  if reserved.contains(name) {
+    name + "_"
+  } else {
+    name
+  }
+}
+
+///|
 fn wrapper_name(prefix : String, name : String) -> String {
   if prefix.length() == 0 {
     name
@@ -478,7 +495,7 @@ fn emit_enum(
   prefix : String,
   buf : Buffer,
 ) -> Unit {
-  let name = wrapper_name(prefix, item.name)
+  let name = type_ident(wrapper_name(prefix, item.name))
   buf.write_string_utf8("///|\npub(all) enum " + name + " {\n")
   // An open enum carries numbers it does not declare, so every generated enum
   // keeps a variant that can hold one.
@@ -524,7 +541,7 @@ fn emit_message(
   tag : String,
   buf : Buffer,
 ) -> Unit {
-  let name = wrapper_name(prefix, message.name)
+  let name = type_ident(wrapper_name(prefix, message.name))
   let full = "\"" + escape(message.full_name) + "\""
   buf.write_string_utf8(
     "///|\npub struct " + name + " {\n  inner : @dynamic.Message\n}\n\n",

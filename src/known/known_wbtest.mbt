@@ -67,3 +67,41 @@ test "Value, Struct and ListValue exist with the right shape" {
   let list = find("google.protobuf.ListValue")
   assert_eq(list.fields.length(), 1)
 }
+
+///|
+test "a type that references another file resolves through the registry" {
+  register_all()
+  let desc = find("google.protobuf.Type")
+  let message = @dynamic.Message::new(desc)
+  for field in desc.fields {
+    if field.name == "name" {
+      message.set(field, @reflect.String("Widget"))
+    }
+    if field.name == "syntax" {
+      message.set(field, @reflect.Enum(1))
+    }
+  }
+  let bytes = @proto.encode(message) catch { _ => abort("encode failed") }
+  let back = @dynamic.Message::new(desc)
+  @proto.decode(bytes, back) catch {
+    _ => abort("decode failed")
+  }
+  for field in desc.fields {
+    if field.name == "name" {
+      assert_eq(back.get(field).string(), "Widget")
+    }
+  }
+  assert_eq(
+    @json.encode(back),
+    "{\"name\":\"Widget\",\"syntax\":\"SYNTAX_PROTO3\"}",
+  )
+}
+
+///|
+test "a message named after a built-in type takes a suffix" {
+  register_all()
+  let desc = find("google.protobuf.Option")
+  assert_eq(desc.name, "Option")
+  let generated = @gp.Option_::new()
+  assert_eq(generated.name(), "")
+}

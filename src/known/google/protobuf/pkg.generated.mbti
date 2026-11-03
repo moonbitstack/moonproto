@@ -11,6 +11,8 @@ import {
 // Values
 pub let any_type : &@reflect.MessageType
 
+pub let api_type : &@reflect.MessageType
+
 pub let boolValue_type : &@reflect.MessageType
 
 pub let bytesValue_type : &@reflect.MessageType
@@ -37,6 +39,10 @@ pub let enumValueDescriptorProto_type : &@reflect.MessageType
 
 pub let enumValueOptions_type : &@reflect.MessageType
 
+pub let enumValue_type : &@reflect.MessageType
+
+pub let enum_type : &@reflect.MessageType
+
 pub let extensionRangeOptions_Declaration_type : &@reflect.MessageType
 
 pub let extensionRangeOptions_type : &@reflect.MessageType
@@ -61,6 +67,8 @@ pub let fieldOptions_FeatureSupport_type : &@reflect.MessageType
 
 pub let fieldOptions_type : &@reflect.MessageType
 
+pub let field_type : &@reflect.MessageType
+
 pub let fileDescriptorProto_type : &@reflect.MessageType
 
 pub let fileDescriptorSet_type : &@reflect.MessageType
@@ -68,6 +76,8 @@ pub let fileDescriptorSet_type : &@reflect.MessageType
 pub let fileOptions_type : &@reflect.MessageType
 
 pub fn file_descriptor_google_protobuf_any_proto() -> @reflect.FileDescriptor raise @desc.Refused
+
+pub fn file_descriptor_google_protobuf_api_proto() -> @reflect.FileDescriptor raise @desc.Refused
 
 pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescriptor raise @desc.Refused
 
@@ -77,9 +87,13 @@ pub fn file_descriptor_google_protobuf_empty_proto() -> @reflect.FileDescriptor 
 
 pub fn file_descriptor_google_protobuf_field_mask_proto() -> @reflect.FileDescriptor raise @desc.Refused
 
+pub fn file_descriptor_google_protobuf_source_context_proto() -> @reflect.FileDescriptor raise @desc.Refused
+
 pub fn file_descriptor_google_protobuf_struct_proto() -> @reflect.FileDescriptor raise @desc.Refused
 
 pub fn file_descriptor_google_protobuf_timestamp_proto() -> @reflect.FileDescriptor raise @desc.Refused
+
+pub fn file_descriptor_google_protobuf_type_proto() -> @reflect.FileDescriptor raise @desc.Refused
 
 pub fn file_descriptor_google_protobuf_wrappers_proto() -> @reflect.FileDescriptor raise @desc.Refused
 
@@ -101,9 +115,15 @@ pub let methodDescriptorProto_type : &@reflect.MessageType
 
 pub let methodOptions_type : &@reflect.MessageType
 
+pub let method_type : &@reflect.MessageType
+
+pub let mixin_type : &@reflect.MessageType
+
 pub let oneofDescriptorProto_type : &@reflect.MessageType
 
 pub let oneofOptions_type : &@reflect.MessageType
+
+pub let option__type : &@reflect.MessageType
 
 pub let serviceDescriptorProto_type : &@reflect.MessageType
 
@@ -113,6 +133,8 @@ pub let sourceCodeInfo_Location_type : &@reflect.MessageType
 
 pub let sourceCodeInfo_type : &@reflect.MessageType
 
+pub let sourceContext_type : &@reflect.MessageType
+
 pub let stringValue_type : &@reflect.MessageType
 
 pub let struct_FieldsEntry_type : &@reflect.MessageType
@@ -120,6 +142,8 @@ pub let struct_FieldsEntry_type : &@reflect.MessageType
 pub let struct_type : &@reflect.MessageType
 
 pub let timestamp_type : &@reflect.MessageType
+
+pub let type_type : &@reflect.MessageType
 
 pub let uInt32Value_type : &@reflect.MessageType
 
@@ -171,6 +195,56 @@ pub fn AnyType::new() -> Self
 pub fn AnyType::new_message(Self) -> &@reflect.Message
 pub fn AnyType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for AnyType
+
+pub struct Api {
+  inner : @dynamic.Message
+}
+pub fn Api::clear(Self, @reflect.FieldDescriptor) -> Unit
+pub fn Api::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn Api::edition(Self) -> String
+pub fn Api::fresh(Self) -> Self
+pub fn Api::from_json(String) -> Self raise @json.Refused
+pub fn Api::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Api::get_unknown(Self) -> @reflect.RawFields
+pub fn Api::has(Self, @reflect.FieldDescriptor) -> Bool
+pub fn Api::is_valid(Self) -> Bool
+pub fn Api::message(Self) -> @dynamic.Message
+pub fn Api::message_type(Self) -> &@reflect.MessageType
+pub fn Api::methods(Self) -> &@reflect.ListField
+pub fn Api::mixins(Self) -> &@reflect.ListField
+pub fn Api::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Api::name(Self) -> String
+pub fn Api::new() -> Self
+pub fn Api::new_field(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Api::options(Self) -> &@reflect.ListField
+pub fn Api::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Api::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Api::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
+pub fn Api::set_edition(Self, String) -> Unit
+pub fn Api::set_methods(Self, @reflect.Value) -> Unit
+pub fn Api::set_mixins(Self, @reflect.Value) -> Unit
+pub fn Api::set_name(Self, String) -> Unit
+pub fn Api::set_options(Self, @reflect.Value) -> Unit
+pub fn Api::set_source_context(Self, @reflect.Value) -> Unit
+pub fn Api::set_syntax(Self, Int32) -> Unit
+pub fn Api::set_unknown(Self, @reflect.RawFields) -> Unit
+pub fn Api::set_version(Self, String) -> Unit
+pub fn Api::source_context(Self) -> @reflect.Value
+pub fn Api::syntax(Self) -> Int32
+pub fn Api::to_json(Self) -> String raise @json.Refused
+pub fn Api::version(Self) -> String
+pub fn Api::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
+pub impl @reflect.Fresh for Api
+pub impl @reflect.Message for Api
+
+pub struct ApiType {
+  marker : Unit
+}
+pub fn ApiType::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn ApiType::new() -> Self
+pub fn ApiType::new_message(Self) -> &@reflect.Message
+pub fn ApiType::zero(Self) -> &@reflect.Message
+pub impl @reflect.MessageType for ApiType
 
 pub struct BoolValue {
   inner : @dynamic.Message
@@ -505,6 +579,43 @@ pub fn EmptyType::new_message(Self) -> &@reflect.Message
 pub fn EmptyType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for EmptyType
 
+pub struct Enum {
+  inner : @dynamic.Message
+}
+pub fn Enum::clear(Self, @reflect.FieldDescriptor) -> Unit
+pub fn Enum::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn Enum::edition(Self) -> String
+pub fn Enum::enumvalue(Self) -> &@reflect.ListField
+pub fn Enum::fresh(Self) -> Self
+pub fn Enum::from_json(String) -> Self raise @json.Refused
+pub fn Enum::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Enum::get_unknown(Self) -> @reflect.RawFields
+pub fn Enum::has(Self, @reflect.FieldDescriptor) -> Bool
+pub fn Enum::is_valid(Self) -> Bool
+pub fn Enum::message(Self) -> @dynamic.Message
+pub fn Enum::message_type(Self) -> &@reflect.MessageType
+pub fn Enum::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Enum::name(Self) -> String
+pub fn Enum::new() -> Self
+pub fn Enum::new_field(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Enum::options(Self) -> &@reflect.ListField
+pub fn Enum::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Enum::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Enum::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
+pub fn Enum::set_edition(Self, String) -> Unit
+pub fn Enum::set_enumvalue(Self, @reflect.Value) -> Unit
+pub fn Enum::set_name(Self, String) -> Unit
+pub fn Enum::set_options(Self, @reflect.Value) -> Unit
+pub fn Enum::set_source_context(Self, @reflect.Value) -> Unit
+pub fn Enum::set_syntax(Self, Int32) -> Unit
+pub fn Enum::set_unknown(Self, @reflect.RawFields) -> Unit
+pub fn Enum::source_context(Self) -> @reflect.Value
+pub fn Enum::syntax(Self) -> Int32
+pub fn Enum::to_json(Self) -> String raise @json.Refused
+pub fn Enum::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
+pub impl @reflect.Fresh for Enum
+pub impl @reflect.Message for Enum
+
 pub struct EnumDescriptorProto {
   inner : @dynamic.Message
 }
@@ -632,6 +743,46 @@ pub fn EnumOptionsType::new_message(Self) -> &@reflect.Message
 pub fn EnumOptionsType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for EnumOptionsType
 
+pub struct EnumType {
+  marker : Unit
+}
+pub fn EnumType::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn EnumType::new() -> Self
+pub fn EnumType::new_message(Self) -> &@reflect.Message
+pub fn EnumType::zero(Self) -> &@reflect.Message
+pub impl @reflect.MessageType for EnumType
+
+pub struct EnumValue {
+  inner : @dynamic.Message
+}
+pub fn EnumValue::clear(Self, @reflect.FieldDescriptor) -> Unit
+pub fn EnumValue::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn EnumValue::fresh(Self) -> Self
+pub fn EnumValue::from_json(String) -> Self raise @json.Refused
+pub fn EnumValue::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn EnumValue::get_unknown(Self) -> @reflect.RawFields
+pub fn EnumValue::has(Self, @reflect.FieldDescriptor) -> Bool
+pub fn EnumValue::is_valid(Self) -> Bool
+pub fn EnumValue::message(Self) -> @dynamic.Message
+pub fn EnumValue::message_type(Self) -> &@reflect.MessageType
+pub fn EnumValue::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn EnumValue::name(Self) -> String
+pub fn EnumValue::new() -> Self
+pub fn EnumValue::new_field(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn EnumValue::number(Self) -> Int32
+pub fn EnumValue::options(Self) -> &@reflect.ListField
+pub fn EnumValue::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn EnumValue::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn EnumValue::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
+pub fn EnumValue::set_name(Self, String) -> Unit
+pub fn EnumValue::set_number(Self, Int32) -> Unit
+pub fn EnumValue::set_options(Self, @reflect.Value) -> Unit
+pub fn EnumValue::set_unknown(Self, @reflect.RawFields) -> Unit
+pub fn EnumValue::to_json(Self) -> String raise @json.Refused
+pub fn EnumValue::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
+pub impl @reflect.Fresh for EnumValue
+pub impl @reflect.Message for EnumValue
+
 pub struct EnumValueDescriptorProto {
   inner : @dynamic.Message
 }
@@ -715,6 +866,15 @@ pub fn EnumValueOptionsType::new() -> Self
 pub fn EnumValueOptionsType::new_message(Self) -> &@reflect.Message
 pub fn EnumValueOptionsType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for EnumValueOptionsType
+
+pub struct EnumValueType {
+  marker : Unit
+}
+pub fn EnumValueType::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn EnumValueType::new() -> Self
+pub fn EnumValueType::new_message(Self) -> &@reflect.Message
+pub fn EnumValueType::zero(Self) -> &@reflect.Message
+pub impl @reflect.MessageType for EnumValueType
 
 pub struct ExtensionRangeOptions {
   inner : @dynamic.Message
@@ -1002,6 +1162,51 @@ pub fn FeatureSet_VisibilityFeatureType::new_message(Self) -> &@reflect.Message
 pub fn FeatureSet_VisibilityFeatureType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FeatureSet_VisibilityFeatureType
 
+pub struct Field {
+  inner : @dynamic.Message
+}
+pub fn Field::cardinality(Self) -> Int32
+pub fn Field::clear(Self, @reflect.FieldDescriptor) -> Unit
+pub fn Field::default_value(Self) -> String
+pub fn Field::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn Field::fresh(Self) -> Self
+pub fn Field::from_json(String) -> Self raise @json.Refused
+pub fn Field::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Field::get_unknown(Self) -> @reflect.RawFields
+pub fn Field::has(Self, @reflect.FieldDescriptor) -> Bool
+pub fn Field::is_valid(Self) -> Bool
+pub fn Field::json_name(Self) -> String
+pub fn Field::kind(Self) -> Int32
+pub fn Field::message(Self) -> @dynamic.Message
+pub fn Field::message_type(Self) -> &@reflect.MessageType
+pub fn Field::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Field::name(Self) -> String
+pub fn Field::new() -> Self
+pub fn Field::new_field(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Field::number(Self) -> Int32
+pub fn Field::oneof_index(Self) -> Int32
+pub fn Field::options(Self) -> &@reflect.ListField
+pub fn Field::packed(Self) -> Bool
+pub fn Field::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Field::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Field::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
+pub fn Field::set_cardinality(Self, Int32) -> Unit
+pub fn Field::set_default_value(Self, String) -> Unit
+pub fn Field::set_json_name(Self, String) -> Unit
+pub fn Field::set_kind(Self, Int32) -> Unit
+pub fn Field::set_name(Self, String) -> Unit
+pub fn Field::set_number(Self, Int32) -> Unit
+pub fn Field::set_oneof_index(Self, Int32) -> Unit
+pub fn Field::set_options(Self, @reflect.Value) -> Unit
+pub fn Field::set_packed(Self, Bool) -> Unit
+pub fn Field::set_type_url(Self, String) -> Unit
+pub fn Field::set_unknown(Self, @reflect.RawFields) -> Unit
+pub fn Field::to_json(Self) -> String raise @json.Refused
+pub fn Field::type_url(Self) -> String
+pub fn Field::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
+pub impl @reflect.Fresh for Field
+pub impl @reflect.Message for Field
+
 pub struct FieldDescriptorProto {
   inner : @dynamic.Message
 }
@@ -1235,6 +1440,15 @@ pub fn FieldOptions_FeatureSupportType::new() -> Self
 pub fn FieldOptions_FeatureSupportType::new_message(Self) -> &@reflect.Message
 pub fn FieldOptions_FeatureSupportType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FieldOptions_FeatureSupportType
+
+pub struct FieldType {
+  marker : Unit
+}
+pub fn FieldType::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn FieldType::new() -> Self
+pub fn FieldType::new_message(Self) -> &@reflect.Message
+pub fn FieldType::zero(Self) -> &@reflect.Message
+pub impl @reflect.MessageType for FieldType
 
 pub struct FileDescriptorProto {
   inner : @dynamic.Message
@@ -1677,6 +1891,47 @@ pub fn MessageOptionsType::new_message(Self) -> &@reflect.Message
 pub fn MessageOptionsType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for MessageOptionsType
 
+pub struct Method {
+  inner : @dynamic.Message
+}
+pub fn Method::clear(Self, @reflect.FieldDescriptor) -> Unit
+pub fn Method::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn Method::edition(Self) -> String
+pub fn Method::fresh(Self) -> Self
+pub fn Method::from_json(String) -> Self raise @json.Refused
+pub fn Method::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Method::get_unknown(Self) -> @reflect.RawFields
+pub fn Method::has(Self, @reflect.FieldDescriptor) -> Bool
+pub fn Method::is_valid(Self) -> Bool
+pub fn Method::message(Self) -> @dynamic.Message
+pub fn Method::message_type(Self) -> &@reflect.MessageType
+pub fn Method::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Method::name(Self) -> String
+pub fn Method::new() -> Self
+pub fn Method::new_field(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Method::options(Self) -> &@reflect.ListField
+pub fn Method::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Method::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Method::request_streaming(Self) -> Bool
+pub fn Method::request_type_url(Self) -> String
+pub fn Method::response_streaming(Self) -> Bool
+pub fn Method::response_type_url(Self) -> String
+pub fn Method::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
+pub fn Method::set_edition(Self, String) -> Unit
+pub fn Method::set_name(Self, String) -> Unit
+pub fn Method::set_options(Self, @reflect.Value) -> Unit
+pub fn Method::set_request_streaming(Self, Bool) -> Unit
+pub fn Method::set_request_type_url(Self, String) -> Unit
+pub fn Method::set_response_streaming(Self, Bool) -> Unit
+pub fn Method::set_response_type_url(Self, String) -> Unit
+pub fn Method::set_syntax(Self, Int32) -> Unit
+pub fn Method::set_unknown(Self, @reflect.RawFields) -> Unit
+pub fn Method::syntax(Self) -> Int32
+pub fn Method::to_json(Self) -> String raise @json.Refused
+pub fn Method::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
+pub impl @reflect.Fresh for Method
+pub impl @reflect.Message for Method
+
 pub struct MethodDescriptorProto {
   inner : @dynamic.Message
 }
@@ -1765,6 +2020,53 @@ pub fn MethodOptionsType::new_message(Self) -> &@reflect.Message
 pub fn MethodOptionsType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for MethodOptionsType
 
+pub struct MethodType {
+  marker : Unit
+}
+pub fn MethodType::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn MethodType::new() -> Self
+pub fn MethodType::new_message(Self) -> &@reflect.Message
+pub fn MethodType::zero(Self) -> &@reflect.Message
+pub impl @reflect.MessageType for MethodType
+
+pub struct Mixin {
+  inner : @dynamic.Message
+}
+pub fn Mixin::clear(Self, @reflect.FieldDescriptor) -> Unit
+pub fn Mixin::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn Mixin::fresh(Self) -> Self
+pub fn Mixin::from_json(String) -> Self raise @json.Refused
+pub fn Mixin::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Mixin::get_unknown(Self) -> @reflect.RawFields
+pub fn Mixin::has(Self, @reflect.FieldDescriptor) -> Bool
+pub fn Mixin::is_valid(Self) -> Bool
+pub fn Mixin::message(Self) -> @dynamic.Message
+pub fn Mixin::message_type(Self) -> &@reflect.MessageType
+pub fn Mixin::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Mixin::name(Self) -> String
+pub fn Mixin::new() -> Self
+pub fn Mixin::new_field(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Mixin::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Mixin::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Mixin::root(Self) -> String
+pub fn Mixin::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
+pub fn Mixin::set_name(Self, String) -> Unit
+pub fn Mixin::set_root(Self, String) -> Unit
+pub fn Mixin::set_unknown(Self, @reflect.RawFields) -> Unit
+pub fn Mixin::to_json(Self) -> String raise @json.Refused
+pub fn Mixin::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
+pub impl @reflect.Fresh for Mixin
+pub impl @reflect.Message for Mixin
+
+pub struct MixinType {
+  marker : Unit
+}
+pub fn MixinType::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn MixinType::new() -> Self
+pub fn MixinType::new_message(Self) -> &@reflect.Message
+pub fn MixinType::zero(Self) -> &@reflect.Message
+pub impl @reflect.MessageType for MixinType
+
 pub(all) enum NullValue {
   NULL_VALUE
   Unknown(Int32)
@@ -1847,6 +2149,44 @@ pub fn OneofOptionsType::new() -> Self
 pub fn OneofOptionsType::new_message(Self) -> &@reflect.Message
 pub fn OneofOptionsType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for OneofOptionsType
+
+pub struct Option_ {
+  inner : @dynamic.Message
+}
+pub fn Option_::clear(Self, @reflect.FieldDescriptor) -> Unit
+pub fn Option_::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn Option_::fresh(Self) -> Self
+pub fn Option_::from_json(String) -> Self raise @json.Refused
+pub fn Option_::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Option_::get_unknown(Self) -> @reflect.RawFields
+pub fn Option_::has(Self, @reflect.FieldDescriptor) -> Bool
+pub fn Option_::is_valid(Self) -> Bool
+pub fn Option_::message(Self) -> @dynamic.Message
+pub fn Option_::message_type(Self) -> &@reflect.MessageType
+pub fn Option_::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Option_::name(Self) -> String
+pub fn Option_::new() -> Self
+pub fn Option_::new_field(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Option_::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Option_::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Option_::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
+pub fn Option_::set_name(Self, String) -> Unit
+pub fn Option_::set_unknown(Self, @reflect.RawFields) -> Unit
+pub fn Option_::set_value(Self, @reflect.Value) -> Unit
+pub fn Option_::to_json(Self) -> String raise @json.Refused
+pub fn Option_::value(Self) -> @reflect.Value
+pub fn Option_::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
+pub impl @reflect.Fresh for Option_
+pub impl @reflect.Message for Option_
+
+pub struct Option_Type {
+  marker : Unit
+}
+pub fn Option_Type::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn Option_Type::new() -> Self
+pub fn Option_Type::new_message(Self) -> &@reflect.Message
+pub fn Option_Type::zero(Self) -> &@reflect.Message
+pub impl @reflect.MessageType for Option_Type
 
 pub struct ServiceDescriptorProto {
   inner : @dynamic.Message
@@ -2005,6 +2345,42 @@ pub fn SourceCodeInfo_LocationType::new_message(Self) -> &@reflect.Message
 pub fn SourceCodeInfo_LocationType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for SourceCodeInfo_LocationType
 
+pub struct SourceContext {
+  inner : @dynamic.Message
+}
+pub fn SourceContext::clear(Self, @reflect.FieldDescriptor) -> Unit
+pub fn SourceContext::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn SourceContext::file_name(Self) -> String
+pub fn SourceContext::fresh(Self) -> Self
+pub fn SourceContext::from_json(String) -> Self raise @json.Refused
+pub fn SourceContext::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn SourceContext::get_unknown(Self) -> @reflect.RawFields
+pub fn SourceContext::has(Self, @reflect.FieldDescriptor) -> Bool
+pub fn SourceContext::is_valid(Self) -> Bool
+pub fn SourceContext::message(Self) -> @dynamic.Message
+pub fn SourceContext::message_type(Self) -> &@reflect.MessageType
+pub fn SourceContext::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn SourceContext::new() -> Self
+pub fn SourceContext::new_field(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn SourceContext::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn SourceContext::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn SourceContext::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
+pub fn SourceContext::set_file_name(Self, String) -> Unit
+pub fn SourceContext::set_unknown(Self, @reflect.RawFields) -> Unit
+pub fn SourceContext::to_json(Self) -> String raise @json.Refused
+pub fn SourceContext::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
+pub impl @reflect.Fresh for SourceContext
+pub impl @reflect.Message for SourceContext
+
+pub struct SourceContextType {
+  marker : Unit
+}
+pub fn SourceContextType::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn SourceContextType::new() -> Self
+pub fn SourceContextType::new_message(Self) -> &@reflect.Message
+pub fn SourceContextType::zero(Self) -> &@reflect.Message
+pub impl @reflect.MessageType for SourceContextType
+
 pub struct StringValue {
   inner : @dynamic.Message
 }
@@ -2124,6 +2500,15 @@ pub(all) enum SymbolVisibility {
 pub fn SymbolVisibility::code(Self) -> Int32
 pub fn SymbolVisibility::of(Int32) -> Self
 
+pub(all) enum Syntax {
+  SYNTAX_PROTO2
+  SYNTAX_PROTO3
+  SYNTAX_EDITIONS
+  Unknown(Int32)
+}
+pub fn Syntax::code(Self) -> Int32
+pub fn Syntax::of(Int32) -> Self
+
 pub struct Timestamp {
   inner : @dynamic.Message
 }
@@ -2161,6 +2546,53 @@ pub fn TimestampType::new() -> Self
 pub fn TimestampType::new_message(Self) -> &@reflect.Message
 pub fn TimestampType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for TimestampType
+
+pub struct Type {
+  inner : @dynamic.Message
+}
+pub fn Type::clear(Self, @reflect.FieldDescriptor) -> Unit
+pub fn Type::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn Type::edition(Self) -> String
+pub fn Type::fields(Self) -> &@reflect.ListField
+pub fn Type::fresh(Self) -> Self
+pub fn Type::from_json(String) -> Self raise @json.Refused
+pub fn Type::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Type::get_unknown(Self) -> @reflect.RawFields
+pub fn Type::has(Self, @reflect.FieldDescriptor) -> Bool
+pub fn Type::is_valid(Self) -> Bool
+pub fn Type::message(Self) -> @dynamic.Message
+pub fn Type::message_type(Self) -> &@reflect.MessageType
+pub fn Type::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Type::name(Self) -> String
+pub fn Type::new() -> Self
+pub fn Type::new_field(Self, @reflect.FieldDescriptor) -> @reflect.Value
+pub fn Type::oneofs(Self) -> &@reflect.ListField
+pub fn Type::options(Self) -> &@reflect.ListField
+pub fn Type::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Type::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
+pub fn Type::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
+pub fn Type::set_edition(Self, String) -> Unit
+pub fn Type::set_fields(Self, @reflect.Value) -> Unit
+pub fn Type::set_name(Self, String) -> Unit
+pub fn Type::set_options(Self, @reflect.Value) -> Unit
+pub fn Type::set_source_context(Self, @reflect.Value) -> Unit
+pub fn Type::set_syntax(Self, Int32) -> Unit
+pub fn Type::set_unknown(Self, @reflect.RawFields) -> Unit
+pub fn Type::source_context(Self) -> @reflect.Value
+pub fn Type::syntax(Self) -> Int32
+pub fn Type::to_json(Self) -> String raise @json.Refused
+pub fn Type::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
+pub impl @reflect.Fresh for Type
+pub impl @reflect.Message for Type
+
+pub struct TypeType {
+  marker : Unit
+}
+pub fn TypeType::descriptor(Self) -> @reflect.MessageDescriptor
+pub fn TypeType::new() -> Self
+pub fn TypeType::new_message(Self) -> &@reflect.Message
+pub fn TypeType::zero(Self) -> &@reflect.Message
+pub impl @reflect.MessageType for TypeType
 
 pub struct UInt32Value {
   inner : @dynamic.Message

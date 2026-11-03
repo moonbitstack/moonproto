@@ -35,11 +35,14 @@ fi
   --plugin="protoc-gen-mbt=$plugin" \
   --mbt_out="$proto_tmp" \
   google/protobuf/any.proto \
+  google/protobuf/api.proto \
   google/protobuf/duration.proto \
   google/protobuf/empty.proto \
   google/protobuf/field_mask.proto \
+  google/protobuf/source_context.proto \
   google/protobuf/struct.proto \
   google/protobuf/timestamp.proto \
+  google/protobuf/type.proto \
   google/protobuf/wrappers.proto \
   google/protobuf/descriptor.proto
 

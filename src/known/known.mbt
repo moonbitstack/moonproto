@@ -5,11 +5,14 @@
 pub fn files() -> Array[@reflect.FileDescriptor] raise @desc.Refused {
   [
     @gp.file_descriptor_google_protobuf_any_proto(),
+    @gp.file_descriptor_google_protobuf_api_proto(),
     @gp.file_descriptor_google_protobuf_duration_proto(),
     @gp.file_descriptor_google_protobuf_empty_proto(),
     @gp.file_descriptor_google_protobuf_field_mask_proto(),
+    @gp.file_descriptor_google_protobuf_source_context_proto(),
     @gp.file_descriptor_google_protobuf_struct_proto(),
     @gp.file_descriptor_google_protobuf_timestamp_proto(),
+    @gp.file_descriptor_google_protobuf_type_proto(),
     @gp.file_descriptor_google_protobuf_wrappers_proto(),
   ]
 }
