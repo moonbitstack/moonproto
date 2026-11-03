@@ -15,7 +15,7 @@ if [ -f "$plugin.exe" ]; then
 fi
 
 tmp="$(mktemp -d)"
-trap 'rm -rf "$tmp" "$pkg"' EXIT
+trap 'rm -rf "$tmp" "$pkg" 2>/dev/null || true' EXIT
 if command -v cygpath >/dev/null 2>&1; then
   proto_tmp="$(cygpath -m "$tmp")"
 else

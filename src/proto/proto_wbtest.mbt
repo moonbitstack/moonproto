@@ -447,3 +447,36 @@ test "a missing required field is refused, and allow_partial lets it through" {
   }
   assert_true(decode_refused)
 }
+
+///|
+test "an extend block in a .proto becomes an extension on the wire" {
+  let source = "syntax = \"proto2\";\npackage x;\nmessage Base { optional int32 a = 1; extensions 100 to 200; }\nextend Base { optional int32 extra = 100; }\n"
+  let file = @parser.parse("x.proto", source) catch {
+    _ => abort("parse failed")
+  }
+  let built = @desc.build_file(file) catch { _ => abort("build failed") }
+  assert_eq(built.extensions.length(), 1)
+  let extension = built.extensions[0]
+  assert_true(extension.is_extension)
+  assert_eq(extension.full_name, "x.extra")
+  assert_eq(extension.containing_message, "x.Base")
+  let base = built.messages[0]
+  @reflect.global_types.register_message(@dynamic.new_message_type(base)) catch {
+    _ => ()
+  }
+  let extension_type = @dynamic.new_extension_type(extension)
+  @reflect.global_types.register_extension(extension_type) catch {
+    _ => ()
+  }
+  let message = @dynamic.Message::new(base)
+  set_extension(message, extension_type, @reflect.Int32(42))
+  let bytes = encode(message)
+  // Field 100, varint 42.
+  assert_eq(bytes, b"\xa0\x06\x2a")
+  let back = @dynamic.Message::new(base)
+  decode(bytes, back)
+  match get_extension(back, extension_type) {
+    Some(value) => assert_eq(value.int(), 42L)
+    None => abort("extension dropped")
+  }
+}

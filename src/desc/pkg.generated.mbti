@@ -75,6 +75,7 @@ pub(all) struct FieldDescriptorProto {
   oneof_index : Int32?
   proto3_optional : Bool
   packed_off : Bool
+  extendee : String?
   features : Features
   options : Array[(String, String)]
 }

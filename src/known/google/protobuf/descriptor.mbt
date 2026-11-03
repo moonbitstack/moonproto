@@ -21,6 +21,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -64,6 +65,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -85,6 +87,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -106,6 +109,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -127,6 +131,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -148,6 +153,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -169,6 +175,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -190,6 +197,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -211,6 +219,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -232,6 +241,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -253,6 +263,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -274,6 +285,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -295,6 +307,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -316,6 +329,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -337,6 +351,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -380,6 +395,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -401,6 +417,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -422,6 +439,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -443,6 +461,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -464,6 +483,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -485,6 +505,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -506,6 +527,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -527,6 +549,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -548,6 +571,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -569,6 +593,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -590,6 +615,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -616,6 +642,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -637,6 +664,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -658,6 +686,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -701,6 +730,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -722,6 +752,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -783,6 +814,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -806,6 +838,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -827,6 +860,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -850,6 +884,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -876,6 +911,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -897,6 +933,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -918,6 +955,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -939,6 +977,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -960,6 +999,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -1041,6 +1081,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1062,6 +1103,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1083,6 +1125,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1104,6 +1147,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1125,6 +1169,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1146,6 +1191,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1167,6 +1213,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1188,6 +1235,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1209,6 +1257,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1230,6 +1279,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1251,6 +1301,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1392,6 +1443,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1413,6 +1465,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1456,6 +1509,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1477,6 +1531,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1498,6 +1553,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1521,6 +1577,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1542,6 +1599,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1563,6 +1621,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1589,6 +1648,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -1610,6 +1670,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -1671,6 +1732,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1692,6 +1754,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1713,6 +1776,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1756,6 +1820,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1777,6 +1842,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1798,6 +1864,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1841,6 +1908,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1862,6 +1930,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1883,6 +1952,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1904,6 +1974,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1925,6 +1996,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1946,6 +2018,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -1989,6 +2062,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2010,6 +2084,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2031,6 +2106,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2052,6 +2128,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2073,6 +2150,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2094,6 +2172,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2115,6 +2194,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2136,6 +2216,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2157,6 +2238,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2178,6 +2260,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2199,6 +2282,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2220,6 +2304,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2241,6 +2326,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2262,6 +2348,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2283,6 +2370,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2304,6 +2392,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2325,6 +2414,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2346,6 +2436,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2367,6 +2458,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2388,6 +2480,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2409,6 +2502,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2473,6 +2567,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2494,6 +2589,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2515,6 +2611,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2536,6 +2633,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2557,6 +2655,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2578,6 +2677,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2599,6 +2699,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2642,6 +2743,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2663,6 +2765,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2684,6 +2787,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2705,6 +2809,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2726,6 +2831,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2747,6 +2853,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2768,6 +2875,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2789,6 +2897,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2810,6 +2919,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2831,6 +2941,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2852,6 +2963,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2873,6 +2985,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2894,6 +3007,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2915,6 +3029,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -2941,6 +3056,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -2962,6 +3078,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -3005,6 +3122,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -3026,6 +3144,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -3047,6 +3166,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -3068,6 +3188,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -3089,6 +3210,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -3268,6 +3390,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3289,6 +3412,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3332,6 +3456,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3353,6 +3478,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3374,6 +3500,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3395,6 +3522,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3416,6 +3544,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3459,6 +3588,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3480,6 +3610,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3501,6 +3632,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3522,6 +3654,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3543,6 +3676,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3586,6 +3720,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3607,6 +3742,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3628,6 +3764,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3671,6 +3808,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3692,6 +3830,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3713,6 +3852,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3734,6 +3874,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3801,6 +3942,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3822,6 +3964,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3843,6 +3986,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3864,6 +4008,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3885,6 +4030,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3906,6 +4052,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3927,6 +4074,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -3953,6 +4101,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -3974,6 +4123,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -4035,6 +4185,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -4056,6 +4207,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -4077,6 +4229,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -4098,6 +4251,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -4119,6 +4273,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -4140,6 +4295,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -4161,6 +4317,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -4184,6 +4341,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -4207,6 +4365,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: true,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -4509,6 +4668,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -4530,6 +4690,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -4551,6 +4712,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -4577,6 +4739,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -4598,6 +4761,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -4619,6 +4783,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -4680,6 +4845,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -4706,6 +4872,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -4727,6 +4894,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -4748,6 +4916,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -4769,6 +4938,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -4790,6 +4960,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -4851,6 +5022,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -4877,6 +5049,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -4898,6 +5071,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -4919,6 +5093,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -4940,6 +5115,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,
@@ -4963,6 +5139,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
                 oneof_index: None,
                 proto3_optional: false,
                 packed_off: false,
+                extendee: None,
                 features: @desc.Features::{
                   field_presence: 0,
                   enum_type: 0,

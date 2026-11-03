@@ -448,6 +448,7 @@ fn make_field(
   oneof_index : Int32?,
   proto3_optional : Bool,
   packed_off : Bool,
+  extendee~ : String? = None,
   features~ : @desc.Features = @desc.features_auto,
   options~ : Array[(String, String)] = [],
 ) -> @desc.FieldDescriptorProto {
@@ -462,6 +463,7 @@ fn make_field(
     oneof_index,
     proto3_optional,
     packed_off,
+    extendee,
     features,
     options,
   }
@@ -566,12 +568,13 @@ pub fn parse(
         result = { ..result, service: append(result.service, item), }
       }
       "extend" => {
-        let _ = parser.read_type_name()
+        let extendee = parser.read_type_name()
         parser.expect('{')
         let fields = parse_extend_body(
           parser,
           result.package_name,
           result.syntax,
+          extendee,
         )
         for field in fields {
           result = { ..result, extension: append(result.extension, field), }
@@ -715,9 +718,9 @@ fn parse_message_body(
       "extend" => {
         parser.pos = start
         let _ = parser.read_ident()
-        let _ = parser.read_type_name()
+        let extendee = parser.read_type_name()
         parser.expect('{')
-        let items = parse_extend_body(parser, full, syntax)
+        let items = parse_extend_body(parser, full, syntax, extendee)
         for item in items {
           extensions.push(item)
         }
@@ -859,6 +862,7 @@ fn parse_field_tail(
     oneof_index,
     proto3_optional,
     packed_off,
+    extendee=None,
     features=@desc.Features::merge(inherited, features),
     options~,
   )
@@ -999,6 +1003,7 @@ fn parse_map_field(
     None,
     false,
     packed_off,
+    extendee=None,
   )
   (field, [entry_message])
 }
@@ -1030,6 +1035,7 @@ fn parse_group(
       oneof_index,
       false,
       packed_off,
+      extendee=None,
     ),
     [body],
   )
@@ -1287,6 +1293,7 @@ fn parse_extend_body(
   parser : Parser,
   scope : String,
   syntax : String,
+  extendee : String,
 ) -> Array[@desc.FieldDescriptorProto] raise Refused {
   let fields : Array[@desc.FieldDescriptorProto] = []
   while true {
@@ -1298,7 +1305,7 @@ fn parse_extend_body(
       continue
     }
     let (field, _) = parse_field(parser, scope, syntax, None)
-    fields.push(field)
+    fields.push({ ..field, extendee: Some(extendee), })
   }
   fields
 }

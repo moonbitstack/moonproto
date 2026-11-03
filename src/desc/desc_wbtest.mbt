@@ -20,6 +20,7 @@ fn field(
     oneof_index: None,
     proto3_optional: false,
     packed_off: false,
+    extendee: None,
     features: features_auto,
     options: [],
   }

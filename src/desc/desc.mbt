@@ -105,6 +105,8 @@ pub(all) struct FieldDescriptorProto {
   proto3_optional : Bool
   /// `[packed = false]` on a repeated numeric field.
   packed_off : Bool
+  /// The message an `extend` block extends; present only on an extension.
+  extendee : String?
   /// `features.*` written on the field, already merged with its parents.
   features : Features
   /// Options written on the field that are not features, as (name, value).
@@ -338,6 +340,20 @@ fn build_message(
       ),
     )
   }
+  let nested_extensions : Array[@reflect.FieldDescriptor] = []
+  for item in proto.extension {
+    nested_extensions.push(
+      build_field(
+        item,
+        full_name,
+        package_name + "." + proto.name,
+        file_path,
+        syntax,
+        symbols,
+        None,
+      ),
+    )
+  }
   let enums : Array[@reflect.EnumDescriptor] = []
   for item in proto.enum_type {
     enums.push(
@@ -432,7 +448,7 @@ fn build_message(
     extension_ranges: proto.extension_range,
     nested_messages: nested,
     nested_enums: enums,
-    nested_extensions: [],
+    nested_extensions,
     file_path,
     map_key: map_entry_field.0,
     map_value: map_entry_field.1,
@@ -491,6 +507,7 @@ fn build_field(
     Some(name) => resolve_type(name, scope, symbols)
     None => None
   }
+  let is_extension = proto.extendee is Some(_)
   let mut is_map = false
   let mut map_key_field = None
   let mut map_value_field = None
@@ -565,16 +582,29 @@ fn build_field(
       proto.proto3_optional ||
       kind.is_message()
   }
+  let containing_name = match proto.extendee {
+    Some(name) =>
+      match resolve_type(name, scope, symbols) {
+        Some(full) => full
+        None => containing
+      }
+    None => containing
+  }
+  let full_name = if is_extension {
+    @reflect.qualify(scope, proto.name)
+  } else {
+    containing + "." + proto.name
+  }
   {
     name: proto.name,
-    full_name: containing + "." + proto.name,
+    full_name,
     number: proto.number,
     kind,
     cardinality,
     json_name,
     text_name,
     has_presence,
-    is_extension: false,
+    is_extension,
     is_map,
     packed,
     oneof_index: proto.oneof_index,
@@ -591,7 +621,7 @@ fn build_field(
     has_default,
     default_value,
     default_enum_name: proto.default_value,
-    containing_message: containing,
+    containing_message: containing_name,
     map_key_field,
     map_value_field,
   }
@@ -956,6 +986,7 @@ fn to_field_proto(field : @reflect.FieldDescriptor) -> FieldDescriptorProto {
     oneof_index: field.oneof_index,
     proto3_optional: false,
     packed_off: !field.packed,
+    extendee: None,
     features: features_auto,
     options: [],
   }

@@ -21,6 +21,7 @@ pub fn file_descriptor_google_protobuf_timestamp_proto() -> @reflect.FileDescrip
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,
@@ -42,6 +43,7 @@ pub fn file_descriptor_google_protobuf_timestamp_proto() -> @reflect.FileDescrip
             oneof_index: None,
             proto3_optional: false,
             packed_off: false,
+            extendee: None,
             features: @desc.Features::{
               field_presence: 0,
               enum_type: 0,

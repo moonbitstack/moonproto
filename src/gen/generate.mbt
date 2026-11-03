@@ -97,6 +97,11 @@ fn emit_field(
   (if field.proto3_optional { "true" } else { "false" }) +
   ", packed_off: " +
   (if field.packed_off { "true" } else { "false" }) +
+  ", extendee: " +
+  (match field.extendee {
+    Some(name) => "Some(\"" + escape(name) + "\")"
+    None => "None"
+  }) +
   ", features: " +
   emit_features(field.features) +
   ", options: " +

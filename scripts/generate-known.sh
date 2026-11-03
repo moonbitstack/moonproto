@@ -23,7 +23,7 @@ if [ -f "$plugin.exe" ]; then
 fi
 
 tmp="$(mktemp -d)"
-trap 'rm -rf "$tmp"' EXIT
+trap 'rm -rf "$tmp" 2>/dev/null || true' EXIT
 
 # protoc is a native binary on Windows, so hand it a Windows path.
 if command -v cygpath >/dev/null 2>&1; then

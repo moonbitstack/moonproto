@@ -46,6 +46,7 @@ fn f(
     oneof_index: None,
     proto3_optional: false,
     packed_off: false,
+    extendee: None,
     features: @desc.features_auto,
     options: [],
   }
@@ -573,6 +574,10 @@ fn to_field_proto(message : &@reflect.Message) -> @desc.FieldDescriptorProto {
     },
     proto3_optional: get_bool(message, 17),
     packed_off,
+    extendee: match get_string(message, 2) {
+      "" => None
+      text => Some(text)
+    },
     features: @desc.features_auto,
     options: [],
   }
@@ -726,6 +731,10 @@ fn encode_field(
   let message = new_message("google.protobuf.FieldDescriptorProto")
   set_string(message, 1, field.name)
   set_int(message, 3, field.number)
+  match field.extendee {
+    Some(name) => set_string(message, 2, name)
+    None => ()
+  }
   set_enum(message, 4, field.label)
   set_enum(message, 5, field.type_code)
   match field.type_name {

@@ -21,6 +21,7 @@ fn f(
     oneof_index,
     proto3_optional: false,
     packed_off: false,
+    extendee: None,
     features: @desc.features_auto,
     options: [],
   }
