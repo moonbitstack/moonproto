@@ -488,7 +488,7 @@ fn make_field(
   oneof_index : Int32?,
   proto3_optional : Bool,
   packed_off : Bool,
-  extendee~ : String? = None,
+  extendee? : String,
   features~ : @desc.Features = @desc.features_auto,
   options~ : Array[(String, String)] = [],
 ) -> @desc.FieldDescriptorProto {
@@ -902,7 +902,6 @@ fn parse_field_tail(
     oneof_index,
     proto3_optional,
     packed_off,
-    extendee=None,
     features=@desc.Features::merge(inherited, features),
     options~,
   )
@@ -1043,7 +1042,6 @@ fn parse_map_field(
     None,
     false,
     packed_off,
-    extendee=None,
   )
   (field, [entry_message])
 }
@@ -1075,7 +1073,6 @@ fn parse_group(
       oneof_index,
       false,
       packed_off,
-      extendee=None,
     ),
     [body],
   )
