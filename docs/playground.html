@@ -41,13 +41,13 @@
 </header>
 
 <div class="wrap">
-  <div style="padding: 42px 0 0; max-width: 60ch">
+  <div class="play-head">
     <p class="eyebrow">Playground</p>
-    <h1 style="font-size: clamp(32px, 4vw, 46px); margin: 12px 0 12px">Take a message apart</h1>
-    <p style="color: var(--ink-2); font-size: 18px; margin: 0">One schema, three samples. The bytes, the JSON and the text below were all written by this library; the page only switches between them.</p>
+    <h1>Take a message apart</h1>
+    <p>One schema, three samples. The bytes, the JSON and the text below were all written by this library; the page only switches between them.</p>
   </div>
 
-  <div style="padding-top: 26px">
+  <div class="play-bar">
     <div class="samples" role="group" aria-label="Sample messages">
       <button type="button" data-sample="full" aria-pressed="true">full</button>
       <button type="button" data-sample="empty" aria-pressed="false">empty</button>
@@ -137,8 +137,8 @@ color: BLUE</pre>
     </section>
   </div>
 
-  <div style="max-width: 68ch; padding: 0 0 40px">
-    <p style="color: var(--ink-2)">A field is one tag byte and its payload. The low three bits of the tag carry the wire type, so the decoder knows whether to read a varint, eight bytes, or a length followed by that many bytes.</p>
+  <div class="play-note">
+    <p>A field is one tag byte and its payload. The low three bits of the tag carry the wire type, so the decoder knows whether to read a varint, eight bytes, or a length followed by that many bytes.</p>
     <div class="note"><b>Note.</b> The map entry is an ordinary message with fields <code>1</code> (key) and <code>2</code> (value); protobuf has no separate map encoding on the wire.</div>
   </div>
 </div>
