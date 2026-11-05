@@ -877,7 +877,8 @@ feature-level overrides). It is an executable package, run as
 
 - The exact generated-code shape: whether a generated message exposes named
   fields, accessors, or both. The interface only requires that it implements
-  `Message`.
+  `Message`. *(Settled: named fields plus accessors, see the implementation
+  notes.)*
 - The text of `Refused` variants beyond the four the organisation fixes
   (`at`, `got`, `want`, `limit`). Each package will add the variants its own
   failures need.
@@ -924,3 +925,15 @@ The implementation settled several points the draft left open.
   plugin's output for the `.proto` files protobuf 36.2 ships, checked in;
   `known` is a thin lookup over it. `descriptor.proto` alone is eleven thousand
   generated lines, so this is also the generator's real-schema test.
+- **Generated messages carry real fields.** The shape question the draft left
+  open is settled in favour of named fields: a scalar is `T?` when it has
+  presence and `T` when it does not, a repeated field is `Array[T]`, a map is
+  `Map[K, V]`, a oneof is a generated enum whose payload variant the accessors
+  read, unknown bytes are a `Bytes` pair of field, and extensions live in a
+  number-keyed map. The generated `Message` implementation reads and writes
+  those fields directly, so a decoded message needs no side table and a field
+  access is a record access. `dynamic` stays the only generic implementation,
+  and it remains what the group, unknown-field and extension tests build cases
+  with. Recursion needs no special case: a message only ever contains itself
+  through `Array[T]` or `T?`, and both already go through a pointer, which is
+  why the generated `DescriptorProto` nests itself without a box.
