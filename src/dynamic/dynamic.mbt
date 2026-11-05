@@ -158,21 +158,27 @@ pub impl @reflect.Message for Message with fn get(
 }
 
 ///|
+/// Remember the descriptor of an extension field that now holds a value, once.
+fn Message::mark_extension(
+  self : Message,
+  field : @reflect.FieldDescriptor,
+) -> Unit {
+  for item in self.ext_fields {
+    if item.number == field.number {
+      return
+    }
+  }
+  self.ext_fields.push(field)
+}
+
+///|
 pub impl @reflect.Message for Message with fn set(
   self,
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
   if field.is_extension {
-    let mut known = false
-    for item in self.ext_fields {
-      if item.number == field.number {
-        known = true
-      }
-    }
-    if !known {
-      self.ext_fields.push(field)
-    }
+    self.mark_extension(field)
   } else {
     match field.oneof_index {
       Some(index) =>
@@ -209,6 +215,12 @@ pub impl @reflect.Message for Message with fn mutable(
     None => ()
   }
   let value = @reflect.new_field_value(field)
+  if field.is_extension {
+    // `range_extensions` walks this list, so an extension reached through
+    // `mutable` has to be recorded here or the value is invisible to every
+    // encoder.
+    self.mark_extension(field)
+  }
   self.put_field(field.number, value)
   value
 }

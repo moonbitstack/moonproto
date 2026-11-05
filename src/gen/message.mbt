@@ -1201,9 +1201,20 @@ fn emit_message_impl(
       "\n",
     )
   }
-  buf.write_string_utf8(
-    "    _ => " + name + "::read_field(self, field)\n  }\n}\n\n",
-  )
+  if has_extensions {
+    // An extension is reached through `mutable` when a decoder meets a message
+    // body for it; the value has to be registered the way `set` does, or
+    // `range_extensions` never sees it.
+    buf.write_string_utf8(
+      "    _ => {\n      if field.is_extension && !self.has(field) {\n        let value = @reflect.new_field_value(field)\n        self.set(field, value)\n        value\n      } else {\n        " +
+      name +
+      "::read_field(self, field)\n      }\n    }\n  }\n}\n\n",
+    )
+  } else {
+    buf.write_string_utf8(
+      "    _ => " + name + "::read_field(self, field)\n  }\n}\n\n",
+    )
+  }
   // new_field
   buf.write_string_utf8(
     "///|\npub impl @reflect.Message for " +

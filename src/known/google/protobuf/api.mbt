@@ -350,7 +350,7 @@ pub fn file_descriptor_google_protobuf_api_proto() -> @reflect.FileDescriptor ra
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -372,7 +372,7 @@ pub fn file_descriptor_google_protobuf_api_proto() -> @reflect.FileDescriptor ra
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,

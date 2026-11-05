@@ -837,7 +837,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -883,7 +883,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: Some("UNVERIFIED"),
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -2105,7 +2105,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: Some("false"),
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -2127,7 +2127,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -2303,7 +2303,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: Some("true"),
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -2654,7 +2654,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -2874,7 +2874,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: Some("false"),
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -3499,7 +3499,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -4184,7 +4184,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -4206,7 +4206,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -4228,7 +4228,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -4250,7 +4250,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -4272,7 +4272,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -4294,7 +4294,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -4316,7 +4316,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -4340,7 +4340,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -4364,7 +4364,7 @@ pub fn file_descriptor_google_protobuf_descriptor_proto() -> @reflect.FileDescri
             default_value: None,
             oneof_index: None,
             proto3_optional: false,
-            packed_off: true,
+            packed_off: false,
             extendee: None,
             features: @desc.Features::{
               field_presence: 0,
@@ -5653,7 +5653,14 @@ pub impl @reflect.Message for FileDescriptorSet with fn mutable(
 ) -> @reflect.Value {
   let _ = self
   match field.number {
-    _ => FileDescriptorSet::read_field(self, field)
+    _ =>
+      if field.is_extension && !self.has(field) {
+        let value = @reflect.new_field_value(field)
+        self.set(field, value)
+        value
+      } else {
+        FileDescriptorSet::read_field(self, field)
+      }
   }
 }
 
@@ -8021,7 +8028,14 @@ pub impl @reflect.Message for ExtensionRangeOptions with fn mutable(
           @reflect.Message(v as &@reflect.Message)
         }
       }
-    _ => ExtensionRangeOptions::read_field(self, field)
+    _ =>
+      if field.is_extension && !self.has(field) {
+        let value = @reflect.new_field_value(field)
+        self.set(field, value)
+        value
+      } else {
+        ExtensionRangeOptions::read_field(self, field)
+      }
   }
 }
 
@@ -11788,7 +11802,14 @@ pub impl @reflect.Message for FileOptions with fn mutable(
           @reflect.Message(v as &@reflect.Message)
         }
       }
-    _ => FileOptions::read_field(self, field)
+    _ =>
+      if field.is_extension && !self.has(field) {
+        let value = @reflect.new_field_value(field)
+        self.set(field, value)
+        value
+      } else {
+        FileOptions::read_field(self, field)
+      }
   }
 }
 
@@ -12272,7 +12293,14 @@ pub impl @reflect.Message for MessageOptions with fn mutable(
           @reflect.Message(v as &@reflect.Message)
         }
       }
-    _ => MessageOptions::read_field(self, field)
+    _ =>
+      if field.is_extension && !self.has(field) {
+        let value = @reflect.new_field_value(field)
+        self.set(field, value)
+        value
+      } else {
+        MessageOptions::read_field(self, field)
+      }
   }
 }
 
@@ -12900,7 +12928,14 @@ pub impl @reflect.Message for FieldOptions with fn mutable(
           @reflect.Message(v as &@reflect.Message)
         }
       }
-    _ => FieldOptions::read_field(self, field)
+    _ =>
+      if field.is_extension && !self.has(field) {
+        let value = @reflect.new_field_value(field)
+        self.set(field, value)
+        value
+      } else {
+        FieldOptions::read_field(self, field)
+      }
   }
 }
 
@@ -14039,7 +14074,14 @@ pub impl @reflect.Message for OneofOptions with fn mutable(
           @reflect.Message(v as &@reflect.Message)
         }
       }
-    _ => OneofOptions::read_field(self, field)
+    _ =>
+      if field.is_extension && !self.has(field) {
+        let value = @reflect.new_field_value(field)
+        self.set(field, value)
+        value
+      } else {
+        OneofOptions::read_field(self, field)
+      }
   }
 }
 
@@ -14445,7 +14487,14 @@ pub impl @reflect.Message for EnumOptions with fn mutable(
           @reflect.Message(v as &@reflect.Message)
         }
       }
-    _ => EnumOptions::read_field(self, field)
+    _ =>
+      if field.is_extension && !self.has(field) {
+        let value = @reflect.new_field_value(field)
+        self.set(field, value)
+        value
+      } else {
+        EnumOptions::read_field(self, field)
+      }
   }
 }
 
@@ -14890,7 +14939,14 @@ pub impl @reflect.Message for EnumValueOptions with fn mutable(
           @reflect.Message(v as &@reflect.Message)
         }
       }
-    _ => EnumValueOptions::read_field(self, field)
+    _ =>
+      if field.is_extension && !self.has(field) {
+        let value = @reflect.new_field_value(field)
+        self.set(field, value)
+        value
+      } else {
+        EnumValueOptions::read_field(self, field)
+      }
   }
 }
 
@@ -15270,7 +15326,14 @@ pub impl @reflect.Message for ServiceOptions with fn mutable(
           @reflect.Message(v as &@reflect.Message)
         }
       }
-    _ => ServiceOptions::read_field(self, field)
+    _ =>
+      if field.is_extension && !self.has(field) {
+        let value = @reflect.new_field_value(field)
+        self.set(field, value)
+        value
+      } else {
+        ServiceOptions::read_field(self, field)
+      }
   }
 }
 
@@ -15668,7 +15731,14 @@ pub impl @reflect.Message for MethodOptions with fn mutable(
           @reflect.Message(v as &@reflect.Message)
         }
       }
-    _ => MethodOptions::read_field(self, field)
+    _ =>
+      if field.is_extension && !self.has(field) {
+        let value = @reflect.new_field_value(field)
+        self.set(field, value)
+        value
+      } else {
+        MethodOptions::read_field(self, field)
+      }
   }
 }
 
@@ -16862,7 +16932,14 @@ pub impl @reflect.Message for FeatureSet with fn mutable(
 ) -> @reflect.Value {
   let _ = self
   match field.number {
-    _ => FeatureSet::read_field(self, field)
+    _ =>
+      if field.is_extension && !self.has(field) {
+        let value = @reflect.new_field_value(field)
+        self.set(field, value)
+        value
+      } else {
+        FeatureSet::read_field(self, field)
+      }
   }
 }
 
@@ -18637,7 +18714,14 @@ pub impl @reflect.Message for SourceCodeInfo with fn mutable(
 ) -> @reflect.Value {
   let _ = self
   match field.number {
-    _ => SourceCodeInfo::read_field(self, field)
+    _ =>
+      if field.is_extension && !self.has(field) {
+        let value = @reflect.new_field_value(field)
+        self.set(field, value)
+        value
+      } else {
+        SourceCodeInfo::read_field(self, field)
+      }
   }
 }
 
