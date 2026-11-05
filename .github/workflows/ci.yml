@@ -148,14 +148,10 @@ jobs:
           moon version --all
           moon update
 
-      - uses: actions/cache@v4
-        id: runner-cache
-        with:
-          path: .cache/pbbuild/conformance_test_runner
-          key: conformance-test-runner-v36.2-ubuntu-26.04-r1
-
+      # No cache: the runner links against libraries that live in its build
+      # tree, so a cached binary alone fails to start. A clean build is about
+      # six minutes and cannot drift.
       - name: build protobuf 36.2 conformance_test_runner
-        if: steps.runner-cache.outputs.cache-hit != 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake ninja-build build-essential
