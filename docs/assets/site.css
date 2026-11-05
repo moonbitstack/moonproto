@@ -1144,7 +1144,7 @@ footer.site {
   display: grid;
   grid-template-columns: 232px minmax(0, 1fr);
   gap: clamp(24px, 4vw, 56px);
-  padding: 34px 0 90px;
+  padding-block: 34px 90px;
   align-items: start;
 }
 

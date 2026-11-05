@@ -47,7 +47,11 @@ def doc_comments(pkg_dir: Path) -> dict[str, str]:
         for line in text:
             stripped = line.strip()
             if stripped.startswith("///"):
-                block.append(stripped[3:].strip())
+                text = stripped[3:].strip()
+                # `///|` is the block marker MoonBit asks for; it is not prose.
+                if text.startswith("|"):
+                    text = text[1:].strip()
+                block.append(text)
                 continue
             if block:
                 match = DECL.match(line)

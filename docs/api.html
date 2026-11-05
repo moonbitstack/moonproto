@@ -70,9 +70,9 @@
       <p class="pkg-path">moonbitstack/moonproto/wire</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">Tags, varints, fixed-width numbers, length-delimited values and groups.</p>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">Limits</span><span class="sdoc">| The depth and byte ceiling a reader applies to one message.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">Limits</span><span class="sdoc">The depth and byte ceiling a reader applies to one message.</span></summary>
         <div class="sym-body">
-          <p>| The depth and byte ceiling a reader applies to one message.</p><pre class="sig">pub(all) struct Limits</pre><div>depth : Int32</div><div>size : Int32</div>
+          <p>The depth and byte ceiling a reader applies to one message.</p><pre class="sig">pub(all) struct Limits</pre><div>depth : Int32</div><div>size : Int32</div>
         </div>
       </details>
       <details class="sym">
@@ -82,9 +82,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">| A wire-format refusal</span></summary>
+        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">A wire-format refusal</span></summary>
         <div class="sym-body">
-          <p>| A wire-format refusal. The offset is where the reader stopped, `got` is what it saw and `want` is what the format required.</p><pre class="sig">pub(all) suberror Refused</pre><div>Incomplete(Int32)</div><div>Malformed(Int32, Int32, Int32)</div><div>Overflow(Int32)</div><div>FieldNumber(Int32, Int32)</div><div>WireType(Int32, Int32)</div><div>Recursion(Int32)</div>
+          <p>A wire-format refusal. The offset is where the reader stopped, `got` is what it saw and `want` is what the format required.</p><pre class="sig">pub(all) suberror Refused</pre><div>Incomplete(Int32)</div><div>Malformed(Int32, Int32, Int32)</div><div>Overflow(Int32)</div><div>FieldNumber(Int32, Int32)</div><div>WireType(Int32, Int32)</div><div>Recursion(Int32)</div>
         </div>
       </details>
       <details class="sym">
@@ -100,9 +100,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">WireType::code</span><span class="sdoc">| The tag&#x27;s low three bits.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">WireType::code</span><span class="sdoc">The tag&#x27;s low three bits.</span></summary>
         <div class="sym-body">
-          <p>| The tag&#x27;s low three bits.</p><pre class="sig">pub fn WireType::code(Self) -&gt; Int32</pre>
+          <p>The tag&#x27;s low three bits.</p><pre class="sig">pub fn WireType::code(Self) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
@@ -118,171 +118,171 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">WireType::of</span><span class="sdoc">| The wire type for a tag&#x27;s low three bits, or `None` when the value is not a wire type at all.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">WireType::of</span><span class="sdoc">The wire type for a tag&#x27;s low three bits, or `None` when the value is not a wire type at all.</span></summary>
         <div class="sym-body">
-          <p>| The wire type for a tag&#x27;s low three bits, or `None` when the value is not a wire type at all.</p><pre class="sig">pub fn WireType::of(Int32) -&gt; Self?</pre>
+          <p>The wire type for a tag&#x27;s low three bits, or `None` when the value is not a wire type at all.</p><pre class="sig">pub fn WireType::of(Int32) -&gt; Self?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">append_bytes</span><span class="sdoc">| Append a length-delimited body: a varint length then the bytes.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">append_bytes</span><span class="sdoc">Append a length-delimited body: a varint length then the bytes.</span></summary>
         <div class="sym-body">
-          <p>| Append a length-delimited body: a varint length then the bytes.</p><pre class="sig">pub fn append_bytes(@buffer.Buffer, BytesView) -&gt; Unit</pre>
+          <p>Append a length-delimited body: a varint length then the bytes.</p><pre class="sig">pub fn append_bytes(@buffer.Buffer, BytesView) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">append_fixed32</span><span class="sdoc">| Append a little-endian 32-bit value.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">append_fixed32</span><span class="sdoc">Append a little-endian 32-bit value.</span></summary>
         <div class="sym-body">
-          <p>| Append a little-endian 32-bit value.</p><pre class="sig">pub fn append_fixed32(@buffer.Buffer, UInt32) -&gt; Unit</pre>
+          <p>Append a little-endian 32-bit value.</p><pre class="sig">pub fn append_fixed32(@buffer.Buffer, UInt32) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">append_fixed64</span><span class="sdoc">| Append a little-endian 64-bit value.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">append_fixed64</span><span class="sdoc">Append a little-endian 64-bit value.</span></summary>
         <div class="sym-body">
-          <p>| Append a little-endian 64-bit value.</p><pre class="sig">pub fn append_fixed64(@buffer.Buffer, UInt64) -&gt; Unit</pre>
+          <p>Append a little-endian 64-bit value.</p><pre class="sig">pub fn append_fixed64(@buffer.Buffer, UInt64) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">append_group</span><span class="sdoc">| Append a start tag, the body, and the matching end tag.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">append_group</span><span class="sdoc">Append a start tag, the body, and the matching end tag.</span></summary>
         <div class="sym-body">
-          <p>| Append a start tag, the body, and the matching end tag.</p><pre class="sig">pub fn append_group(@buffer.Buffer, Int32, BytesView) -&gt; Unit</pre>
+          <p>Append a start tag, the body, and the matching end tag.</p><pre class="sig">pub fn append_group(@buffer.Buffer, Int32, BytesView) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">append_string</span><span class="sdoc">| Append a length-delimited string.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">append_string</span><span class="sdoc">Append a length-delimited string.</span></summary>
         <div class="sym-body">
-          <p>| Append a length-delimited string.</p><pre class="sig">pub fn append_string(@buffer.Buffer, StringView) -&gt; Unit</pre>
+          <p>Append a length-delimited string.</p><pre class="sig">pub fn append_string(@buffer.Buffer, StringView) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">append_tag</span><span class="sdoc">| Append a tag, itself a varint of `(number &lt;&lt; 3) | wire_type`.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">append_tag</span><span class="sdoc">Append a tag, itself a varint of `(number &lt;&lt; 3) | wire_type`.</span></summary>
         <div class="sym-body">
-          <p>| Append a tag, itself a varint of `(number &lt;&lt; 3) | wire_type`.</p><pre class="sig">pub fn append_tag(@buffer.Buffer, Int32, WireType) -&gt; Unit</pre>
+          <p>Append a tag, itself a varint of `(number &lt;&lt; 3) | wire_type`.</p><pre class="sig">pub fn append_tag(@buffer.Buffer, Int32, WireType) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">append_varint</span><span class="sdoc">| Append a base-128 varint: seven bits per octet, high bit set on every octet but the last.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">append_varint</span><span class="sdoc">Append a base-128 varint: seven bits per octet, high bit set on every octet but the last.</span></summary>
         <div class="sym-body">
-          <p>| Append a base-128 varint: seven bits per octet, high bit set on every octet but the last.</p><pre class="sig">pub fn append_varint(@buffer.Buffer, UInt64) -&gt; Unit</pre>
+          <p>Append a base-128 varint: seven bits per octet, high bit set on every octet but the last.</p><pre class="sig">pub fn append_varint(@buffer.Buffer, UInt64) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">consume_bytes</span><span class="sdoc">| Read a length-delimited body, returning a view of it and the offset just past it.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">consume_bytes</span><span class="sdoc">Read a length-delimited body, returning a view of it and the offset just past it.</span></summary>
         <div class="sym-body">
-          <p>| Read a length-delimited body, returning a view of it and the offset just past it.</p><pre class="sig">pub fn consume_bytes(BytesView, at? : Int32, limit? : Int32) -&gt; (BytesView, Int32) raise Refused</pre>
+          <p>Read a length-delimited body, returning a view of it and the offset just past it.</p><pre class="sig">pub fn consume_bytes(BytesView, at? : Int32, limit? : Int32) -&gt; (BytesView, Int32) raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">consume_fixed32</span><span class="sdoc">| Read a little-endian 32-bit value.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">consume_fixed32</span><span class="sdoc">Read a little-endian 32-bit value.</span></summary>
         <div class="sym-body">
-          <p>| Read a little-endian 32-bit value.</p><pre class="sig">pub fn consume_fixed32(BytesView, at? : Int32, limit? : Int32) -&gt; (UInt32, Int32) raise Refused</pre>
+          <p>Read a little-endian 32-bit value.</p><pre class="sig">pub fn consume_fixed32(BytesView, at? : Int32, limit? : Int32) -&gt; (UInt32, Int32) raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">consume_fixed64</span><span class="sdoc">| Read a little-endian 64-bit value.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">consume_fixed64</span><span class="sdoc">Read a little-endian 64-bit value.</span></summary>
         <div class="sym-body">
-          <p>| Read a little-endian 64-bit value.</p><pre class="sig">pub fn consume_fixed64(BytesView, at? : Int32, limit? : Int32) -&gt; (UInt64, Int32) raise Refused</pre>
+          <p>Read a little-endian 64-bit value.</p><pre class="sig">pub fn consume_fixed64(BytesView, at? : Int32, limit? : Int32) -&gt; (UInt64, Int32) raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">consume_group</span><span class="sdoc">| Read a group body after its start tag</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">consume_group</span><span class="sdoc">Read a group body after its start tag</span></summary>
         <div class="sym-body">
-          <p>| Read a group body after its start tag. `at` is the offset just past the start tag; the returned view excludes both tags.</p><pre class="sig">pub fn consume_group(BytesView, Int32, at? : Int32, limit? : Int32, limits? : Limits) -&gt; (BytesView, Int32) raise Refused</pre>
+          <p>Read a group body after its start tag. `at` is the offset just past the start tag; the returned view excludes both tags.</p><pre class="sig">pub fn consume_group(BytesView, Int32, at? : Int32, limit? : Int32, limits? : Limits) -&gt; (BytesView, Int32) raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">consume_string</span><span class="sdoc">| Read a length-delimited string, refusing invalid UTF-8 as the format requires.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">consume_string</span><span class="sdoc">Read a length-delimited string, refusing invalid UTF-8 as the format requires.</span></summary>
         <div class="sym-body">
-          <p>| Read a length-delimited string, refusing invalid UTF-8 as the format requires.</p><pre class="sig">pub fn consume_string(BytesView, at? : Int32, limit? : Int32) -&gt; (String, Int32) raise Refused</pre>
+          <p>Read a length-delimited string, refusing invalid UTF-8 as the format requires.</p><pre class="sig">pub fn consume_string(BytesView, at? : Int32, limit? : Int32) -&gt; (String, Int32) raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">consume_tag</span><span class="sdoc">| Read a tag, returning the field number, the wire type, and the offset just past it.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">consume_tag</span><span class="sdoc">Read a tag, returning the field number, the wire type, and the offset just past it.</span></summary>
         <div class="sym-body">
-          <p>| Read a tag, returning the field number, the wire type, and the offset just past it.</p><pre class="sig">pub fn consume_tag(BytesView, at? : Int32, limit? : Int32) -&gt; (Int32, WireType, Int32) raise Refused</pre>
+          <p>Read a tag, returning the field number, the wire type, and the offset just past it.</p><pre class="sig">pub fn consume_tag(BytesView, at? : Int32, limit? : Int32) -&gt; (Int32, WireType, Int32) raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">consume_varint</span><span class="sdoc">| Read a varint, returning the value and the offset just past it.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">consume_varint</span><span class="sdoc">Read a varint, returning the value and the offset just past it.</span></summary>
         <div class="sym-body">
-          <p>| Read a varint, returning the value and the offset just past it.</p><pre class="sig">pub fn consume_varint(BytesView, at? : Int32, limit? : Int32) -&gt; (UInt64, Int32) raise Refused</pre>
+          <p>Read a varint, returning the value and the offset just past it.</p><pre class="sig">pub fn consume_varint(BytesView, at? : Int32, limit? : Int32) -&gt; (UInt64, Int32) raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">decode_bool</span><span class="sdoc">| Any non-zero varint is `true`.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">decode_bool</span><span class="sdoc">Any non-zero varint is `true`.</span></summary>
         <div class="sym-body">
-          <p>| Any non-zero varint is `true`.</p><pre class="sig">pub fn decode_bool(UInt64) -&gt; Bool</pre>
+          <p>Any non-zero varint is `true`.</p><pre class="sig">pub fn decode_bool(UInt64) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">decode_tag</span><span class="sdoc">| Split a tag into its number and wire type.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">decode_tag</span><span class="sdoc">Split a tag into its number and wire type.</span></summary>
         <div class="sym-body">
-          <p>| Split a tag into its number and wire type.</p><pre class="sig">pub fn decode_tag(UInt64) -&gt; (Int32, WireType) raise Refused</pre>
+          <p>Split a tag into its number and wire type.</p><pre class="sig">pub fn decode_tag(UInt64) -&gt; (Int32, WireType) raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">decode_zigzag</span><span class="sdoc">| The inverse of `encode_zigzag`.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">decode_zigzag</span><span class="sdoc">The inverse of `encode_zigzag`.</span></summary>
         <div class="sym-body">
-          <p>| The inverse of `encode_zigzag`.</p><pre class="sig">pub fn decode_zigzag(UInt64) -&gt; Int64</pre>
+          <p>The inverse of `encode_zigzag`.</p><pre class="sig">pub fn decode_zigzag(UInt64) -&gt; Int64</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">encode_bool</span><span class="sdoc">| `true` is one, `false` is zero.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">encode_bool</span><span class="sdoc">`true` is one, `false` is zero.</span></summary>
         <div class="sym-body">
-          <p>| `true` is one, `false` is zero.</p><pre class="sig">pub fn encode_bool(Bool) -&gt; UInt64</pre>
+          <p>`true` is one, `false` is zero.</p><pre class="sig">pub fn encode_bool(Bool) -&gt; UInt64</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">encode_tag</span><span class="sdoc">| A tag as one integer.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">encode_tag</span><span class="sdoc">A tag as one integer.</span></summary>
         <div class="sym-body">
-          <p>| A tag as one integer.</p><pre class="sig">pub fn encode_tag(Int32, WireType) -&gt; UInt64</pre>
+          <p>A tag as one integer.</p><pre class="sig">pub fn encode_tag(Int32, WireType) -&gt; UInt64</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">encode_zigzag</span><span class="sdoc">| Map a signed integer to an unsigned one that stays short for small magnitudes: `(n &lt;&lt; 1) ^…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">encode_zigzag</span><span class="sdoc">Map a signed integer to an unsigned one that stays short for small magnitudes: `(n &lt;&lt; 1) ^ (n…</span></summary>
         <div class="sym-body">
-          <p>| Map a signed integer to an unsigned one that stays short for small magnitudes: `(n &lt;&lt; 1) ^ (n &gt;&gt; 63)`.</p><pre class="sig">pub fn encode_zigzag(Int64) -&gt; UInt64</pre>
+          <p>Map a signed integer to an unsigned one that stays short for small magnitudes: `(n &lt;&lt; 1) ^ (n &gt;&gt; 63)`.</p><pre class="sig">pub fn encode_zigzag(Int64) -&gt; UInt64</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">size_bytes</span><span class="sdoc">| The number of octets a length-delimited body occupies, prefix included.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">size_bytes</span><span class="sdoc">The number of octets a length-delimited body occupies, prefix included.</span></summary>
         <div class="sym-body">
-          <p>| The number of octets a length-delimited body occupies, prefix included.</p><pre class="sig">pub fn size_bytes(Int32) -&gt; Int32</pre>
+          <p>The number of octets a length-delimited body occupies, prefix included.</p><pre class="sig">pub fn size_bytes(Int32) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">size_group</span><span class="sdoc">| The number of octets a group occupies, both tags included.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">size_group</span><span class="sdoc">The number of octets a group occupies, both tags included.</span></summary>
         <div class="sym-body">
-          <p>| The number of octets a group occupies, both tags included.</p><pre class="sig">pub fn size_group(Int32, Int32) -&gt; Int32</pre>
+          <p>The number of octets a group occupies, both tags included.</p><pre class="sig">pub fn size_group(Int32, Int32) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">size_tag</span><span class="sdoc">| The number of octets a tag occupies.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">size_tag</span><span class="sdoc">The number of octets a tag occupies.</span></summary>
         <div class="sym-body">
-          <p>| The number of octets a tag occupies.</p><pre class="sig">pub fn size_tag(Int32) -&gt; Int32</pre>
+          <p>The number of octets a tag occupies.</p><pre class="sig">pub fn size_tag(Int32) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">size_varint</span><span class="sdoc">| The number of octets a varint occupies.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">size_varint</span><span class="sdoc">The number of octets a varint occupies.</span></summary>
         <div class="sym-body">
-          <p>| The number of octets a varint occupies.</p><pre class="sig">pub fn size_varint(UInt64) -&gt; Int32</pre>
+          <p>The number of octets a varint occupies.</p><pre class="sig">pub fn size_varint(UInt64) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">skip_field</span><span class="sdoc">| Skip one whole field, returning the offset just past it.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">skip_field</span><span class="sdoc">Skip one whole field, returning the offset just past it.</span></summary>
         <div class="sym-body">
-          <p>| Skip one whole field, returning the offset just past it.</p><pre class="sig">pub fn skip_field(BytesView, at? : Int32, limit? : Int32, limits? : Limits) -&gt; Int32 raise Refused</pre>
+          <p>Skip one whole field, returning the offset just past it.</p><pre class="sig">pub fn skip_field(BytesView, at? : Int32, limit? : Int32, limits? : Limits) -&gt; Int32 raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">limits</span><span class="sdoc">| The reference defaults: ten thousand levels, and no practical byte ceiling.</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">limits</span><span class="sdoc">The reference defaults: ten thousand levels, and no practical byte ceiling.</span></summary>
         <div class="sym-body">
-          <p>| The reference defaults: ten thousand levels, and no practical byte ceiling.</p><pre class="sig">pub let limits : Limits</pre>
+          <p>The reference defaults: ten thousand levels, and no practical byte ceiling.</p><pre class="sig">pub let limits : Limits</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">max_field_number</span><span class="sdoc">| The largest field number the format allows.</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">max_field_number</span><span class="sdoc">The largest field number the format allows.</span></summary>
         <div class="sym-body">
-          <p>| The largest field number the format allows.</p><pre class="sig">pub let max_field_number : Int32</pre>
+          <p>The largest field number the format allows.</p><pre class="sig">pub let max_field_number : Int32</pre>
         </div>
       </details>
     </section>
@@ -291,99 +291,99 @@
       <p class="pkg-path">moonbitstack/moonproto/reflect</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">Value, Message, the descriptor records and the global registries.</p>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">Element</span><span class="sdoc">| How to move one element of a repeated or map field between its typed form and a `Value`</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">Element</span><span class="sdoc">How to move one element of a repeated or map field between its typed form and a `Value`</span></summary>
         <div class="sym-body">
-          <p>| How to move one element of a repeated or map field between its typed form and a `Value`. `copy_into` exists because a message element cannot be reconstructed from a `Value`: the concrete type is only known here, so the value is copied into storage instead.</p><pre class="sig">pub(all) struct Element[T]</pre><div>to_value : (T) -&gt; Value</div><div>from_value : (Value) -&gt; T</div><div>make : () -&gt; T</div><div>copy_into : (T, &amp;Message) -&gt; Unit</div><div>is_message : Bool</div>
+          <p>How to move one element of a repeated or map field between its typed form and a `Value`. `copy_into` exists because a message element cannot be reconstructed from a `Value`: the concrete type is only known here, so the value is copied into storage instead.</p><pre class="sig">pub(all) struct Element[T]</pre><div>to_value : (T) -&gt; Value</div><div>from_value : (Value) -&gt; T</div><div>make : () -&gt; T</div><div>copy_into : (T, &amp;Message) -&gt; Unit</div><div>is_message : Bool</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">EnumDescriptor</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">EnumDescriptor</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct EnumDescriptor</pre><div>name : String</div><div>full_name : String</div><div>values : Array[EnumValueDescriptor]</div><div>closed : Bool</div><div>file_path : String</div>
+          <pre class="sig">pub(all) struct EnumDescriptor</pre><div>name : String</div><div>full_name : String</div><div>values : Array[EnumValueDescriptor]</div><div>closed : Bool</div><div>file_path : String</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">EnumValueDescriptor</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">EnumValueDescriptor</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct EnumValueDescriptor</pre><div>name : String</div><div>number : Int32</div><div>full_name : String</div>
+          <pre class="sig">pub(all) struct EnumValueDescriptor</pre><div>name : String</div><div>number : Int32</div><div>full_name : String</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">FieldDescriptor</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">FieldDescriptor</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct FieldDescriptor</pre><div>name : String</div><div>full_name : String</div><div>number : Int32</div><div>kind : Kind</div><div>cardinality : Cardinality</div><div>json_name : String</div><div>text_name : String</div><div>has_presence : Bool</div><div>is_extension : Bool</div><div>is_map : Bool</div><div>packed : Bool</div><div>oneof_index : Int32?</div><div>message_type : String?</div><div>enum_type : String?</div>
+          <pre class="sig">pub(all) struct FieldDescriptor</pre><div>name : String</div><div>full_name : String</div><div>number : Int32</div><div>kind : Kind</div><div>cardinality : Cardinality</div><div>json_name : String</div><div>text_name : String</div><div>has_presence : Bool</div><div>is_extension : Bool</div><div>is_map : Bool</div><div>packed : Bool</div><div>oneof_index : Int32?</div><div>message_type : String?</div><div>enum_type : String?</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">FileDescriptor</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">FileDescriptor</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct FileDescriptor</pre><div>path : String</div><div>package_name : String</div><div>syntax : Syntax</div><div>messages : Array[MessageDescriptor]</div><div>enums : Array[EnumDescriptor]</div><div>services : Array[ServiceDescriptor]</div><div>extensions : Array[FieldDescriptor]</div><div>dependencies : Array[String]</div><div>public_dependencies : Array[String]</div><div>edition : String?</div><div>option_map : Array[(String, Array[(String, String)])]</div>
+          <pre class="sig">pub(all) struct FileDescriptor</pre><div>path : String</div><div>package_name : String</div><div>syntax : Syntax</div><div>messages : Array[MessageDescriptor]</div><div>enums : Array[EnumDescriptor]</div><div>services : Array[ServiceDescriptor]</div><div>extensions : Array[FieldDescriptor]</div><div>dependencies : Array[String]</div><div>public_dependencies : Array[String]</div><div>edition : String?</div><div>option_map : Array[(String, Array[(String, String)])]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">Files</span><span class="sdoc">| File descriptors, looked up by path or by a declaration&#x27;s qualified name.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">Files</span><span class="sdoc">File descriptors, looked up by path or by a declaration&#x27;s qualified name.</span></summary>
         <div class="sym-body">
-          <p>| File descriptors, looked up by path or by a declaration&#x27;s qualified name.</p><pre class="sig">pub struct Files</pre><div>files : Array[FileDescriptor]</div>
+          <p>File descriptors, looked up by path or by a declaration&#x27;s qualified name.</p><pre class="sig">pub struct Files</pre><div>files : Array[FileDescriptor]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">MessageDescriptor</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">MessageDescriptor</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct MessageDescriptor</pre><div>name : String</div><div>full_name : String</div><div>syntax : Syntax</div><div>fields : Array[FieldDescriptor]</div><div>oneofs : Array[OneofDescriptor]</div><div>is_map_entry : Bool</div><div>reserved_names : Array[String]</div><div>reserved_ranges : Array[(Int32, Int32)]</div><div>required_numbers : Array[Int32]</div><div>extension_ranges : Array[(Int32, Int32)]</div><div>nested_messages : Array[MessageDescriptor]</div><div>nested_enums : Array[EnumDescriptor]</div><div>nested_extensions : Array[FieldDescriptor]</div><div>file_path : String</div>
+          <pre class="sig">pub(all) struct MessageDescriptor</pre><div>name : String</div><div>full_name : String</div><div>syntax : Syntax</div><div>fields : Array[FieldDescriptor]</div><div>oneofs : Array[OneofDescriptor]</div><div>is_map_entry : Bool</div><div>reserved_names : Array[String]</div><div>reserved_ranges : Array[(Int32, Int32)]</div><div>required_numbers : Array[Int32]</div><div>extension_ranges : Array[(Int32, Int32)]</div><div>nested_messages : Array[MessageDescriptor]</div><div>nested_enums : Array[EnumDescriptor]</div><div>nested_extensions : Array[FieldDescriptor]</div><div>file_path : String</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">MethodDescriptor</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">MethodDescriptor</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct MethodDescriptor</pre><div>name : String</div><div>full_name : String</div><div>input_type : String</div><div>output_type : String</div><div>streaming_client : Bool</div><div>streaming_server : Bool</div>
+          <pre class="sig">pub(all) struct MethodDescriptor</pre><div>name : String</div><div>full_name : String</div><div>input_type : String</div><div>output_type : String</div><div>streaming_client : Bool</div><div>streaming_server : Bool</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">OneofDescriptor</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">OneofDescriptor</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct OneofDescriptor</pre><div>name : String</div><div>synthetic : Bool</div><div>field_numbers : Array[Int32]</div>
+          <pre class="sig">pub(all) struct OneofDescriptor</pre><div>name : String</div><div>synthetic : Bool</div><div>field_numbers : Array[Int32]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">RawFields</span><span class="sdoc">| The bytes of every unknown field a message carried, tag and body included.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">RawFields</span><span class="sdoc">The bytes of every unknown field a message carried, tag and body included.</span></summary>
         <div class="sym-body">
-          <p>| The bytes of every unknown field a message carried, tag and body included.</p><pre class="sig">pub(all) struct RawFields(Bytes)</pre>
+          <p>The bytes of every unknown field a message carried, tag and body included.</p><pre class="sig">pub(all) struct RawFields(Bytes)</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">ServiceDescriptor</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">ServiceDescriptor</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct ServiceDescriptor</pre><div>name : String</div><div>full_name : String</div><div>methods : Array[MethodDescriptor]</div><div>file_path : String</div>
+          <pre class="sig">pub(all) struct ServiceDescriptor</pre><div>name : String</div><div>full_name : String</div><div>methods : Array[MethodDescriptor]</div><div>file_path : String</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">TypedList</span><span class="sdoc">| A repeated field backed by the array the message stores.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">TypedList</span><span class="sdoc">A repeated field backed by the array the message stores.</span></summary>
         <div class="sym-body">
-          <p>| A repeated field backed by the array the message stores.</p><pre class="sig">pub struct TypedList[T]</pre><div>items : Array[T]</div><div>element : Element[T]</div>
+          <p>A repeated field backed by the array the message stores.</p><pre class="sig">pub struct TypedList[T]</pre><div>items : Array[T]</div><div>element : Element[T]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">TypedMap</span><span class="sdoc">| A map field backed by the map the message stores.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">TypedMap</span><span class="sdoc">A map field backed by the map the message stores.</span></summary>
         <div class="sym-body">
-          <p>| A map field backed by the map the message stores.</p><pre class="sig">pub struct TypedMap[K, V]</pre><div>entries : Map[K, V]</div><div>key_value : (K) -&gt; MapKey</div><div>key_of : (MapKey) -&gt; K</div><div>element : Element[V]</div>
+          <p>A map field backed by the map the message stores.</p><pre class="sig">pub struct TypedMap[K, V]</pre><div>entries : Map[K, V]</div><div>key_value : (K) -&gt; MapKey</div><div>key_of : (MapKey) -&gt; K</div><div>element : Element[V]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">Types</span><span class="sdoc">| Message, enum and extension types, looked up by qualified name.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">Types</span><span class="sdoc">Message, enum and extension types, looked up by qualified name.</span></summary>
         <div class="sym-body">
-          <p>| Message, enum and extension types, looked up by qualified name.</p><pre class="sig">pub struct Types</pre><div>messages : Array[(String, &amp;MessageType)]</div><div>enums : Array[(String, &amp;EnumType)]</div><div>extensions : Array[(String, &amp;ExtensionType)]</div><div>extensions_by_number : Array[(String, &amp;ExtensionType)]</div>
+          <p>Message, enum and extension types, looked up by qualified name.</p><pre class="sig">pub struct Types</pre><div>messages : Array[(String, &amp;MessageType)]</div><div>enums : Array[(String, &amp;EnumType)]</div><div>extensions : Array[(String, &amp;ExtensionType)]</div><div>extensions_by_number : Array[(String, &amp;ExtensionType)]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">ValueList</span><span class="sdoc">| A list backed by an array</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">ValueList</span><span class="sdoc">A list backed by an array</span></summary>
         <div class="sym-body">
-          <p>| A list backed by an array. It remembers the element kind so that a new element can be built without consulting the descriptor again.</p><pre class="sig">pub struct ValueList</pre><div>element_kind : Kind</div><div>element_message_type : String?</div><div>items : Array[Value]</div>
+          <p>A list backed by an array. It remembers the element kind so that a new element can be built without consulting the descriptor again.</p><pre class="sig">pub struct ValueList</pre><div>element_kind : Kind</div><div>element_message_type : String?</div><div>items : Array[Value]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">ValueMap</span><span class="sdoc">| A map backed by an association array</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">ValueMap</span><span class="sdoc">A map backed by an association array</span></summary>
         <div class="sym-body">
-          <p>| A map backed by an association array. Protobuf maps are usually small, and a linear lookup avoids requiring the key type to be hashable here.</p><pre class="sig">pub struct ValueMap</pre><div>key_kind : Kind</div><div>value_kind : Kind</div><div>value_message_type : String?</div><div>entries : Array[(MapKey, Value)]</div>
+          <p>A map backed by an association array. Protobuf maps are usually small, and a linear lookup avoids requiring the key type to be hashable here.</p><pre class="sig">pub struct ValueMap</pre><div>key_kind : Kind</div><div>value_kind : Kind</div><div>value_message_type : String?</div><div>entries : Array[(MapKey, Value)]</div>
         </div>
       </details>
       <details class="sym">
@@ -411,75 +411,75 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind enum">enum</span><span class="sname">Value</span><span class="sdoc">| One field value</span></summary>
+        <summary><span class="kind enum">enum</span><span class="sname">Value</span><span class="sdoc">One field value</span></summary>
         <div class="sym-body">
-          <p>| One field value. A composite value holds a reference to a list, map or message, so mutation through it is visible to the message that owns it.</p><pre class="sig">pub(all) enum Value</pre><div>Invalid</div><div>Bool(Bool)</div><div>Int32(Int32)</div><div>Int64(Int64)</div><div>Uint32(UInt32)</div><div>Uint64(UInt64)</div><div>Float(Float)</div><div>Double(Double)</div><div>String(String)</div><div>Bytes(Bytes)</div><div>Enum(Int32)</div><div>Message(&amp;Message)</div><div>ListView(&amp;ListField)</div><div>MapView(&amp;MapField)</div>
+          <p>One field value. A composite value holds a reference to a list, map or message, so mutation through it is visible to the message that owns it.</p><pre class="sig">pub(all) enum Value</pre><div>Invalid</div><div>Bool(Bool)</div><div>Int32(Int32)</div><div>Int64(Int64)</div><div>Uint32(UInt32)</div><div>Uint64(UInt64)</div><div>Float(Float)</div><div>Double(Double)</div><div>String(String)</div><div>Bytes(Bytes)</div><div>Enum(Int32)</div><div>Message(&amp;Message)</div><div>ListView(&amp;ListField)</div><div>MapView(&amp;MapField)</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">| A registry refusal: a name already taken.</span></summary>
+        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">A registry refusal: a name already taken.</span></summary>
         <div class="sym-body">
-          <p>| A registry refusal: a name already taken.</p><pre class="sig">pub(all) suberror Refused</pre><div>Conflict(String)</div>
+          <p>A registry refusal: a name already taken.</p><pre class="sig">pub(all) suberror Refused</pre><div>Conflict(String)</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">Enum</span><span class="sdoc">| A concrete enum value.</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">Enum</span><span class="sdoc">A concrete enum value.</span></summary>
         <div class="sym-body">
-          <p>| A concrete enum value.</p><pre class="sig">pub(open) trait Enum</pre><div>fn descriptor(Self) -&gt; EnumDescriptor</div><div>fn enum_type(Self) -&gt; &amp;EnumType</div><div>fn number(Self) -&gt; Int32</div>
+          <p>A concrete enum value.</p><pre class="sig">pub(open) trait Enum</pre><div>fn descriptor(Self) -&gt; EnumDescriptor</div><div>fn enum_type(Self) -&gt; &amp;EnumType</div><div>fn number(Self) -&gt; Int32</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">EnumType</span><span class="sdoc">| An enum&#x27;s concrete type: its descriptor and a constructor.</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">EnumType</span><span class="sdoc">An enum&#x27;s concrete type: its descriptor and a constructor.</span></summary>
         <div class="sym-body">
-          <p>| An enum&#x27;s concrete type: its descriptor and a constructor.</p><pre class="sig">pub(open) trait EnumType</pre><div>fn new_enum(Self, Int32) -&gt; &amp;Enum</div><div>fn descriptor(Self) -&gt; EnumDescriptor</div>
+          <p>An enum&#x27;s concrete type: its descriptor and a constructor.</p><pre class="sig">pub(open) trait EnumType</pre><div>fn new_enum(Self, Int32) -&gt; &amp;Enum</div><div>fn descriptor(Self) -&gt; EnumDescriptor</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">ExtensionType</span><span class="sdoc">| A concrete extension: its type and validation of a value assigned to it.</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">ExtensionType</span><span class="sdoc">A concrete extension: its type and validation of a value assigned to it.</span></summary>
         <div class="sym-body">
-          <p>| A concrete extension: its type and validation of a value assigned to it.</p><pre class="sig">pub(open) trait ExtensionType</pre><div>fn new_value(Self) -&gt; Value</div><div>fn zero(Self) -&gt; Value</div><div>fn descriptor(Self) -&gt; FieldDescriptor</div><div>fn is_valid_value(Self, Value) -&gt; Bool</div>
+          <p>A concrete extension: its type and validation of a value assigned to it.</p><pre class="sig">pub(open) trait ExtensionType</pre><div>fn new_value(Self) -&gt; Value</div><div>fn zero(Self) -&gt; Value</div><div>fn descriptor(Self) -&gt; FieldDescriptor</div><div>fn is_valid_value(Self, Value) -&gt; Bool</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">Fresh</span><span class="sdoc">| A message type that can build an empty instance of its own concrete type</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">Fresh</span><span class="sdoc">A message type that can build an empty instance of its own concrete type</span></summary>
         <div class="sym-body">
-          <p>| A message type that can build an empty instance of its own concrete type. Kept apart from `Message` so that `&amp;Message` stays a usable trait object.</p><pre class="sig">pub(open) trait Fresh</pre><div>fn fresh(Self) -&gt; Self</div>
+          <p>A message type that can build an empty instance of its own concrete type. Kept apart from `Message` so that `&amp;Message` stays a usable trait object.</p><pre class="sig">pub(open) trait Fresh</pre><div>fn fresh(Self) -&gt; Self</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">ListField</span><span class="sdoc">| A repeated field: zero-indexed and ordered.</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">ListField</span><span class="sdoc">A repeated field: zero-indexed and ordered.</span></summary>
         <div class="sym-body">
-          <p>| A repeated field: zero-indexed and ordered.</p><pre class="sig">pub(open) trait ListField</pre><div>fn length(Self) -&gt; Int32</div><div>fn get(Self, Int32) -&gt; Value</div><div>fn set(Self, Int32, Value) -&gt; Unit</div><div>fn append(Self, Value) -&gt; Unit</div><div>fn append_mutable(Self) -&gt; Value</div><div>fn truncate(Self, Int32) -&gt; Unit</div><div>fn new_element(Self) -&gt; Value</div><div>fn is_valid(Self) -&gt; Bool</div>
+          <p>A repeated field: zero-indexed and ordered.</p><pre class="sig">pub(open) trait ListField</pre><div>fn length(Self) -&gt; Int32</div><div>fn get(Self, Int32) -&gt; Value</div><div>fn set(Self, Int32, Value) -&gt; Unit</div><div>fn append(Self, Value) -&gt; Unit</div><div>fn append_mutable(Self) -&gt; Value</div><div>fn truncate(Self, Int32) -&gt; Unit</div><div>fn new_element(Self) -&gt; Value</div><div>fn is_valid(Self) -&gt; Bool</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">MapField</span><span class="sdoc">| A map field: unordered, keyed by one of the six key kinds.</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">MapField</span><span class="sdoc">A map field: unordered, keyed by one of the six key kinds.</span></summary>
         <div class="sym-body">
-          <p>| A map field: unordered, keyed by one of the six key kinds.</p><pre class="sig">pub(open) trait MapField</pre><div>fn length(Self) -&gt; Int32</div><div>fn range(Self, (MapKey, Value) -&gt; Bool) -&gt; Unit</div><div>fn has(Self, MapKey) -&gt; Bool</div><div>fn clear(Self, MapKey) -&gt; Unit</div><div>fn get(Self, MapKey) -&gt; Value</div><div>fn set(Self, MapKey, Value) -&gt; Unit</div><div>fn mutable(Self, MapKey) -&gt; Value</div><div>fn new_value(Self) -&gt; Value</div><div>fn is_valid(Self) -&gt; Bool</div>
+          <p>A map field: unordered, keyed by one of the six key kinds.</p><pre class="sig">pub(open) trait MapField</pre><div>fn length(Self) -&gt; Int32</div><div>fn range(Self, (MapKey, Value) -&gt; Bool) -&gt; Unit</div><div>fn has(Self, MapKey) -&gt; Bool</div><div>fn clear(Self, MapKey) -&gt; Unit</div><div>fn get(Self, MapKey) -&gt; Value</div><div>fn set(Self, MapKey, Value) -&gt; Unit</div><div>fn mutable(Self, MapKey) -&gt; Value</div><div>fn new_value(Self) -&gt; Value</div><div>fn is_valid(Self) -&gt; Bool</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">Message</span><span class="sdoc">| A message instance, reachable only through its descriptor.</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">Message</span><span class="sdoc">A message instance, reachable only through its descriptor.</span></summary>
         <div class="sym-body">
-          <p>| A message instance, reachable only through its descriptor.</p><pre class="sig">pub(open) trait Message</pre><div>fn descriptor(Self) -&gt; MessageDescriptor</div><div>fn message_type(Self) -&gt; &amp;MessageType</div><div>fn is_valid(Self) -&gt; Bool</div><div>fn range(Self, (FieldDescriptor, Value) -&gt; Bool) -&gt; Unit</div><div>fn range_extensions(Self, (FieldDescriptor, Value) -&gt; Bool) -&gt; Unit</div><div>fn has(Self, FieldDescriptor) -&gt; Bool</div><div>fn clear(Self, FieldDescriptor) -&gt; Unit</div><div>fn get(Self, FieldDescriptor) -&gt; Value</div><div>fn set(Self, FieldDescriptor, Value) -&gt; Unit</div><div>fn mutable(Self, FieldDescriptor) -&gt; Value</div><div>fn new_field(Self, FieldDescriptor) -&gt; Value</div><div>fn which_oneof(Self, OneofDescriptor) -&gt; Int32?</div><div>fn get_unknown(Self) -&gt; RawFields</div><div>fn set_unknown(Self, RawFields) -&gt; Unit</div>
+          <p>A message instance, reachable only through its descriptor.</p><pre class="sig">pub(open) trait Message</pre><div>fn descriptor(Self) -&gt; MessageDescriptor</div><div>fn message_type(Self) -&gt; &amp;MessageType</div><div>fn is_valid(Self) -&gt; Bool</div><div>fn range(Self, (FieldDescriptor, Value) -&gt; Bool) -&gt; Unit</div><div>fn range_extensions(Self, (FieldDescriptor, Value) -&gt; Bool) -&gt; Unit</div><div>fn has(Self, FieldDescriptor) -&gt; Bool</div><div>fn clear(Self, FieldDescriptor) -&gt; Unit</div><div>fn get(Self, FieldDescriptor) -&gt; Value</div><div>fn set(Self, FieldDescriptor, Value) -&gt; Unit</div><div>fn mutable(Self, FieldDescriptor) -&gt; Value</div><div>fn new_field(Self, FieldDescriptor) -&gt; Value</div><div>fn which_oneof(Self, OneofDescriptor) -&gt; Int32?</div><div>fn get_unknown(Self) -&gt; RawFields</div><div>fn set_unknown(Self, RawFields) -&gt; Unit</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">MessageType</span><span class="sdoc">| A message&#x27;s concrete type: its descriptor and a constructor.</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">MessageType</span><span class="sdoc">A message&#x27;s concrete type: its descriptor and a constructor.</span></summary>
         <div class="sym-body">
-          <p>| A message&#x27;s concrete type: its descriptor and a constructor.</p><pre class="sig">pub(open) trait MessageType</pre><div>fn new_message(Self) -&gt; &amp;Message</div><div>fn zero(Self) -&gt; &amp;Message</div><div>fn descriptor(Self) -&gt; MessageDescriptor</div>
+          <p>A message&#x27;s concrete type: its descriptor and a constructor.</p><pre class="sig">pub(open) trait MessageType</pre><div>fn new_message(Self) -&gt; &amp;Message</div><div>fn zero(Self) -&gt; &amp;Message</div><div>fn descriptor(Self) -&gt; MessageDescriptor</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Cardinality::code</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Cardinality::code</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Cardinality::code(Self) -&gt; Int32</pre>
+          <pre class="sig">pub fn Cardinality::code(Self) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Cardinality::equal</span><span class="sdoc">| Structural equality for scalars; composites compare by identity, because semantic equality…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Cardinality::equal</span><span class="sdoc">Structural equality for scalars; composites compare by identity, because semantic equality is…</span></summary>
         <div class="sym-body">
-          <p>| Structural equality for scalars; composites compare by identity, because semantic equality is a descriptor-driven walk in `proto.equal`.</p><pre class="sig">pub fn Cardinality::equal(Self, Self) -&gt; Bool</pre>
+          <p>Structural equality for scalars; composites compare by identity, because semantic equality is a descriptor-driven walk in `proto.equal`.</p><pre class="sig">pub fn Cardinality::equal(Self, Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
@@ -489,129 +489,129 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Cardinality::of</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Cardinality::of</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Cardinality::of(Int32) -&gt; Self?</pre>
+          <pre class="sig">pub fn Cardinality::of(Int32) -&gt; Self?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Element::new</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Element::new</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn[T] Element::new((T) -&gt; Value, (Value) -&gt; T, () -&gt; T, (T, &amp;Message) -&gt; Unit, Bool) -&gt; Self[T]</pre>
+          <pre class="sig">pub fn[T] Element::new((T) -&gt; Value, (Value) -&gt; T, () -&gt; T, (T, &amp;Message) -&gt; Unit, Bool) -&gt; Self[T]</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">EnumDescriptor::value_by_name</span><span class="sdoc">| The value with `name`, or `None`.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">EnumDescriptor::value_by_name</span><span class="sdoc">The value with `name`, or `None`.</span></summary>
         <div class="sym-body">
-          <p>| The value with `name`, or `None`.</p><pre class="sig">pub fn EnumDescriptor::value_by_name(Self, String) -&gt; EnumValueDescriptor?</pre>
+          <p>The value with `name`, or `None`.</p><pre class="sig">pub fn EnumDescriptor::value_by_name(Self, String) -&gt; EnumValueDescriptor?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">EnumDescriptor::value_by_number</span><span class="sdoc">| The value with `number`, or `None`.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">EnumDescriptor::value_by_number</span><span class="sdoc">The value with `number`, or `None`.</span></summary>
         <div class="sym-body">
-          <p>| The value with `number`, or `None`.</p><pre class="sig">pub fn EnumDescriptor::value_by_number(Self, Int32) -&gt; EnumValueDescriptor?</pre>
+          <p>The value with `number`, or `None`.</p><pre class="sig">pub fn EnumDescriptor::value_by_number(Self, Int32) -&gt; EnumValueDescriptor?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">FieldDescriptor::is_list</span><span class="sdoc">| Whether the field is repeated and not a map, so its value is a list.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">FieldDescriptor::is_list</span><span class="sdoc">Whether the field is repeated and not a map, so its value is a list.</span></summary>
         <div class="sym-body">
-          <p>| Whether the field is repeated and not a map, so its value is a list.</p><pre class="sig">pub fn FieldDescriptor::is_list(Self) -&gt; Bool</pre>
+          <p>Whether the field is repeated and not a map, so its value is a list.</p><pre class="sig">pub fn FieldDescriptor::is_list(Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">FieldDescriptor::is_map_field</span><span class="sdoc">| Whether the field is a map, so its value is a map rather than a list.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">FieldDescriptor::is_map_field</span><span class="sdoc">Whether the field is a map, so its value is a map rather than a list.</span></summary>
         <div class="sym-body">
-          <p>| Whether the field is a map, so its value is a map rather than a list.</p><pre class="sig">pub fn FieldDescriptor::is_map_field(Self) -&gt; Bool</pre>
+          <p>Whether the field is a map, so its value is a map rather than a list.</p><pre class="sig">pub fn FieldDescriptor::is_map_field(Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">FileDescriptor::name</span><span class="sdoc">| The file&#x27;s own name, without directories.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">FileDescriptor::name</span><span class="sdoc">The file&#x27;s own name, without directories.</span></summary>
         <div class="sym-body">
-          <p>| The file&#x27;s own name, without directories.</p><pre class="sig">pub fn FileDescriptor::name(Self) -&gt; String</pre>
+          <p>The file&#x27;s own name, without directories.</p><pre class="sig">pub fn FileDescriptor::name(Self) -&gt; String</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">FileDescriptor::option_of</span><span class="sdoc">| The value of one option on `name`, if it was written.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">FileDescriptor::option_of</span><span class="sdoc">The value of one option on `name`, if it was written.</span></summary>
         <div class="sym-body">
-          <p>| The value of one option on `name`, if it was written.</p><pre class="sig">pub fn FileDescriptor::option_of(Self, String, String) -&gt; String?</pre>
+          <p>The value of one option on `name`, if it was written.</p><pre class="sig">pub fn FileDescriptor::option_of(Self, String, String) -&gt; String?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">FileDescriptor::options_of</span><span class="sdoc">| The options written on `name` in this file, as (name, value) pairs.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">FileDescriptor::options_of</span><span class="sdoc">The options written on `name` in this file, as (name, value) pairs.</span></summary>
         <div class="sym-body">
-          <p>| The options written on `name` in this file, as (name, value) pairs.</p><pre class="sig">pub fn FileDescriptor::options_of(Self, String) -&gt; Array[(String, String)]</pre>
+          <p>The options written on `name` in this file, as (name, value) pairs.</p><pre class="sig">pub fn FileDescriptor::options_of(Self, String) -&gt; Array[(String, String)]</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Files::all</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Files::all</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Files::all(Self) -&gt; Array[FileDescriptor]</pre>
+          <pre class="sig">pub fn Files::all(Self) -&gt; Array[FileDescriptor]</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Files::find_enum_by_name</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Files::find_enum_by_name</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Files::find_enum_by_name(Self, String) -&gt; EnumDescriptor?</pre>
+          <pre class="sig">pub fn Files::find_enum_by_name(Self, String) -&gt; EnumDescriptor?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Files::find_file_by_path</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Files::find_file_by_path</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Files::find_file_by_path(Self, String) -&gt; FileDescriptor?</pre>
+          <pre class="sig">pub fn Files::find_file_by_path(Self, String) -&gt; FileDescriptor?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Files::find_message_by_name</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Files::find_message_by_name</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Files::find_message_by_name(Self, String) -&gt; MessageDescriptor?</pre>
+          <pre class="sig">pub fn Files::find_message_by_name(Self, String) -&gt; MessageDescriptor?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Files::length</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Files::length</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Files::length(Self) -&gt; Int32</pre>
+          <pre class="sig">pub fn Files::length(Self) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Files::new</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Files::new</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Files::new() -&gt; Self</pre>
+          <pre class="sig">pub fn Files::new() -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Files::register</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Files::register</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Files::register(Self, FileDescriptor) -&gt; Unit raise Refused</pre>
+          <pre class="sig">pub fn Files::register(Self, FileDescriptor) -&gt; Unit raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Kind::code</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Kind::code</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Kind::code(Self) -&gt; Int32</pre>
+          <pre class="sig">pub fn Kind::code(Self) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Kind::equal</span><span class="sdoc">| Structural equality for scalars; composites compare by identity, because semantic equality…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Kind::equal</span><span class="sdoc">Structural equality for scalars; composites compare by identity, because semantic equality is…</span></summary>
         <div class="sym-body">
-          <p>| Structural equality for scalars; composites compare by identity, because semantic equality is a descriptor-driven walk in `proto.equal`.</p><pre class="sig">pub fn Kind::equal(Self, Self) -&gt; Bool</pre>
+          <p>Structural equality for scalars; composites compare by identity, because semantic equality is a descriptor-driven walk in `proto.equal`.</p><pre class="sig">pub fn Kind::equal(Self, Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Kind::is_enum</span><span class="sdoc">| Whether the kind is the enum kind.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Kind::is_enum</span><span class="sdoc">Whether the kind is the enum kind.</span></summary>
         <div class="sym-body">
-          <p>| Whether the kind is the enum kind.</p><pre class="sig">pub fn Kind::is_enum(Self) -&gt; Bool</pre>
+          <p>Whether the kind is the enum kind.</p><pre class="sig">pub fn Kind::is_enum(Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Kind::is_message</span><span class="sdoc">| Whether the kind is a message or a group, and so needs a nested message.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Kind::is_message</span><span class="sdoc">Whether the kind is a message or a group, and so needs a nested message.</span></summary>
         <div class="sym-body">
-          <p>| Whether the kind is a message or a group, and so needs a nested message.</p><pre class="sig">pub fn Kind::is_message(Self) -&gt; Bool</pre>
+          <p>Whether the kind is a message or a group, and so needs a nested message.</p><pre class="sig">pub fn Kind::is_message(Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Kind::is_numeric</span><span class="sdoc">| Whether the kind is a number, and so packable when repeated.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Kind::is_numeric</span><span class="sdoc">Whether the kind is a number, and so packable when repeated.</span></summary>
         <div class="sym-body">
-          <p>| Whether the kind is a number, and so packable when repeated.</p><pre class="sig">pub fn Kind::is_numeric(Self) -&gt; Bool</pre>
+          <p>Whether the kind is a number, and so packable when repeated.</p><pre class="sig">pub fn Kind::is_numeric(Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
@@ -621,27 +621,27 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Kind::of</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Kind::of</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Kind::of(Int32) -&gt; Self?</pre>
+          <pre class="sig">pub fn Kind::of(Int32) -&gt; Self?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">MapKey::bool</span><span class="sdoc">| The value as a bool; aborts when it is not one.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">MapKey::bool</span><span class="sdoc">The value as a bool; aborts when it is not one.</span></summary>
         <div class="sym-body">
-          <p>| The value as a bool; aborts when it is not one.</p><pre class="sig">pub fn MapKey::bool(Self) -&gt; Bool</pre>
+          <p>The value as a bool; aborts when it is not one.</p><pre class="sig">pub fn MapKey::bool(Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">MapKey::equal</span><span class="sdoc">| Structural equality for scalars; composites compare by identity, because semantic equality…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">MapKey::equal</span><span class="sdoc">Structural equality for scalars; composites compare by identity, because semantic equality is…</span></summary>
         <div class="sym-body">
-          <p>| Structural equality for scalars; composites compare by identity, because semantic equality is a descriptor-driven walk in `proto.equal`.</p><pre class="sig">pub fn MapKey::equal(Self, Self) -&gt; Bool</pre>
+          <p>Structural equality for scalars; composites compare by identity, because semantic equality is a descriptor-driven walk in `proto.equal`.</p><pre class="sig">pub fn MapKey::equal(Self, Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">MapKey::int</span><span class="sdoc">| The value as an integer; `Int32` and `Int64` both widen.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">MapKey::int</span><span class="sdoc">The value as an integer; `Int32` and `Int64` both widen.</span></summary>
         <div class="sym-body">
-          <p>| The value as an integer; `Int32` and `Int64` both widen.</p><pre class="sig">pub fn MapKey::int(Self) -&gt; Int64</pre>
+          <p>The value as an integer; `Int32` and `Int64` both widen.</p><pre class="sig">pub fn MapKey::int(Self) -&gt; Int64</pre>
         </div>
       </details>
       <details class="sym">
@@ -651,69 +651,69 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">MapKey::string</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">MapKey::string</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn MapKey::string(Self) -&gt; String</pre>
+          <pre class="sig">pub fn MapKey::string(Self) -&gt; String</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">MapKey::uint</span><span class="sdoc">| The value as an unsigned integer; `Uint32` and `Uint64` both widen.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">MapKey::uint</span><span class="sdoc">The value as an unsigned integer; `Uint32` and `Uint64` both widen.</span></summary>
         <div class="sym-body">
-          <p>| The value as an unsigned integer; `Uint32` and `Uint64` both widen.</p><pre class="sig">pub fn MapKey::uint(Self) -&gt; UInt64</pre>
+          <p>The value as an unsigned integer; `Uint32` and `Uint64` both widen.</p><pre class="sig">pub fn MapKey::uint(Self) -&gt; UInt64</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">MapKey::value</span><span class="sdoc">| A value for a map key.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">MapKey::value</span><span class="sdoc">A value for a map key.</span></summary>
         <div class="sym-body">
-          <p>| A value for a map key.</p><pre class="sig">pub fn MapKey::value(Self) -&gt; Value</pre>
+          <p>A value for a map key.</p><pre class="sig">pub fn MapKey::value(Self) -&gt; Value</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">MessageDescriptor::field_by_json_name</span><span class="sdoc">| The field whose JSON name is `name`, or `None`.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">MessageDescriptor::field_by_json_name</span><span class="sdoc">The field whose JSON name is `name`, or `None`.</span></summary>
         <div class="sym-body">
-          <p>| The field whose JSON name is `name`, or `None`.</p><pre class="sig">pub fn MessageDescriptor::field_by_json_name(Self, String) -&gt; FieldDescriptor?</pre>
+          <p>The field whose JSON name is `name`, or `None`.</p><pre class="sig">pub fn MessageDescriptor::field_by_json_name(Self, String) -&gt; FieldDescriptor?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">MessageDescriptor::field_by_name</span><span class="sdoc">| The field with the proto `name`, or `None`.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">MessageDescriptor::field_by_name</span><span class="sdoc">The field with the proto `name`, or `None`.</span></summary>
         <div class="sym-body">
-          <p>| The field with the proto `name`, or `None`.</p><pre class="sig">pub fn MessageDescriptor::field_by_name(Self, String) -&gt; FieldDescriptor?</pre>
+          <p>The field with the proto `name`, or `None`.</p><pre class="sig">pub fn MessageDescriptor::field_by_name(Self, String) -&gt; FieldDescriptor?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">MessageDescriptor::field_by_number</span><span class="sdoc">| The field with `number`, or `None`.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">MessageDescriptor::field_by_number</span><span class="sdoc">The field with `number`, or `None`.</span></summary>
         <div class="sym-body">
-          <p>| The field with `number`, or `None`.</p><pre class="sig">pub fn MessageDescriptor::field_by_number(Self, Int32) -&gt; FieldDescriptor?</pre>
+          <p>The field with `number`, or `None`.</p><pre class="sig">pub fn MessageDescriptor::field_by_number(Self, Int32) -&gt; FieldDescriptor?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">MessageDescriptor::oneof_of_field</span><span class="sdoc">| The oneof that owns `number`, or `None`.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">MessageDescriptor::oneof_of_field</span><span class="sdoc">The oneof that owns `number`, or `None`.</span></summary>
         <div class="sym-body">
-          <p>| The oneof that owns `number`, or `None`.</p><pre class="sig">pub fn MessageDescriptor::oneof_of_field(Self, Int32) -&gt; OneofDescriptor?</pre>
+          <p>The oneof that owns `number`, or `None`.</p><pre class="sig">pub fn MessageDescriptor::oneof_of_field(Self, Int32) -&gt; OneofDescriptor?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">RawFields::bytes</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">RawFields::bytes</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn RawFields::bytes(Self) -&gt; Bytes</pre>
+          <pre class="sig">pub fn RawFields::bytes(Self) -&gt; Bytes</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">RawFields::from_bytes</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">RawFields::from_bytes</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn RawFields::from_bytes(Bytes) -&gt; Self</pre>
+          <pre class="sig">pub fn RawFields::from_bytes(Bytes) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">RawFields::is_empty</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">RawFields::is_empty</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn RawFields::is_empty(Self) -&gt; Bool</pre>
+          <pre class="sig">pub fn RawFields::is_empty(Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">RawFields::is_valid</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">RawFields::is_valid</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn RawFields::is_valid(Self) -&gt; Bool</pre>
+          <pre class="sig">pub fn RawFields::is_valid(Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
@@ -729,15 +729,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Syntax::code</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Syntax::code</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Syntax::code(Self) -&gt; Int32</pre>
+          <pre class="sig">pub fn Syntax::code(Self) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Syntax::equal</span><span class="sdoc">| Structural equality for scalars; composites compare by identity, because semantic equality…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Syntax::equal</span><span class="sdoc">Structural equality for scalars; composites compare by identity, because semantic equality is…</span></summary>
         <div class="sym-body">
-          <p>| Structural equality for scalars; composites compare by identity, because semantic equality is a descriptor-driven walk in `proto.equal`.</p><pre class="sig">pub fn Syntax::equal(Self, Self) -&gt; Bool</pre>
+          <p>Structural equality for scalars; composites compare by identity, because semantic equality is a descriptor-driven walk in `proto.equal`.</p><pre class="sig">pub fn Syntax::equal(Self, Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
@@ -747,9 +747,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Syntax::of</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Syntax::of</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Syntax::of(Int32) -&gt; Self?</pre>
+          <pre class="sig">pub fn Syntax::of(Int32) -&gt; Self?</pre>
         </div>
       </details>
       <details class="sym">
@@ -771,15 +771,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">TypedList::is_valid</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">TypedList::is_valid</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn[T] TypedList::is_valid(Self[T]) -&gt; Bool</pre>
+          <pre class="sig">pub fn[T] TypedList::is_valid(Self[T]) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">TypedList::length</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">TypedList::length</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn[T] TypedList::length(Self[T]) -&gt; Int32</pre>
+          <pre class="sig">pub fn[T] TypedList::length(Self[T]) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
@@ -819,15 +819,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">TypedMap::is_valid</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">TypedMap::is_valid</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn[K : Hash + Eq, V] TypedMap::is_valid(Self[K, V]) -&gt; Bool</pre>
+          <pre class="sig">pub fn[K : Hash + Eq, V] TypedMap::is_valid(Self[K, V]) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">TypedMap::length</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">TypedMap::length</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn[K : Hash + Eq, V] TypedMap::length(Self[K, V]) -&gt; Int32</pre>
+          <pre class="sig">pub fn[K : Hash + Eq, V] TypedMap::length(Self[K, V]) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
@@ -855,165 +855,165 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Types::find_enum_by_name</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Types::find_enum_by_name</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Types::find_enum_by_name(Self, String) -&gt; &amp;EnumType?</pre>
+          <pre class="sig">pub fn Types::find_enum_by_name(Self, String) -&gt; &amp;EnumType?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Types::find_extension_by_name</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Types::find_extension_by_name</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Types::find_extension_by_name(Self, String) -&gt; &amp;ExtensionType?</pre>
+          <pre class="sig">pub fn Types::find_extension_by_name(Self, String) -&gt; &amp;ExtensionType?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Types::find_extension_by_number</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Types::find_extension_by_number</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Types::find_extension_by_number(Self, String, Int32) -&gt; &amp;ExtensionType?</pre>
+          <pre class="sig">pub fn Types::find_extension_by_number(Self, String, Int32) -&gt; &amp;ExtensionType?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Types::find_message_by_name</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Types::find_message_by_name</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Types::find_message_by_name(Self, String) -&gt; &amp;MessageType?</pre>
+          <pre class="sig">pub fn Types::find_message_by_name(Self, String) -&gt; &amp;MessageType?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Types::new</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Types::new</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Types::new() -&gt; Self</pre>
+          <pre class="sig">pub fn Types::new() -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Types::num_enums</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Types::num_enums</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Types::num_enums(Self) -&gt; Int32</pre>
+          <pre class="sig">pub fn Types::num_enums(Self) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Types::num_extensions</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Types::num_extensions</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Types::num_extensions(Self) -&gt; Int32</pre>
+          <pre class="sig">pub fn Types::num_extensions(Self) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Types::num_messages</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Types::num_messages</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Types::num_messages(Self) -&gt; Int32</pre>
+          <pre class="sig">pub fn Types::num_messages(Self) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Types::range_enums</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Types::range_enums</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Types::range_enums(Self, (&amp;EnumType) -&gt; Bool) -&gt; Unit</pre>
+          <pre class="sig">pub fn Types::range_enums(Self, (&amp;EnumType) -&gt; Bool) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Types::range_extensions</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Types::range_extensions</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Types::range_extensions(Self, (&amp;ExtensionType) -&gt; Bool) -&gt; Unit</pre>
+          <pre class="sig">pub fn Types::range_extensions(Self, (&amp;ExtensionType) -&gt; Bool) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Types::range_messages</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Types::range_messages</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Types::range_messages(Self, (&amp;MessageType) -&gt; Bool) -&gt; Unit</pre>
+          <pre class="sig">pub fn Types::range_messages(Self, (&amp;MessageType) -&gt; Bool) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Types::register_enum</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Types::register_enum</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Types::register_enum(Self, &amp;EnumType) -&gt; Unit raise Refused</pre>
+          <pre class="sig">pub fn Types::register_enum(Self, &amp;EnumType) -&gt; Unit raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Types::register_extension</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Types::register_extension</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Types::register_extension(Self, &amp;ExtensionType) -&gt; Unit raise Refused</pre>
+          <pre class="sig">pub fn Types::register_extension(Self, &amp;ExtensionType) -&gt; Unit raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Types::register_message</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Types::register_message</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Types::register_message(Self, &amp;MessageType) -&gt; Unit raise Refused</pre>
+          <pre class="sig">pub fn Types::register_message(Self, &amp;MessageType) -&gt; Unit raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Value::bool</span><span class="sdoc">| The value as a bool; aborts when it is not one.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Value::bool</span><span class="sdoc">The value as a bool; aborts when it is not one.</span></summary>
         <div class="sym-body">
-          <p>| The value as a bool; aborts when it is not one.</p><pre class="sig">pub fn Value::bool(Self) -&gt; Bool</pre>
+          <p>The value as a bool; aborts when it is not one.</p><pre class="sig">pub fn Value::bool(Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Value::bytes</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Value::bytes</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Value::bytes(Self) -&gt; Bytes</pre>
+          <pre class="sig">pub fn Value::bytes(Self) -&gt; Bytes</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Value::enum_number</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Value::enum_number</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Value::enum_number(Self) -&gt; Int32</pre>
+          <pre class="sig">pub fn Value::enum_number(Self) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Value::equal</span><span class="sdoc">| Structural equality for scalars; composites compare by identity, because semantic equality…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Value::equal</span><span class="sdoc">Structural equality for scalars; composites compare by identity, because semantic equality is…</span></summary>
         <div class="sym-body">
-          <p>| Structural equality for scalars; composites compare by identity, because semantic equality is a descriptor-driven walk in `proto.equal`.</p><pre class="sig">pub fn Value::equal(Self, Self) -&gt; Bool</pre>
+          <p>Structural equality for scalars; composites compare by identity, because semantic equality is a descriptor-driven walk in `proto.equal`.</p><pre class="sig">pub fn Value::equal(Self, Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Value::float</span><span class="sdoc">| The value as a double; `Float` widens.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Value::float</span><span class="sdoc">The value as a double; `Float` widens.</span></summary>
         <div class="sym-body">
-          <p>| The value as a double; `Float` widens.</p><pre class="sig">pub fn Value::float(Self) -&gt; Double</pre>
+          <p>The value as a double; `Float` widens.</p><pre class="sig">pub fn Value::float(Self) -&gt; Double</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Value::int</span><span class="sdoc">| The value as an integer; `Int32` and `Int64` both widen.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Value::int</span><span class="sdoc">The value as an integer; `Int32` and `Int64` both widen.</span></summary>
         <div class="sym-body">
-          <p>| The value as an integer; `Int32` and `Int64` both widen.</p><pre class="sig">pub fn Value::int(Self) -&gt; Int64</pre>
+          <p>The value as an integer; `Int32` and `Int64` both widen.</p><pre class="sig">pub fn Value::int(Self) -&gt; Int64</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Value::is_valid</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Value::is_valid</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Value::is_valid(Self) -&gt; Bool</pre>
+          <pre class="sig">pub fn Value::is_valid(Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Value::list</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Value::list</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Value::list(Self) -&gt; &amp;ListField</pre>
+          <pre class="sig">pub fn Value::list(Self) -&gt; &amp;ListField</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Value::map</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Value::map</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Value::map(Self) -&gt; &amp;MapField</pre>
+          <pre class="sig">pub fn Value::map(Self) -&gt; &amp;MapField</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Value::map_key</span><span class="sdoc">| The value as a map key, or `None` when its kind cannot be a key.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Value::map_key</span><span class="sdoc">The value as a map key, or `None` when its kind cannot be a key.</span></summary>
         <div class="sym-body">
-          <p>| The value as a map key, or `None` when its kind cannot be a key.</p><pre class="sig">pub fn Value::map_key(Self) -&gt; MapKey?</pre>
+          <p>The value as a map key, or `None` when its kind cannot be a key.</p><pre class="sig">pub fn Value::map_key(Self) -&gt; MapKey?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Value::message</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Value::message</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Value::message(Self) -&gt; &amp;Message</pre>
+          <pre class="sig">pub fn Value::message(Self) -&gt; &amp;Message</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Value::string</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Value::string</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Value::string(Self) -&gt; String</pre>
+          <pre class="sig">pub fn Value::string(Self) -&gt; String</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Value::uint</span><span class="sdoc">| The value as an unsigned integer; `Uint32` and `Uint64` both widen.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Value::uint</span><span class="sdoc">The value as an unsigned integer; `Uint32` and `Uint64` both widen.</span></summary>
         <div class="sym-body">
-          <p>| The value as an unsigned integer; `Uint32` and `Uint64` both widen.</p><pre class="sig">pub fn Value::uint(Self) -&gt; UInt64</pre>
+          <p>The value as an unsigned integer; `Uint32` and `Uint64` both widen.</p><pre class="sig">pub fn Value::uint(Self) -&gt; UInt64</pre>
         </div>
       </details>
       <details class="sym">
@@ -1029,9 +1029,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">ValueList::from_array</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">ValueList::from_array</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn ValueList::from_array(FieldDescriptor, Array[Value]) -&gt; Self</pre>
+          <pre class="sig">pub fn ValueList::from_array(FieldDescriptor, Array[Value]) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
@@ -1041,21 +1041,21 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">ValueList::is_valid</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">ValueList::is_valid</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn ValueList::is_valid(Self) -&gt; Bool</pre>
+          <pre class="sig">pub fn ValueList::is_valid(Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">ValueList::length</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">ValueList::length</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn ValueList::length(Self) -&gt; Int32</pre>
+          <pre class="sig">pub fn ValueList::length(Self) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">ValueList::new</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">ValueList::new</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn ValueList::new(FieldDescriptor) -&gt; Self</pre>
+          <pre class="sig">pub fn ValueList::new(FieldDescriptor) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
@@ -1095,15 +1095,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">ValueMap::is_valid</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">ValueMap::is_valid</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn ValueMap::is_valid(Self) -&gt; Bool</pre>
+          <pre class="sig">pub fn ValueMap::is_valid(Self) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">ValueMap::length</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">ValueMap::length</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn ValueMap::length(Self) -&gt; Int32</pre>
+          <pre class="sig">pub fn ValueMap::length(Self) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
@@ -1113,9 +1113,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">ValueMap::new</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">ValueMap::new</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn ValueMap::new(FieldDescriptor) -&gt; Self</pre>
+          <pre class="sig">pub fn ValueMap::new(FieldDescriptor) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
@@ -1149,15 +1149,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">default_for</span><span class="sdoc">| The value `get` returns for a field that is unset: the declared default when there is one,…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">default_for</span><span class="sdoc">The value `get` returns for a field that is unset: the declared default when there is one, th…</span></summary>
         <div class="sym-body">
-          <p>| The value `get` returns for a field that is unset: the declared default when there is one, the kind&#x27;s zero otherwise.</p><pre class="sig">pub fn default_for(FieldDescriptor) -&gt; Value</pre>
+          <p>The value `get` returns for a field that is unset: the declared default when there is one, the kind&#x27;s zero otherwise.</p><pre class="sig">pub fn default_for(FieldDescriptor) -&gt; Value</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">float_value</span><span class="sdoc">| A 32-bit float carried as the double the wire and the encoders use.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">float_value</span><span class="sdoc">A 32-bit float carried as the double the wire and the encoders use.</span></summary>
         <div class="sym-body">
-          <p>| A 32-bit float carried as the double the wire and the encoders use.</p><pre class="sig">pub fn float_value(Double) -&gt; Value</pre>
+          <p>A 32-bit float carried as the double the wire and the encoders use.</p><pre class="sig">pub fn float_value(Double) -&gt; Value</pre>
         </div>
       </details>
       <details class="sym">
@@ -1185,33 +1185,33 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">missing_required</span><span class="sdoc">| The dotted path of the first required field that has no value, or `None` when the message a…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">missing_required</span><span class="sdoc">The dotted path of the first required field that has no value, or `None` when the message and…</span></summary>
         <div class="sym-body">
-          <p>| The dotted path of the first required field that has no value, or `None` when the message and its nested messages are complete. The encoders use this so each can report the omission in its own error type.</p><pre class="sig">pub fn missing_required(&amp;Message) -&gt; String?</pre>
+          <p>The dotted path of the first required field that has no value, or `None` when the message and its nested messages are complete. The encoders use this so each can report the omission in its own error type.</p><pre class="sig">pub fn missing_required(&amp;Message) -&gt; String?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">new_element_value</span><span class="sdoc">| A fresh value for an element of a list or map.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">new_element_value</span><span class="sdoc">A fresh value for an element of a list or map.</span></summary>
         <div class="sym-body">
-          <p>| A fresh value for an element of a list or map.</p><pre class="sig">pub fn new_element_value(Kind, String?) -&gt; Value</pre>
+          <p>A fresh value for an element of a list or map.</p><pre class="sig">pub fn new_element_value(Kind, String?) -&gt; Value</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">new_field_value</span><span class="sdoc">| A fresh, mutable value assignable to `field`: an empty list, an empty map, a new message, o…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">new_field_value</span><span class="sdoc">A fresh, mutable value assignable to `field`: an empty list, an empty map, a new message, or…</span></summary>
         <div class="sym-body">
-          <p>| A fresh, mutable value assignable to `field`: an empty list, an empty map, a new message, or the scalar default.</p><pre class="sig">pub fn new_field_value(FieldDescriptor) -&gt; Value</pre>
+          <p>A fresh, mutable value assignable to `field`: an empty list, an empty map, a new message, or the scalar default.</p><pre class="sig">pub fn new_field_value(FieldDescriptor) -&gt; Value</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">parent_name</span><span class="sdoc">| The qualified name with its last segment removed.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">parent_name</span><span class="sdoc">The qualified name with its last segment removed.</span></summary>
         <div class="sym-body">
-          <p>| The qualified name with its last segment removed.</p><pre class="sig">pub fn parent_name(String) -&gt; String</pre>
+          <p>The qualified name with its last segment removed.</p><pre class="sig">pub fn parent_name(String) -&gt; String</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">qualify</span><span class="sdoc">| A qualified name built from a package and a short name.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">qualify</span><span class="sdoc">A qualified name built from a package and a short name.</span></summary>
         <div class="sym-body">
-          <p>| A qualified name built from a package and a short name.</p><pre class="sig">pub fn qualify(String, String) -&gt; String</pre>
+          <p>A qualified name built from a package and a short name.</p><pre class="sig">pub fn qualify(String, String) -&gt; String</pre>
         </div>
       </details>
       <details class="sym">
@@ -1221,33 +1221,33 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">short_name</span><span class="sdoc">| The last segment of a qualified name.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">short_name</span><span class="sdoc">The last segment of a qualified name.</span></summary>
         <div class="sym-body">
-          <p>| The last segment of a qualified name.</p><pre class="sig">pub fn short_name(String) -&gt; String</pre>
+          <p>The last segment of a qualified name.</p><pre class="sig">pub fn short_name(String) -&gt; String</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">zero_value</span><span class="sdoc">| The zero value for a scalar kind; `Invalid` for a message or group, which has no scalar zero.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">zero_value</span><span class="sdoc">The zero value for a scalar kind; `Invalid` for a message or group, which has no scalar zero.</span></summary>
         <div class="sym-body">
-          <p>| The zero value for a scalar kind; `Invalid` for a message or group, which has no scalar zero.</p><pre class="sig">pub fn zero_value(Kind) -&gt; Value</pre>
+          <p>The zero value for a scalar kind; `Invalid` for a message or group, which has no scalar zero.</p><pre class="sig">pub fn zero_value(Kind) -&gt; Value</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">global_files</span><span class="sdoc">| The process-wide registries a generated file registers into.</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">global_files</span><span class="sdoc">The process-wide registries a generated file registers into.</span></summary>
         <div class="sym-body">
-          <p>| The process-wide registries a generated file registers into.</p><pre class="sig">pub let global_files : Files</pre>
+          <p>The process-wide registries a generated file registers into.</p><pre class="sig">pub let global_files : Files</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">global_types</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">global_types</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub let global_types : Types</pre>
+          <pre class="sig">pub let global_types : Types</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">invalid</span><span class="sdoc">| The empty value, used where a field is absent and a `Value` is still required.</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">invalid</span><span class="sdoc">The empty value, used where a field is absent and a `Value` is still required.</span></summary>
         <div class="sym-body">
-          <p>| The empty value, used where a field is absent and a `Value` is still required.</p><pre class="sig">pub let invalid : Value</pre>
+          <p>The empty value, used where a field is absent and a `Value` is still required.</p><pre class="sig">pub let invalid : Value</pre>
         </div>
       </details>
     </section>
@@ -1256,21 +1256,21 @@
       <p class="pkg-path">moonbitstack/moonproto/proto</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">Binary encoding and decoding, size, merge, clone, equal, reset.</p>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">MarshalOptions</span><span class="sdoc">| How a message is encoded.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">MarshalOptions</span><span class="sdoc">How a message is encoded.</span></summary>
         <div class="sym-body">
-          <p>| How a message is encoded.</p><pre class="sig">pub(all) struct MarshalOptions</pre><div>allow_partial : Bool</div><div>deterministic : Bool</div>
+          <p>How a message is encoded.</p><pre class="sig">pub(all) struct MarshalOptions</pre><div>allow_partial : Bool</div><div>deterministic : Bool</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">UnmarshalOptions</span><span class="sdoc">| How a message is decoded.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">UnmarshalOptions</span><span class="sdoc">How a message is decoded.</span></summary>
         <div class="sym-body">
-          <p>| How a message is decoded.</p><pre class="sig">pub(all) struct UnmarshalOptions</pre><div>merge : Bool</div><div>allow_partial : Bool</div><div>discard_unknown : Bool</div><div>recursion_limit : Int32</div>
+          <p>How a message is decoded.</p><pre class="sig">pub(all) struct UnmarshalOptions</pre><div>merge : Bool</div><div>allow_partial : Bool</div><div>discard_unknown : Bool</div><div>recursion_limit : Int32</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">| A binary refusal.</span></summary>
+        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">A binary refusal.</span></summary>
         <div class="sym-body">
-          <p>| A binary refusal.</p><pre class="sig">pub(all) suberror Refused</pre><div>Wire(@wire.Refused)</div><div>Required(String)</div><div>NoType(String)</div><div>Recursion(Int32)</div><div>Mismatch(String)</div>
+          <p>A binary refusal.</p><pre class="sig">pub(all) suberror Refused</pre><div>Wire(@wire.Refused)</div><div>Required(String)</div><div>NoType(String)</div><div>Recursion(Int32)</div><div>Mismatch(String)</div>
         </div>
       </details>
       <details class="sym">
@@ -1370,15 +1370,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">marshal_options</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">marshal_options</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub let marshal_options : MarshalOptions</pre>
+          <pre class="sig">pub let marshal_options : MarshalOptions</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">unmarshal_options</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">unmarshal_options</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub let unmarshal_options : UnmarshalOptions</pre>
+          <pre class="sig">pub let unmarshal_options : UnmarshalOptions</pre>
         </div>
       </details>
     </section>
@@ -1387,21 +1387,21 @@
       <p class="pkg-path">moonbitstack/moonproto/json</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">The JSON mapping, including the well-known type forms.</p>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">MarshalOptions</span><span class="sdoc">| How a message is written as JSON.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">MarshalOptions</span><span class="sdoc">How a message is written as JSON.</span></summary>
         <div class="sym-body">
-          <p>| How a message is written as JSON.</p><pre class="sig">pub(all) struct MarshalOptions</pre><div>multiline : Bool</div><div>indent : String</div><div>allow_partial : Bool</div><div>use_proto_names : Bool</div><div>use_enum_numbers : Bool</div><div>emit_unpopulated : Bool</div><div>emit_default_values : Bool</div>
+          <p>How a message is written as JSON.</p><pre class="sig">pub(all) struct MarshalOptions</pre><div>multiline : Bool</div><div>indent : String</div><div>allow_partial : Bool</div><div>use_proto_names : Bool</div><div>use_enum_numbers : Bool</div><div>emit_unpopulated : Bool</div><div>emit_default_values : Bool</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">UnmarshalOptions</span><span class="sdoc">| How a message is read from JSON.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">UnmarshalOptions</span><span class="sdoc">How a message is read from JSON.</span></summary>
         <div class="sym-body">
-          <p>| How a message is read from JSON.</p><pre class="sig">pub(all) struct UnmarshalOptions</pre><div>allow_partial : Bool</div><div>discard_unknown : Bool</div><div>recursion_limit : Int32</div>
+          <p>How a message is read from JSON.</p><pre class="sig">pub(all) struct UnmarshalOptions</pre><div>allow_partial : Bool</div><div>discard_unknown : Bool</div><div>recursion_limit : Int32</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">| A JSON refusal.</span></summary>
+        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">A JSON refusal.</span></summary>
         <div class="sym-body">
-          <p>| A JSON refusal.</p><pre class="sig">pub(all) suberror Refused</pre><div>Syntax(String)</div><div>UnknownField(String)</div><div>BadValue(String)</div><div>BadBase64(String)</div><div>Recursion(Int32)</div><div>NoType(String)</div><div>Required(String)</div>
+          <p>A JSON refusal.</p><pre class="sig">pub(all) suberror Refused</pre><div>Syntax(String)</div><div>UnknownField(String)</div><div>BadValue(String)</div><div>BadBase64(String)</div><div>Recursion(Int32)</div><div>NoType(String)</div><div>Required(String)</div>
         </div>
       </details>
       <details class="sym">
@@ -1441,15 +1441,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">marshal_options</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">marshal_options</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub let marshal_options : MarshalOptions</pre>
+          <pre class="sig">pub let marshal_options : MarshalOptions</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">unmarshal_options</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">unmarshal_options</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub let unmarshal_options : UnmarshalOptions</pre>
+          <pre class="sig">pub let unmarshal_options : UnmarshalOptions</pre>
         </div>
       </details>
     </section>
@@ -1458,21 +1458,21 @@
       <p class="pkg-path">moonbitstack/moonproto/text</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">The text format: fields, groups, lists and every literal.</p>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">MarshalOptions</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">MarshalOptions</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct MarshalOptions</pre><div>multiline : Bool</div><div>indent : String</div><div>emit_ascii : Bool</div><div>allow_partial : Bool</div>
+          <pre class="sig">pub(all) struct MarshalOptions</pre><div>multiline : Bool</div><div>indent : String</div><div>emit_ascii : Bool</div><div>allow_partial : Bool</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">UnmarshalOptions</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">UnmarshalOptions</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct UnmarshalOptions</pre><div>allow_partial : Bool</div><div>discard_unknown : Bool</div><div>recursion_limit : Int32</div>
+          <pre class="sig">pub(all) struct UnmarshalOptions</pre><div>allow_partial : Bool</div><div>discard_unknown : Bool</div><div>recursion_limit : Int32</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">| A text-format refusal.</span></summary>
+        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">A text-format refusal.</span></summary>
         <div class="sym-body">
-          <p>| A text-format refusal.</p><pre class="sig">pub(all) suberror Refused</pre><div>Syntax(String, Int32)</div><div>UnknownField(String)</div><div>BadValue(String)</div><div>NoType(String)</div><div>Required(String)</div><div>Recursion(Int32)</div>
+          <p>A text-format refusal.</p><pre class="sig">pub(all) suberror Refused</pre><div>Syntax(String, Int32)</div><div>UnknownField(String)</div><div>BadValue(String)</div><div>NoType(String)</div><div>Required(String)</div><div>Recursion(Int32)</div>
         </div>
       </details>
       <details class="sym">
@@ -1500,15 +1500,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">marshal_options</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">marshal_options</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub let marshal_options : MarshalOptions</pre>
+          <pre class="sig">pub let marshal_options : MarshalOptions</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">unmarshal_options</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">unmarshal_options</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub let unmarshal_options : UnmarshalOptions</pre>
+          <pre class="sig">pub let unmarshal_options : UnmarshalOptions</pre>
         </div>
       </details>
     </section>
@@ -1517,51 +1517,51 @@
       <p class="pkg-path">moonbitstack/moonproto/delim</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">Varint size-delimited messages over a byte source.</p>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">BytesReader</span><span class="sdoc">| A reader over a fixed byte sequence.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">BytesReader</span><span class="sdoc">A reader over a fixed byte sequence.</span></summary>
         <div class="sym-body">
-          <p>| A reader over a fixed byte sequence.</p><pre class="sig">pub struct BytesReader</pre><div>bytes : Bytes</div><div>mut pos : Int32</div>
+          <p>A reader over a fixed byte sequence.</p><pre class="sig">pub struct BytesReader</pre><div>bytes : Bytes</div><div>mut pos : Int32</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">BytesWriter</span><span class="sdoc">| A writer that collects into a buffer, for callers that already hold bytes.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">BytesWriter</span><span class="sdoc">A writer that collects into a buffer, for callers that already hold bytes.</span></summary>
         <div class="sym-body">
-          <p>| A writer that collects into a buffer, for callers that already hold bytes.</p><pre class="sig">pub struct BytesWriter</pre><div>buf : @buffer.Buffer</div>
+          <p>A writer that collects into a buffer, for callers that already hold bytes.</p><pre class="sig">pub struct BytesWriter</pre><div>buf : @buffer.Buffer</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">MarshalOptions</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">MarshalOptions</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct MarshalOptions</pre><div>marshal : @proto.MarshalOptions</div>
+          <pre class="sig">pub(all) struct MarshalOptions</pre><div>marshal : @proto.MarshalOptions</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">UnmarshalOptions</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">UnmarshalOptions</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct UnmarshalOptions</pre><div>unmarshal : @proto.UnmarshalOptions</div><div>max_size : Int32</div>
+          <pre class="sig">pub(all) struct UnmarshalOptions</pre><div>unmarshal : @proto.UnmarshalOptions</div><div>max_size : Int32</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) suberror Refused</pre><div>Wire(@wire.Refused)</div><div>Proto(@proto.Refused)</div><div>Size(Int32, Int32)</div><div>Truncated</div>
+          <pre class="sig">pub(all) suberror Refused</pre><div>Wire(@wire.Refused)</div><div>Proto(@proto.Refused)</div><div>Size(Int32, Int32)</div><div>Truncated</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">Reader</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">Reader</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(open) trait Reader</pre><div>fn read_byte(Self) -&gt; Int32?</div>
+          <pre class="sig">pub(open) trait Reader</pre><div>fn read_byte(Self) -&gt; Int32?</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">Writer</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">Writer</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(open) trait Writer</pre><div>fn write(Self, BytesView) -&gt; Unit raise Refused</div>
+          <pre class="sig">pub(open) trait Writer</pre><div>fn write(Self, BytesView) -&gt; Unit raise Refused</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">BytesReader::new</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">BytesReader::new</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn BytesReader::new(Bytes) -&gt; Self</pre>
+          <pre class="sig">pub fn BytesReader::new(Bytes) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
@@ -1571,15 +1571,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">BytesWriter::new</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">BytesWriter::new</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn BytesWriter::new() -&gt; Self</pre>
+          <pre class="sig">pub fn BytesWriter::new() -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">BytesWriter::to_bytes</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">BytesWriter::to_bytes</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn BytesWriter::to_bytes(Self) -&gt; Bytes</pre>
+          <pre class="sig">pub fn BytesWriter::to_bytes(Self) -&gt; Bytes</pre>
         </div>
       </details>
       <details class="sym">
@@ -1613,15 +1613,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">marshal_options</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">marshal_options</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub let marshal_options : MarshalOptions</pre>
+          <pre class="sig">pub let marshal_options : MarshalOptions</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">unmarshal_options</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">unmarshal_options</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub let unmarshal_options : UnmarshalOptions</pre>
+          <pre class="sig">pub let unmarshal_options : UnmarshalOptions</pre>
         </div>
       </details>
     </section>
@@ -1630,33 +1630,33 @@
       <p class="pkg-path">moonbitstack/moonproto/dynamic</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">Messages, enums and extensions built from descriptors at run time.</p>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">EnumType</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">EnumType</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub struct EnumType</pre><div>desc : @reflect.EnumDescriptor</div>
+          <pre class="sig">pub struct EnumType</pre><div>desc : @reflect.EnumDescriptor</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">EnumValue</span><span class="sdoc">| An enum value carrying its descriptor and number.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">EnumValue</span><span class="sdoc">An enum value carrying its descriptor and number.</span></summary>
         <div class="sym-body">
-          <p>| An enum value carrying its descriptor and number.</p><pre class="sig">pub struct EnumValue</pre><div>desc : @reflect.EnumDescriptor</div><div>enum_type : &amp;@reflect.EnumType</div><div>number_value : Int32</div>
+          <p>An enum value carrying its descriptor and number.</p><pre class="sig">pub struct EnumValue</pre><div>desc : @reflect.EnumDescriptor</div><div>enum_type : &amp;@reflect.EnumType</div><div>number_value : Int32</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">ExtensionType</span><span class="sdoc">| An extension type backed by its descriptor.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">ExtensionType</span><span class="sdoc">An extension type backed by its descriptor.</span></summary>
         <div class="sym-body">
-          <p>| An extension type backed by its descriptor.</p><pre class="sig">pub struct ExtensionType</pre><div>desc : @reflect.FieldDescriptor</div>
+          <p>An extension type backed by its descriptor.</p><pre class="sig">pub struct ExtensionType</pre><div>desc : @reflect.FieldDescriptor</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">Message</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">Message</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub struct Message</pre><div>desc : @reflect.MessageDescriptor</div><div>msg_type : &amp;@reflect.MessageType</div><div>fields : Array[(Int32, @reflect.Value)]</div><div>mut unknown : Bytes</div><div>ext_fields : Array[@reflect.FieldDescriptor]</div>
+          <pre class="sig">pub struct Message</pre><div>desc : @reflect.MessageDescriptor</div><div>msg_type : &amp;@reflect.MessageType</div><div>fields : Array[(Int32, @reflect.Value)]</div><div>mut unknown : Bytes</div><div>ext_fields : Array[@reflect.FieldDescriptor]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">MessageType</span><span class="sdoc">| The type of a dynamic message: its descriptor and a constructor.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">MessageType</span><span class="sdoc">The type of a dynamic message: its descriptor and a constructor.</span></summary>
         <div class="sym-body">
-          <p>| The type of a dynamic message: its descriptor and a constructor.</p><pre class="sig">pub struct MessageType</pre><div>desc : @reflect.MessageDescriptor</div>
+          <p>The type of a dynamic message: its descriptor and a constructor.</p><pre class="sig">pub struct MessageType</pre><div>desc : @reflect.MessageDescriptor</div>
         </div>
       </details>
       <details class="sym">
@@ -1666,9 +1666,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">EnumType::new</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">EnumType::new</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn EnumType::new(@reflect.EnumDescriptor) -&gt; Self</pre>
+          <pre class="sig">pub fn EnumType::new(@reflect.EnumDescriptor) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
@@ -1774,9 +1774,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Message::new</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Message::new</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Message::new(@reflect.MessageDescriptor) -&gt; Self</pre>
+          <pre class="sig">pub fn Message::new(@reflect.MessageDescriptor) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
@@ -1786,9 +1786,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Message::new_with_type</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Message::new_with_type</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Message::new_with_type(@reflect.MessageDescriptor, &amp;@reflect.MessageType) -&gt; Self</pre>
+          <pre class="sig">pub fn Message::new_with_type(@reflect.MessageDescriptor, &amp;@reflect.MessageType) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
@@ -1828,9 +1828,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">MessageType::new</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">MessageType::new</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn MessageType::new(@reflect.MessageDescriptor) -&gt; Self</pre>
+          <pre class="sig">pub fn MessageType::new(@reflect.MessageDescriptor) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
@@ -1846,21 +1846,21 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">new_enum_type</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">new_enum_type</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn new_enum_type(@reflect.EnumDescriptor) -&gt; &amp;@reflect.EnumType</pre>
+          <pre class="sig">pub fn new_enum_type(@reflect.EnumDescriptor) -&gt; &amp;@reflect.EnumType</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">new_extension_type</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">new_extension_type</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn new_extension_type(@reflect.FieldDescriptor) -&gt; &amp;@reflect.ExtensionType</pre>
+          <pre class="sig">pub fn new_extension_type(@reflect.FieldDescriptor) -&gt; &amp;@reflect.ExtensionType</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">new_message_type</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">new_message_type</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn new_message_type(@reflect.MessageDescriptor) -&gt; &amp;@reflect.MessageType</pre>
+          <pre class="sig">pub fn new_message_type(@reflect.MessageDescriptor) -&gt; &amp;@reflect.MessageType</pre>
         </div>
       </details>
     </section>
@@ -1869,75 +1869,75 @@
       <p class="pkg-path">moonbitstack/moonproto/desc</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">Building runtime descriptors, and converting them back.</p>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">DescriptorProto</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">DescriptorProto</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct DescriptorProto</pre><div>name : String</div><div>field : Array[FieldDescriptorProto]</div><div>nested_type : Array[DescriptorProto]</div><div>enum_type : Array[EnumDescriptorProto]</div><div>extension : Array[FieldDescriptorProto]</div><div>oneof_decl : Array[OneofDescriptorProto]</div><div>reserved_range : Array[(Int32, Int32)]</div><div>reserved_name : Array[String]</div><div>extension_range : Array[(Int32, Int32)]</div><div>map_entry : Bool</div><div>features : Features</div><div>options : Array[(String, String)]</div>
+          <pre class="sig">pub(all) struct DescriptorProto</pre><div>name : String</div><div>field : Array[FieldDescriptorProto]</div><div>nested_type : Array[DescriptorProto]</div><div>enum_type : Array[EnumDescriptorProto]</div><div>extension : Array[FieldDescriptorProto]</div><div>oneof_decl : Array[OneofDescriptorProto]</div><div>reserved_range : Array[(Int32, Int32)]</div><div>reserved_name : Array[String]</div><div>extension_range : Array[(Int32, Int32)]</div><div>map_entry : Bool</div><div>features : Features</div><div>options : Array[(String, String)]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">EnumDescriptorProto</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">EnumDescriptorProto</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct EnumDescriptorProto</pre><div>name : String</div><div>value : Array[EnumValueDescriptorProto]</div><div>features : Features</div><div>options : Array[(String, String)]</div>
+          <pre class="sig">pub(all) struct EnumDescriptorProto</pre><div>name : String</div><div>value : Array[EnumValueDescriptorProto]</div><div>features : Features</div><div>options : Array[(String, String)]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">EnumValueDescriptorProto</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">EnumValueDescriptorProto</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct EnumValueDescriptorProto</pre><div>name : String</div><div>number : Int32</div>
+          <pre class="sig">pub(all) struct EnumValueDescriptorProto</pre><div>name : String</div><div>number : Int32</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">Features</span><span class="sdoc">| The edition feature values that change how a declaration is interpreted</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">Features</span><span class="sdoc">The edition feature values that change how a declaration is interpreted</span></summary>
         <div class="sym-body">
-          <p>| The edition feature values that change how a declaration is interpreted. Zero means &quot;inherit&quot;, which is what proto2 and proto3 files use.</p><pre class="sig">pub(all) struct Features</pre><div>field_presence : Int32</div><div>enum_type : Int32</div><div>repeated_field_encoding : Int32</div><div>message_encoding : Int32</div><div>utf8_validation : Int32</div><div>json_format : Int32</div>
+          <p>The edition feature values that change how a declaration is interpreted. Zero means &quot;inherit&quot;, which is what proto2 and proto3 files use.</p><pre class="sig">pub(all) struct Features</pre><div>field_presence : Int32</div><div>enum_type : Int32</div><div>repeated_field_encoding : Int32</div><div>message_encoding : Int32</div><div>utf8_validation : Int32</div><div>json_format : Int32</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">FieldDescriptorProto</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">FieldDescriptorProto</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct FieldDescriptorProto</pre><div>name : String</div><div>number : Int32</div><div>label : Int32</div><div>type_code : Int32</div><div>type_name : String?</div><div>json_name : String?</div><div>default_value : String?</div><div>oneof_index : Int32?</div><div>proto3_optional : Bool</div><div>packed_off : Bool</div><div>extendee : String?</div><div>features : Features</div><div>options : Array[(String, String)]</div>
+          <pre class="sig">pub(all) struct FieldDescriptorProto</pre><div>name : String</div><div>number : Int32</div><div>label : Int32</div><div>type_code : Int32</div><div>type_name : String?</div><div>json_name : String?</div><div>default_value : String?</div><div>oneof_index : Int32?</div><div>proto3_optional : Bool</div><div>packed_off : Bool</div><div>extendee : String?</div><div>features : Features</div><div>options : Array[(String, String)]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">FileDescriptorProto</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">FileDescriptorProto</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct FileDescriptorProto</pre><div>name : String</div><div>package_name : String</div><div>syntax : String</div><div>message_type : Array[DescriptorProto]</div><div>enum_type : Array[EnumDescriptorProto]</div><div>service : Array[ServiceDescriptorProto]</div><div>extension : Array[FieldDescriptorProto]</div><div>dependency : Array[String]</div><div>public_dependency : Array[Int32]</div><div>edition : String?</div><div>features : Features</div><div>options : Array[(String, String)]</div>
+          <pre class="sig">pub(all) struct FileDescriptorProto</pre><div>name : String</div><div>package_name : String</div><div>syntax : String</div><div>message_type : Array[DescriptorProto]</div><div>enum_type : Array[EnumDescriptorProto]</div><div>service : Array[ServiceDescriptorProto]</div><div>extension : Array[FieldDescriptorProto]</div><div>dependency : Array[String]</div><div>public_dependency : Array[Int32]</div><div>edition : String?</div><div>features : Features</div><div>options : Array[(String, String)]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">MethodDescriptorProto</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">MethodDescriptorProto</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct MethodDescriptorProto</pre><div>name : String</div><div>input_type : String</div><div>output_type : String</div><div>client_streaming : Bool</div><div>server_streaming : Bool</div>
+          <pre class="sig">pub(all) struct MethodDescriptorProto</pre><div>name : String</div><div>input_type : String</div><div>output_type : String</div><div>client_streaming : Bool</div><div>server_streaming : Bool</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">OneofDescriptorProto</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">OneofDescriptorProto</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct OneofDescriptorProto</pre><div>name : String</div>
+          <pre class="sig">pub(all) struct OneofDescriptorProto</pre><div>name : String</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">ServiceDescriptorProto</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">ServiceDescriptorProto</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) struct ServiceDescriptorProto</pre><div>name : String</div><div>methods : Array[MethodDescriptorProto]</div>
+          <pre class="sig">pub(all) struct ServiceDescriptorProto</pre><div>name : String</div><div>methods : Array[MethodDescriptorProto]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">| A build refusal.</span></summary>
+        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">A build refusal.</span></summary>
         <div class="sym-body">
-          <p>| A build refusal.</p><pre class="sig">pub(all) suberror Refused</pre><div>Name(String)</div><div>Number(Int32)</div><div>Type(String)</div><div>Syntax(String)</div>
+          <p>A build refusal.</p><pre class="sig">pub(all) suberror Refused</pre><div>Name(String)</div><div>Number(Int32)</div><div>Type(String)</div><div>Syntax(String)</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Features::merge</span><span class="sdoc">| A child&#x27;s features on top of its parent&#x27;s: anything the child sets wins, anything it leaves…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Features::merge</span><span class="sdoc">A child&#x27;s features on top of its parent&#x27;s: anything the child sets wins, anything it leaves a…</span></summary>
         <div class="sym-body">
-          <p>| A child&#x27;s features on top of its parent&#x27;s: anything the child sets wins, anything it leaves at zero is inherited.</p><pre class="sig">pub fn Features::merge(Self, Self) -&gt; Self</pre>
+          <p>A child&#x27;s features on top of its parent&#x27;s: anything the child sets wins, anything it leaves at zero is inherited.</p><pre class="sig">pub fn Features::merge(Self, Self) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Features::set</span><span class="sdoc">| Set one `features.&lt;name&gt;` value, leaving the name alone when it is not a feature</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Features::set</span><span class="sdoc">Set one `features.&lt;name&gt;` value, leaving the name alone when it is not a feature</span></summary>
         <div class="sym-body">
-          <p>| Set one `features.&lt;name&gt;` value, leaving the name alone when it is not a feature. `value` is the identifier or boolean as written.</p><pre class="sig">pub fn Features::set(Self, String, String) -&gt; Self</pre>
+          <p>Set one `features.&lt;name&gt;` value, leaving the name alone when it is not a feature. `value` is the identifier or boolean as written.</p><pre class="sig">pub fn Features::set(Self, String, String) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
@@ -1953,27 +1953,27 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">build_file</span><span class="sdoc">| Build a runtime file descriptor from the proto form.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">build_file</span><span class="sdoc">Build a runtime file descriptor from the proto form.</span></summary>
         <div class="sym-body">
-          <p>| Build a runtime file descriptor from the proto form.</p><pre class="sig">pub fn build_file(FileDescriptorProto) -&gt; @reflect.FileDescriptor raise Refused</pre>
+          <p>Build a runtime file descriptor from the proto form.</p><pre class="sig">pub fn build_file(FileDescriptorProto) -&gt; @reflect.FileDescriptor raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">to_file_descriptor_proto</span><span class="sdoc">| The proto form of a runtime file descriptor.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">to_file_descriptor_proto</span><span class="sdoc">The proto form of a runtime file descriptor.</span></summary>
         <div class="sym-body">
-          <p>| The proto form of a runtime file descriptor.</p><pre class="sig">pub fn to_file_descriptor_proto(@reflect.FileDescriptor) -&gt; FileDescriptorProto</pre>
+          <p>The proto form of a runtime file descriptor.</p><pre class="sig">pub fn to_file_descriptor_proto(@reflect.FileDescriptor) -&gt; FileDescriptorProto</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">to_json_name</span><span class="sdoc">| `foo_bar` becomes `fooBar`, the JSON name default.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">to_json_name</span><span class="sdoc">`foo_bar` becomes `fooBar`, the JSON name default.</span></summary>
         <div class="sym-body">
-          <p>| `foo_bar` becomes `fooBar`, the JSON name default.</p><pre class="sig">pub fn to_json_name(String) -&gt; String</pre>
+          <p>`foo_bar` becomes `fooBar`, the JSON name default.</p><pre class="sig">pub fn to_json_name(String) -&gt; String</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">features_auto</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">features_auto</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub let features_auto : Features</pre>
+          <pre class="sig">pub let features_auto : Features</pre>
         </div>
       </details>
     </section>
@@ -1982,9 +1982,9 @@
       <p class="pkg-path">moonbitstack/moonproto/parser</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">The .proto language: proto2, proto3 and editions.</p>
       <details class="sym">
-        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) suberror Refused</pre><div>Syntax(String, Int32)</div>
+          <pre class="sig">pub(all) suberror Refused</pre><div>Syntax(String, Int32)</div>
         </div>
       </details>
       <details class="sym">
@@ -2000,9 +2000,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">parse</span><span class="sdoc">| Parse one `.proto` file.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">parse</span><span class="sdoc">Parse one `.proto` file.</span></summary>
         <div class="sym-body">
-          <p>| Parse one `.proto` file.</p><pre class="sig">pub fn parse(String, String) -&gt; @desc.FileDescriptorProto raise Refused</pre>
+          <p>Parse one `.proto` file.</p><pre class="sig">pub fn parse(String, String) -&gt; @desc.FileDescriptorProto raise Refused</pre>
         </div>
       </details>
     </section>
@@ -2011,39 +2011,39 @@
       <p class="pkg-path">moonbitstack/moonproto/gen</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">The protoc plugin protocol and the MoonBit code generator.</p>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">Naming</span><span class="sdoc">| How one generated file names the types it refers to: bare when they live in the same packag…</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">Naming</span><span class="sdoc">How one generated file names the types it refers to: bare when they live in the same package,…</span></summary>
         <div class="sym-body">
-          <p>| How one generated file names the types it refers to: bare when they live in the same package, qualified by an prefix when they do not.</p><pre class="sig">pub struct Naming</pre><div>dir : String</div><div>symbols : Symbols</div><div>imports : Array[(String, String)]</div>
+          <p>How one generated file names the types it refers to: bare when they live in the same package, qualified by an prefix when they do not.</p><pre class="sig">pub struct Naming</pre><div>dir : String</div><div>symbols : Symbols</div><div>imports : Array[(String, String)]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">Request</span><span class="sdoc">| One request to generate code.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">Request</span><span class="sdoc">One request to generate code.</span></summary>
         <div class="sym-body">
-          <p>| One request to generate code.</p><pre class="sig">pub(all) struct Request</pre><div>files_to_generate : Array[String]</div><div>parameter : String</div><div>proto_file : Array[@desc.FileDescriptorProto]</div>
+          <p>One request to generate code.</p><pre class="sig">pub(all) struct Request</pre><div>files_to_generate : Array[String]</div><div>parameter : String</div><div>proto_file : Array[@desc.FileDescriptorProto]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">Symbols</span><span class="sdoc">| Fully-qualified proto name to generated type.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">Symbols</span><span class="sdoc">Fully-qualified proto name to generated type.</span></summary>
         <div class="sym-body">
-          <p>| Fully-qualified proto name to generated type.</p><pre class="sig">pub struct Symbols</pre><div>types : Map[String, TypeRef]</div>
+          <p>Fully-qualified proto name to generated type.</p><pre class="sig">pub struct Symbols</pre><div>types : Map[String, TypeRef]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">TypeRef</span><span class="sdoc">| Where a generated type lives: the package directory its file lands in, and the type name in…</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">TypeRef</span><span class="sdoc">Where a generated type lives: the package directory its file lands in, and the type name insi…</span></summary>
         <div class="sym-body">
-          <p>| Where a generated type lives: the package directory its file lands in, and the type name inside it.</p><pre class="sig">pub(all) struct TypeRef</pre><div>dir : String</div><div>name : String</div>
+          <p>Where a generated type lives: the package directory its file lands in, and the type name inside it.</p><pre class="sig">pub(all) struct TypeRef</pre><div>dir : String</div><div>name : String</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub(all) suberror Refused</pre><div>Protocol(String)</div><div>Proto(@proto.Refused)</div><div>Desc(@desc.Refused)</div><div>Unknown(String)</div>
+          <pre class="sig">pub(all) suberror Refused</pre><div>Protocol(String)</div><div>Proto(@proto.Refused)</div><div>Desc(@desc.Refused)</div><div>Unknown(String)</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Naming::new</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Naming::new</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Naming::new(String, Symbols) -&gt; Self</pre>
+          <pre class="sig">pub fn Naming::new(String, Symbols) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
@@ -2059,75 +2059,75 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Symbols::add_file</span><span class="sdoc">| Record every message and enum one file declares, including the nested ones</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Symbols::add_file</span><span class="sdoc">Record every message and enum one file declares, including the nested ones</span></summary>
         <div class="sym-body">
-          <p>| Record every message and enum one file declares, including the nested ones. A map entry is recorded too: a field that names it is a map, and the field&#x27;s emitter asks for the entry&#x27;s value type by name.</p><pre class="sig">pub fn Symbols::add_file(Self, @desc.FileDescriptorProto) -&gt; Unit</pre>
+          <p>Record every message and enum one file declares, including the nested ones. A map entry is recorded too: a field that names it is a map, and the field&#x27;s emitter asks for the entry&#x27;s value type by name.</p><pre class="sig">pub fn Symbols::add_file(Self, @desc.FileDescriptorProto) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Symbols::new</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Symbols::new</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn Symbols::new() -&gt; Self</pre>
+          <pre class="sig">pub fn Symbols::new() -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">decode_request</span><span class="sdoc">| Decode a `CodeGeneratorRequest`.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">decode_request</span><span class="sdoc">Decode a `CodeGeneratorRequest`.</span></summary>
         <div class="sym-body">
-          <p>| Decode a `CodeGeneratorRequest`.</p><pre class="sig">pub fn decode_request(Bytes) -&gt; Request raise Refused</pre>
+          <p>Decode a `CodeGeneratorRequest`.</p><pre class="sig">pub fn decode_request(Bytes) -&gt; Request raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">decode_response</span><span class="sdoc">| Decode a response: the generated files and the error, if any.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">decode_response</span><span class="sdoc">Decode a response: the generated files and the error, if any.</span></summary>
         <div class="sym-body">
-          <p>| Decode a response: the generated files and the error, if any.</p><pre class="sig">pub fn decode_response(Bytes) -&gt; (Array[(String, String)], String?) raise Refused</pre>
+          <p>Decode a response: the generated files and the error, if any.</p><pre class="sig">pub fn decode_response(Bytes) -&gt; (Array[(String, String)], String?) raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">emit_message</span><span class="sdoc">| Emit one message: the struct, its constructor, its accessors, its oneofs and its reflective…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">emit_message</span><span class="sdoc">Emit one message: the struct, its constructor, its accessors, its oneofs and its reflective i…</span></summary>
         <div class="sym-body">
-          <p>| Emit one message: the struct, its constructor, its accessors, its oneofs and its reflective implementation.</p><pre class="sig">pub fn emit_message(@reflect.MessageDescriptor, String, String, Naming, @buffer.Buffer) -&gt; Unit raise Refused</pre>
+          <p>Emit one message: the struct, its constructor, its accessors, its oneofs and its reflective implementation.</p><pre class="sig">pub fn emit_message(@reflect.MessageDescriptor, String, String, Naming, @buffer.Buffer) -&gt; Unit raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">encode_request</span><span class="sdoc">| Encode a request, the inverse of `decode_request`.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">encode_request</span><span class="sdoc">Encode a request, the inverse of `decode_request`.</span></summary>
         <div class="sym-body">
-          <p>| Encode a request, the inverse of `decode_request`.</p><pre class="sig">pub fn encode_request(Request) -&gt; Bytes raise Refused</pre>
+          <p>Encode a request, the inverse of `decode_request`.</p><pre class="sig">pub fn encode_request(Request) -&gt; Bytes raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">encode_response</span><span class="sdoc">| Encode a `CodeGeneratorResponse`.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">encode_response</span><span class="sdoc">Encode a `CodeGeneratorResponse`.</span></summary>
         <div class="sym-body">
-          <p>| Encode a `CodeGeneratorResponse`.</p><pre class="sig">pub fn encode_response(Array[(String, String)], String?) -&gt; Bytes raise Refused</pre>
+          <p>Encode a `CodeGeneratorResponse`.</p><pre class="sig">pub fn encode_response(Array[(String, String)], String?) -&gt; Bytes raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">generate_source</span><span class="sdoc">| Generate the MoonBit source for one file descriptor, resolving the types the file refers to…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">generate_source</span><span class="sdoc">Generate the MoonBit source for one file descriptor, resolving the types the file refers to a…</span></summary>
         <div class="sym-body">
-          <p>| Generate the MoonBit source for one file descriptor, resolving the types the file refers to against its own declarations only.</p><pre class="sig">pub fn generate_source(@desc.FileDescriptorProto) -&gt; String raise Refused</pre>
+          <p>Generate the MoonBit source for one file descriptor, resolving the types the file refers to against its own declarations only.</p><pre class="sig">pub fn generate_source(@desc.FileDescriptorProto) -&gt; String raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">generate_source_with</span><span class="sdoc">| Generate one file, resolving the types it refers to against every file of the request, so a…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">generate_source_with</span><span class="sdoc">Generate one file, resolving the types it refers to against every file of the request, so a r…</span></summary>
         <div class="sym-body">
-          <p>| Generate one file, resolving the types it refers to against every file of the request, so a reference to another file&#x27;s message names the right type.</p><pre class="sig">pub fn generate_source_with(@desc.FileDescriptorProto, Symbols) -&gt; String raise Refused</pre>
+          <p>Generate one file, resolving the types it refers to against every file of the request, so a reference to another file&#x27;s message names the right type.</p><pre class="sig">pub fn generate_source_with(@desc.FileDescriptorProto, Symbols) -&gt; String raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">plugin_main</span><span class="sdoc">| The protoc plugin entry point: a serialized request in, a serialized response out.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">plugin_main</span><span class="sdoc">The protoc plugin entry point: a serialized request in, a serialized response out.</span></summary>
         <div class="sym-body">
-          <p>| The protoc plugin entry point: a serialized request in, a serialized response out.</p><pre class="sig">pub fn plugin_main(Bytes) -&gt; Bytes</pre>
+          <p>The protoc plugin entry point: a serialized request in, a serialized response out.</p><pre class="sig">pub fn plugin_main(Bytes) -&gt; Bytes</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">types</span><span class="sdoc">| The two files the protocol needs, built once.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">types</span><span class="sdoc">The two files the protocol needs, built once.</span></summary>
         <div class="sym-body">
-          <p>| The two files the protocol needs, built once.</p><pre class="sig">pub fn types() -&gt; @reflect.Types</pre>
+          <p>The two files the protocol needs, built once.</p><pre class="sig">pub fn types() -&gt; @reflect.Types</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">plugin_types</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">plugin_types</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub let plugin_types : @reflect.Types</pre>
+          <pre class="sig">pub let plugin_types : @reflect.Types</pre>
         </div>
       </details>
     </section>
@@ -2136,33 +2136,33 @@
       <p class="pkg-path">moonbitstack/moonproto/known</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">The well-known types, generated from the schemas protobuf ships.</p>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">descriptor_file</span><span class="sdoc">| `descriptor.proto`, which carries the descriptor messages themselves.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">descriptor_file</span><span class="sdoc">`descriptor.proto`, which carries the descriptor messages themselves.</span></summary>
         <div class="sym-body">
-          <p>| `descriptor.proto`, which carries the descriptor messages themselves.</p><pre class="sig">pub fn descriptor_file() -&gt; @reflect.FileDescriptor raise @desc.Refused</pre>
+          <p>`descriptor.proto`, which carries the descriptor messages themselves.</p><pre class="sig">pub fn descriptor_file() -&gt; @reflect.FileDescriptor raise @desc.Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">file_descriptor</span><span class="sdoc">| The first file that declares `name`, or the descriptor file.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">file_descriptor</span><span class="sdoc">The first file that declares `name`, or the descriptor file.</span></summary>
         <div class="sym-body">
-          <p>| The first file that declares `name`, or the descriptor file.</p><pre class="sig">pub fn file_descriptor() -&gt; @reflect.FileDescriptor raise @desc.Refused</pre>
+          <p>The first file that declares `name`, or the descriptor file.</p><pre class="sig">pub fn file_descriptor() -&gt; @reflect.FileDescriptor raise @desc.Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">files</span><span class="sdoc">| Every well-known file, in the order protobuf lists them.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">files</span><span class="sdoc">Every well-known file, in the order protobuf lists them.</span></summary>
         <div class="sym-body">
-          <p>| Every well-known file, in the order protobuf lists them.</p><pre class="sig">pub fn files() -&gt; Array[@reflect.FileDescriptor] raise @desc.Refused</pre>
+          <p>Every well-known file, in the order protobuf lists them.</p><pre class="sig">pub fn files() -&gt; Array[@reflect.FileDescriptor] raise @desc.Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">message_descriptor</span><span class="sdoc">| Look a message up by its qualified name.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">message_descriptor</span><span class="sdoc">Look a message up by its qualified name.</span></summary>
         <div class="sym-body">
-          <p>| Look a message up by its qualified name.</p><pre class="sig">pub fn message_descriptor(String) -&gt; @reflect.MessageDescriptor? raise @desc.Refused</pre>
+          <p>Look a message up by its qualified name.</p><pre class="sig">pub fn message_descriptor(String) -&gt; @reflect.MessageDescriptor? raise @desc.Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">register_all</span><span class="sdoc">| Register every well-known type, so the codecs can resolve a message by name</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">register_all</span><span class="sdoc">Register every well-known type, so the codecs can resolve a message by name</span></summary>
         <div class="sym-body">
-          <p>| Register every well-known type, so the codecs can resolve a message by name. Registering twice is harmless.</p><pre class="sig">pub fn register_all() -&gt; Unit</pre>
+          <p>Register every well-known type, so the codecs can resolve a message by name. Registering twice is harmless.</p><pre class="sig">pub fn register_all() -&gt; Unit</pre>
         </div>
       </details>
     </section>
@@ -2171,39 +2171,39 @@
       <p class="pkg-path">moonbitstack/moonproto/conformance</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">The conformance protocol: read one format, write another.</p>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">handle</span><span class="sdoc">| Answer one request: read the payload in the format it carries, write it in the requested one.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">handle</span><span class="sdoc">Answer one request: read the payload in the format it carries, write it in the requested one.</span></summary>
         <div class="sym-body">
-          <p>| Answer one request: read the payload in the format it carries, write it in the requested one.</p><pre class="sig">pub fn handle(Bytes) -&gt; Bytes</pre>
+          <p>Answer one request: read the payload in the format it carries, write it in the requested one.</p><pre class="sig">pub fn handle(Bytes) -&gt; Bytes</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">official_files</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">official_files</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn official_files() -&gt; Array[@desc.FileDescriptorProto]</pre>
+          <pre class="sig">pub fn official_files() -&gt; Array[@desc.FileDescriptorProto]</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">register_known_types</span><span class="sdoc">| Register the well-known types too, so a request that names one resolves.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">register_known_types</span><span class="sdoc">Register the well-known types too, so a request that names one resolves.</span></summary>
         <div class="sym-body">
-          <p>| Register the well-known types too, so a request that names one resolves.</p><pre class="sig">pub fn register_known_types() -&gt; Unit</pre>
+          <p>Register the well-known types too, so a request that names one resolves.</p><pre class="sig">pub fn register_known_types() -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">register_official_types</span><span class="sdoc">| Register the message types the official runner names: proto2, proto3, editions and edition-…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">register_official_types</span><span class="sdoc">Register the message types the official runner names: proto2, proto3, editions and edition-un…</span></summary>
         <div class="sym-body">
-          <p>| Register the message types the official runner names: proto2, proto3, editions and edition-unstable test schemas. Their descriptors come from the pinned descriptor set, so the testee has no build-time dependency on protoc.</p><pre class="sig">pub fn register_official_types() -&gt; Unit</pre>
+          <p>Register the message types the official runner names: proto2, proto3, editions and edition-unstable test schemas. Their descriptors come from the pinned descriptor set, so the testee has no build-time dependency on protoc.</p><pre class="sig">pub fn register_official_types() -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">register_test_types</span><span class="sdoc">|</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">register_test_types</span></summary>
         <div class="sym-body">
-          <p>|</p><pre class="sig">pub fn register_test_types() -&gt; Unit</pre>
+          <pre class="sig">pub fn register_test_types() -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">test_descriptor</span><span class="sdoc">| A message that exercises every scalar kind, a packed repeat, a map, a nested message, an en…</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">test_descriptor</span><span class="sdoc">A message that exercises every scalar kind, a packed repeat, a map, a nested message, an enum…</span></summary>
         <div class="sym-body">
-          <p>| A message that exercises every scalar kind, a packed repeat, a map, a nested message, an enum and a oneof.</p><pre class="sig">pub fn test_descriptor() -&gt; @desc.FileDescriptorProto</pre>
+          <p>A message that exercises every scalar kind, a packed repeat, a map, a nested message, an enum and a oneof.</p><pre class="sig">pub fn test_descriptor() -&gt; @desc.FileDescriptorProto</pre>
         </div>
       </details>
     </section>
