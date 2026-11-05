@@ -1,0 +1,11 @@
+// A first message: parse a schema, fill a dynamic message and round-trip it
+// through the binary encoding.
+import {
+  "moonbitstack/moonproto/desc",
+  "moonbitstack/moonproto/dynamic",
+  "moonbitstack/moonproto/parser",
+  "moonbitstack/moonproto/proto",
+  "moonbitstack/moonproto/reflect",
+}
+
+pkgtype(kind: "executable")

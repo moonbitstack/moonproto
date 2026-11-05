@@ -1,0 +1,14 @@
+// An integrated example: one descriptor drives binary, JSON and text output,
+// and a well-known type keeps its own JSON form.
+import {
+  "moonbitstack/moonproto/desc",
+  "moonbitstack/moonproto/dynamic",
+  "moonbitstack/moonproto/json",
+  "moonbitstack/moonproto/known",
+  "moonbitstack/moonproto/parser",
+  "moonbitstack/moonproto/proto",
+  "moonbitstack/moonproto/reflect",
+  "moonbitstack/moonproto/text",
+}
+
+pkgtype(kind: "executable")
