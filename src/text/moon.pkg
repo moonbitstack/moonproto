@@ -5,6 +5,7 @@ import {
   "moonbitlang/core/double",
   "moonbitlang/core/encoding/utf8",
   "moonbitlang/core/float",
+  "moonbitlang/core/string",
   "moonbitstack/moonproto/proto",
   "moonbitstack/moonproto/reflect",
 }

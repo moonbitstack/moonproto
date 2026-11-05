@@ -25,9 +25,9 @@ A few numbers that describe the current shape of the library:
 | Wire types | 5 |
 | Scalar kinds | 15 |
 | Syntax shapes generated and checked | 4 (`proto2`, `proto3`, editions 2023, editions 2024) |
-| Official binary and JSON conformance cases passing | 2736 / 2736 |
-| Official text format cases in the supported subset | 251 / 251 |
-| Declared text format omissions, each with a reason | 182 |
+| Official binary and JSON conformance cases passing | 2737 / 2737 |
+| Official text format conformance cases passing | 440 / 440 |
+| Declared conformance omissions | 0 |
 
 ## Packages
 
@@ -38,7 +38,7 @@ A few numbers that describe the current shape of the library:
 | `desc` | building runtime descriptors from the descriptor shape, and converting back |
 | `proto` | binary encode and decode, size, merge, clone, equal, reset, required checks, extensions on the wire |
 | `json` | the JSON mapping: 64-bit integers as strings, enums by name, base64 bytes, maps as objects, extensions in brackets, the `Timestamp`, `Duration`, wrapper, `FieldMask` and `Any` forms, and arbitrary JSON through `Struct`, `Value` and `ListValue` |
-| `text` | the text format: fields, braces, comments, expanded `Any`, extensions in brackets |
+| `text` | the text format: fields and separators, braces and angle brackets, groups, lists, every literal form, comments, expanded `Any`, extensions in brackets |
 | `delim` | varint size-delimited messages over a byte source |
 | `dynamic` | messages, enums and extensions built at run time from descriptors |
 | `known` | the well-known types; a thin layer over `known/google/protobuf`, which the plugin generated |
@@ -130,25 +130,22 @@ failure lists live in `tests/conformance/`.
 
 | Suite | Cases | Passed | Skipped | Expected failures | Unexpected failures |
 |:--|--:|--:|--:|--:|--:|
-| Binary and JSON (`failure_list.txt`) | 2736 | 2736 | 0 | 0 | 0 |
-| Text format (`text_format_failure_list.txt`) | 433 | 251 | 0 | 182 | 0 |
+| Binary and JSON (`failure_list.txt`) | 2737 | 2737 | 0 | 0 | 0 |
+| Text format (`text_format_failure_list.txt`) | 440 | 440 | 0 | 0 | 0 |
 
-`failure_list.txt` is empty: every binary and JSON case passes. The text format
-suite covers a wider grammar than this implementation targets. Each of its 182
-declared omissions is one line in `text_format_failure_list.txt` followed by the
-runner's observed failure message, so no case is waived without a reason. They
-group as follows:
+Both failure lists are empty: no case in either suite is waived. The text
+format suite is the one that exercises the grammar rather than the message
+model, and it covers:
 
-| Cause | Kind of case |
+| Area | What is read |
 |:--|:--|
-| Group and extension syntax in text form | `Data { ... }`, `[ext]`, group fields with and without colons |
-| Uncommon numeric spellings | `PosINF`, mixed-case `nAn`, huge exponents, octal literals and out-of-range literals |
-| Statement punctuation | semicolons, commas inside list values, adjacent string literals |
-| Lenient recovery | reserved field names, `Any` and extension brackets, duplicate fields |
-| Strictness of the text path | scalar literals that the binary path rejects but text accepts |
-
-The ordinary message, scalar, repeated, map, oneof, `Any` and well-known type
-text forms are all inside the supported subset.
+| Fields | `name: value`, `name value` for message values, `;` or `,` closing a field, `{ ... }` and `< ... >` bodies |
+| Groups | the group's type name or its own field name, in any case, with or without a colon, as a declared field or as an extension |
+| Repeated | one element per name, or a bracketed list with `,` between elements |
+| Scalars | decimal, `0x` hexadecimal and leading-zero octal integers with a range check per width; decimal and exponent floats with an optional `f` suffix, `.5` and `-.5` forms, case-insensitive `inf`/`infinity`/`nan`, overflow to infinity and underflow to a signed zero |
+| Strings | single or double quotes, adjacent literals joined, `\a \b \f \n \r \t \v \? \\ \' \"`, `\xNN`, octal and `\u`/`\U` escapes, no raw line feed |
+| Names | extensions and expanded `Any` payloads in brackets, where whitespace and comments are dropped and a `%` must introduce two hex digits |
+| Refusals | an out-of-range integer, a hexadecimal or octal float literal, a number a closed enum does not declare, and a name the schema neither declares nor reserves |
 
 ### Bidirectional interop
 

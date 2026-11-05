@@ -331,6 +331,11 @@ fn scalar_text(
         buf.write_string_utf8("nan")
       } else if number.is_inf() {
         buf.write_string_utf8(if number > 0.0 { "inf" } else { "-inf" })
+      } else if number == 0.0 &&
+        number.reinterpret_as_uint64() == 0x8000_0000_0000_0000UL {
+        // A negative zero is not the same value as zero, so it has to keep its
+        // sign on the way out or the field stops round-tripping.
+        buf.write_string_utf8("-0")
       } else {
         buf.write_string_utf8(number.to_string())
       }
@@ -459,18 +464,43 @@ fn Parser::new(text : String) -> Parser {
 }
 
 ///|
-fn Parser::finish(self : Parser) -> Unit raise Refused {
-  self.skip()
-  if self.pos < self.text.length() {
-    raise Syntax("trailing input", self.pos)
-  }
+fn is_digit(ch : Char) -> Bool {
+  ch >= '0' && ch <= '9'
+}
+
+///|
+fn is_hex_letter(ch : Char) -> Bool {
+  (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F')
+}
+
+///|
+fn is_hex_letter_or_digit(ch : Char) -> Bool {
+  is_digit(ch) || is_hex_letter(ch)
+}
+
+///|
+fn is_ident_start(ch : Char) -> Bool {
+  (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_'
+}
+
+///|
+fn is_ident_char(ch : Char) -> Bool {
+  is_ident_start(ch) || is_digit(ch)
+}
+
+///|
+/// The whitespace the text format skips. Vertical tab and form feed are in the
+/// list because the reference tokenizer treats them as space.
+fn is_space_char(ch : Char) -> Bool {
+  let code = ch.to_int()
+  code == 32 || (code >= 9 && code <= 13)
 }
 
 ///|
 fn Parser::skip(self : Parser) -> Unit {
   while self.pos < self.text.length() {
     let ch = char_at(self.text, self.pos)
-    if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' {
+    if is_space_char(ch) {
       self.pos = self.pos + 1
     } else if ch == '#' {
       while self.pos < self.text.length() &&
@@ -509,18 +539,166 @@ fn Parser::expect(self : Parser, ch : Char) -> Unit raise Refused {
 }
 
 ///|
-/// A bracketed name: a type URL may contain `/`, an extension name may contain
-/// dots, so it runs to the closing bracket.
-fn Parser::read_type_url(self : Parser) -> String raise Refused {
+fn Parser::take(self : Parser, ch : Char) -> Bool {
+  self.skip()
+  if self.pos < self.text.length() && char_at(self.text, self.pos) == ch {
+    self.pos = self.pos + 1
+    true
+  } else {
+    false
+  }
+}
+
+///|
+fn Parser::finish(self : Parser) -> Unit raise Refused {
+  self.skip()
+  if self.pos < self.text.length() {
+    raise Syntax("trailing input", self.pos)
+  }
+}
+
+///|
+fn Parser::read_ident(self : Parser) -> String raise Refused {
   self.skip()
   let start = self.pos
-  while self.pos < self.text.length() && char_at(self.text, self.pos) != ']' {
+  if self.pos >= self.text.length() ||
+    !is_ident_start(char_at(self.text, self.pos)) {
+    raise Syntax("expected a name", self.pos)
+  }
+  self.pos = self.pos + 1
+  while self.pos < self.text.length() &&
+        is_ident_char(char_at(self.text, self.pos)) {
     self.pos = self.pos + 1
   }
-  if self.pos >= self.text.length() {
-    raise Syntax("unterminated name", start)
+  self.text[start:self.pos].to_owned()
+}
+
+///|
+/// Read one numeric token: an optional sign, then a decimal or hexadecimal
+/// literal, optionally with a fraction, an exponent and a float suffix. The
+/// token is returned verbatim because the field's type decides which forms are
+/// legal: `012` is a valid integer token and an invalid float token, `0x1` the
+/// other way round.
+fn Parser::read_number_token(self : Parser) -> String raise Refused {
+  self.skip()
+  let start = self.pos
+  if self.pos < self.text.length() {
+    let ch = char_at(self.text, self.pos)
+    if ch == '+' || ch == '-' {
+      self.pos = self.pos + 1
+    }
   }
-  let name = self.text[start:self.pos].to_owned()
+  if self.pos + 1 < self.text.length() &&
+    char_at(self.text, self.pos) == '0' &&
+    (
+      char_at(self.text, self.pos + 1) == 'x' ||
+      char_at(self.text, self.pos + 1) == 'X'
+    ) {
+    self.pos = self.pos + 2
+    let hex_start = self.pos
+    while self.pos < self.text.length() &&
+          (
+            is_digit(char_at(self.text, self.pos)) ||
+            is_hex_letter(char_at(self.text, self.pos))
+          ) {
+      self.pos = self.pos + 1
+    }
+    if self.pos == hex_start {
+      raise Syntax("expected a digit after 0x", self.pos)
+    }
+    return self.text[start:self.pos].to_owned()
+  }
+  let mut whole_digits = 0
+  while self.pos < self.text.length() && is_digit(char_at(self.text, self.pos)) {
+    self.pos = self.pos + 1
+    whole_digits = whole_digits + 1
+  }
+  let mut fraction_digits = 0
+  if self.pos < self.text.length() && char_at(self.text, self.pos) == '.' {
+    self.pos = self.pos + 1
+    while self.pos < self.text.length() &&
+          is_digit(char_at(self.text, self.pos)) {
+      self.pos = self.pos + 1
+      fraction_digits = fraction_digits + 1
+    }
+  }
+  if whole_digits == 0 && fraction_digits == 0 {
+    self.pos = start
+    raise Syntax("expected a number", start)
+  }
+  if self.pos < self.text.length() &&
+    (char_at(self.text, self.pos) == 'e' || char_at(self.text, self.pos) == 'E') {
+    let mark = self.pos
+    self.pos = self.pos + 1
+    if self.pos < self.text.length() &&
+      (
+        char_at(self.text, self.pos) == '+' ||
+        char_at(self.text, self.pos) == '-'
+      ) {
+      self.pos = self.pos + 1
+    }
+    let exponent_start = self.pos
+    while self.pos < self.text.length() &&
+          is_digit(char_at(self.text, self.pos)) {
+      self.pos = self.pos + 1
+    }
+    if self.pos == exponent_start {
+      // `1e` is not an exponent; leave the `e` for the caller to reject.
+      self.pos = mark
+    }
+  }
+  if self.pos < self.text.length() &&
+    (char_at(self.text, self.pos) == 'f' || char_at(self.text, self.pos) == 'F') {
+    self.pos = self.pos + 1
+  }
+  self.text[start:self.pos].to_owned()
+}
+
+///|
+/// Read a bracketed name. Whitespace and comments are dropped, which is how the
+/// reference tokenizer reads a type URL spread over several lines, and a `%`
+/// has to introduce two hex digits so a broken percent escape is refused here
+/// rather than silently kept.
+fn Parser::read_bracket(self : Parser) -> String raise Refused {
+  self.skip()
+  let start = self.pos
+  self.expect('[')
+  let name = Buffer()
+  while true {
+    if self.pos >= self.text.length() {
+      raise Syntax("unterminated name", start)
+    }
+    let ch = char_at(self.text, self.pos)
+    if ch == ']' {
+      self.pos = self.pos + 1
+      break
+    }
+    if is_space_char(ch) {
+      self.pos = self.pos + 1
+    } else if ch == '#' {
+      while self.pos < self.text.length() &&
+            char_at(self.text, self.pos) != '\n' {
+        self.pos = self.pos + 1
+      }
+    } else if ch == '%' {
+      if self.pos + 2 >= self.text.length() ||
+        !is_hex_letter_or_digit(char_at(self.text, self.pos + 1)) ||
+        !is_hex_letter_or_digit(char_at(self.text, self.pos + 2)) {
+        raise Syntax("bad percent escape", self.pos)
+      }
+      for offset in 0..<3 {
+        name.write_string_utf8(
+          char_at(self.text, self.pos + offset).to_string(),
+        )
+      }
+      self.pos = self.pos + 3
+    } else {
+      name.write_string_utf8(ch.to_string())
+      self.pos = self.pos + 1
+    }
+  }
+  let text = name.to_bytes()
+  let name = @utf8.decode(text) catch { _ => raise Syntax("bad name", start) }
   if name.length() == 0 {
     raise Syntax("empty name", start)
   }
@@ -528,59 +706,46 @@ fn Parser::read_type_url(self : Parser) -> String raise Refused {
 }
 
 ///|
-fn is_ident_start(ch : Char) -> Bool {
-  (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_'
+fn Parser::read_hex_digit(self : Parser) -> Int32 raise Refused {
+  if self.pos >= self.text.length() {
+    raise Syntax("expected a hex digit", self.pos)
+  }
+  let ch = char_at(self.text, self.pos)
+  self.pos = self.pos + 1
+  if is_digit(ch) {
+    ch.to_int() - '0'.to_int()
+  } else if ch >= 'a' && ch <= 'f' {
+    ch.to_int() - 'a'.to_int() + 10
+  } else if ch >= 'A' && ch <= 'F' {
+    ch.to_int() - 'A'.to_int() + 10
+  } else {
+    raise Syntax("expected a hex digit", self.pos)
+  }
 }
 
 ///|
-fn is_ident_char(ch : Char) -> Bool {
-  is_ident_start(ch) || (ch >= '0' && ch <= '9') || ch == '.'
+fn write_utf8(out : Buffer, code : Int32) -> Unit {
+  if code < 0x80 {
+    out.write_byte(code.to_byte())
+  } else if code < 0x800 {
+    out.write_byte((0xC0 | (code >> 6)).to_byte())
+    out.write_byte((0x80 | (code & 0x3F)).to_byte())
+  } else if code < 0x10000 {
+    out.write_byte((0xE0 | (code >> 12)).to_byte())
+    out.write_byte((0x80 | ((code >> 6) & 0x3F)).to_byte())
+    out.write_byte((0x80 | (code & 0x3F)).to_byte())
+  } else {
+    out.write_byte((0xF0 | (code >> 18)).to_byte())
+    out.write_byte((0x80 | ((code >> 12) & 0x3F)).to_byte())
+    out.write_byte((0x80 | ((code >> 6) & 0x3F)).to_byte())
+    out.write_byte((0x80 | (code & 0x3F)).to_byte())
+  }
 }
 
 ///|
-fn Parser::read_ident(self : Parser) -> String raise Refused {
+fn Parser::read_string_literal(self : Parser) -> Bytes raise Refused {
   self.skip()
   let start = self.pos
-  while self.pos < self.text.length() &&
-        is_ident_char(char_at(self.text, self.pos)) {
-    self.pos = self.pos + 1
-  }
-  if self.pos == start {
-    raise Syntax("expected a name", self.pos)
-  }
-  self.text[start:self.pos].to_owned()
-}
-
-///|
-fn Parser::read_number(self : Parser) -> String raise Refused {
-  self.skip()
-  let start = self.pos
-  while self.pos < self.text.length() {
-    let ch = char_at(self.text, self.pos)
-    if (ch >= '0' && ch <= '9') ||
-      ch == '+' ||
-      ch == '-' ||
-      ch == '.' ||
-      ch == 'e' ||
-      ch == 'E' ||
-      ch == 'x' ||
-      ch == 'X' ||
-      (ch >= 'a' && ch <= 'f') ||
-      (ch >= 'A' && ch <= 'F') {
-      self.pos = self.pos + 1
-    } else {
-      break
-    }
-  }
-  if self.pos == start {
-    raise Syntax("expected a number", self.pos)
-  }
-  self.text[start:self.pos].to_owned()
-}
-
-///|
-fn Parser::read_string(self : Parser) -> Bytes raise Refused {
-  self.skip()
   let quote = if self.pos < self.text.length() {
     char_at(self.text, self.pos)
   } else {
@@ -593,12 +758,15 @@ fn Parser::read_string(self : Parser) -> Bytes raise Refused {
   let out = Buffer()
   while true {
     if self.pos >= self.text.length() {
-      raise Syntax("unterminated string", self.pos)
+      raise Syntax("unterminated string", start)
     }
     let ch = char_at(self.text, self.pos)
     if ch == quote {
       self.pos = self.pos + 1
       return out.to_bytes()
+    }
+    if ch == '\n' {
+      raise Syntax("a string literal cannot span lines", self.pos)
     }
     if ch == '\\' {
       self.pos = self.pos + 1
@@ -613,7 +781,15 @@ fn Parser::read_string(self : Parser) -> Bytes raise Refused {
         out.write_byte(0x0D)
       } else if esc == 't' {
         out.write_byte(0x09)
-      } else if esc == '\\' || esc == '"' || esc == '\'' {
+      } else if esc == 'a' {
+        out.write_byte(0x07)
+      } else if esc == 'b' {
+        out.write_byte(0x08)
+      } else if esc == 'f' {
+        out.write_byte(0x0C)
+      } else if esc == 'v' {
+        out.write_byte(0x0B)
+      } else if esc == '?' || esc == '\\' || esc == '\'' || esc == '"' {
         out.write_byte(esc.to_int().to_byte())
       } else if esc == 'x' || esc == 'X' {
         let high = self.read_hex_digit()
@@ -632,6 +808,16 @@ fn Parser::read_string(self : Parser) -> Bytes raise Refused {
           count = count + 1
         }
         out.write_byte(value.to_byte())
+      } else if esc == 'u' || esc == 'U' {
+        let count = if esc == 'u' { 4 } else { 8 }
+        let mut code = 0
+        for _ in 0..<count {
+          code = code * 16 + self.read_hex_digit()
+        }
+        if code > 0x10FFFF || (code >= 0xD800 && code <= 0xDFFF) {
+          raise Syntax("invalid code point in escape", self.pos)
+        }
+        write_utf8(out, code)
       } else {
         raise Syntax("unknown escape", self.pos)
       }
@@ -647,21 +833,324 @@ fn Parser::read_string(self : Parser) -> Bytes raise Refused {
 }
 
 ///|
-fn Parser::read_hex_digit(self : Parser) -> Int32 raise Refused {
-  if self.pos >= self.text.length() {
-    raise Syntax("expected a hex digit", self.pos)
+/// One string value, which may be several adjacent literals: the reference
+/// parser joins them, so `'first' "second"` is one value.
+fn Parser::read_string(self : Parser) -> Bytes raise Refused {
+  let out = Buffer()
+  let mut seen = false
+  while true {
+    match self.peek() {
+      Some(ch) =>
+        if ch == '"' || ch == '\'' {
+          let piece = self.read_string_literal()
+          for i in 0..<piece.length() {
+            out.write_byte(piece[i])
+          }
+          seen = true
+        } else {
+          break
+        }
+      None => break
+    }
   }
-  let ch = char_at(self.text, self.pos)
-  self.pos = self.pos + 1
-  if ch >= '0' && ch <= '9' {
-    ch.to_int() - '0'.to_int()
-  } else if ch >= 'a' && ch <= 'f' {
-    ch.to_int() - 'a'.to_int() + 10
-  } else if ch >= 'A' && ch <= 'F' {
-    ch.to_int() - 'A'.to_int() + 10
-  } else {
-    raise Syntax("expected a hex digit", self.pos)
+  if !seen {
+    raise Syntax("expected a string", self.pos)
   }
+  out.to_bytes()
+}
+
+// -- numbers ----------------------------------------------------------------
+
+///|
+/// Split an integer token into sign, base and digits. A leading `0x` selects
+/// base 16 and any other leading zero selects base 8, which is what makes
+/// `017777777777` the largest int32.
+fn integer_parts(token : String) -> (Bool, Int32, String) raise Refused {
+  let mut i = 0
+  let mut negative = false
+  if token.length() > 0 {
+    let ch = char_at(token, 0)
+    if ch == '-' {
+      negative = true
+      i = 1
+    } else if ch == '+' {
+      i = 1
+    }
+  }
+  let mut base = 10
+  if token.length() > i + 1 && char_at(token, i) == '0' {
+    let next = char_at(token, i + 1)
+    if next == 'x' || next == 'X' {
+      base = 16
+      i = i + 2
+    } else {
+      base = 8
+    }
+  }
+  if i >= token.length() {
+    raise BadValue(token)
+  }
+  (negative, base, token[i:].to_owned())
+}
+
+///|
+fn digits_value(digits : String, base : Int32) -> UInt64 raise Refused {
+  let limit = 0xFFFF_FFFF_FFFF_FFFFUL
+  let radix = base.to_uint64()
+  let mut value = 0UL
+  for i in 0..<digits.length() {
+    let ch = char_at(digits, i)
+    let digit = if is_digit(ch) {
+      (ch.to_int() - '0'.to_int()).to_uint64()
+    } else if ch >= 'a' && ch <= 'f' {
+      (ch.to_int() - 'a'.to_int() + 10).to_uint64()
+    } else if ch >= 'A' && ch <= 'F' {
+      (ch.to_int() - 'A'.to_int() + 10).to_uint64()
+    } else {
+      raise BadValue(digits)
+    }
+    if digit >= radix {
+      raise BadValue(digits)
+    }
+    if value > (limit - digit) / radix {
+      raise BadValue(digits)
+    }
+    value = value * radix + digit
+  }
+  value
+}
+
+///|
+/// An integer for a field of `kind`, refusing a value the type cannot hold. The
+/// limit is checked on the magnitude, so the minimum of a signed type (which
+/// has no positive counterpart) is accepted.
+fn int_value(
+  kind : @reflect.Kind,
+  token : String,
+) -> @reflect.Value raise Refused {
+  let (negative, base, digits) = integer_parts(token)
+  let magnitude = digits_value(digits, base)
+  match kind {
+    @reflect.Int32 | @reflect.Sint32 | @reflect.Sfixed32 => {
+      let limit = if negative { 0x8000_0000UL } else { 0x7FFF_FFFFUL }
+      if magnitude > limit {
+        raise BadValue(token)
+      }
+      let signed = if negative {
+        0L - magnitude.reinterpret_as_int64()
+      } else {
+        magnitude.reinterpret_as_int64()
+      }
+      @reflect.Int32(signed.to_int())
+    }
+    @reflect.Int64 | @reflect.Sint64 | @reflect.Sfixed64 => {
+      let limit = if negative {
+        0x8000_0000_0000_0000UL
+      } else {
+        0x7FFF_FFFF_FFFF_FFFFUL
+      }
+      if magnitude > limit {
+        raise BadValue(token)
+      }
+      let signed = if negative {
+        0L - magnitude.reinterpret_as_int64()
+      } else {
+        magnitude.reinterpret_as_int64()
+      }
+      @reflect.Int64(signed)
+    }
+    @reflect.Uint32 | @reflect.Fixed32 => {
+      if (negative && magnitude != 0UL) || magnitude > 0xFFFF_FFFFUL {
+        raise BadValue(token)
+      }
+      @reflect.Uint32(
+        magnitude.reinterpret_as_int64().to_int().reinterpret_as_uint(),
+      )
+    }
+    @reflect.Uint64 | @reflect.Fixed64 => {
+      if negative && magnitude != 0UL {
+        raise BadValue(token)
+      }
+      @reflect.Uint64(magnitude)
+    }
+    _ => raise BadValue(token)
+  }
+}
+
+///|
+fn lowercase_word(text : String) -> String {
+  let buf = Buffer()
+  for i in 0..<text.length() {
+    let ch = char_at(text, i)
+    if ch >= 'A' && ch <= 'Z' {
+      let code = ch.to_int() - 'A'.to_int() + 'a'.to_int()
+      buf.write_string_utf8(code.to_char().unwrap_or('a').to_string())
+    } else {
+      buf.write_string_utf8(ch.to_string())
+    }
+  }
+  let bytes = buf.to_bytes()
+  @utf8.decode(bytes) catch {
+    _ => text
+  }
+}
+
+///|
+/// The exponent a literal carries, or zero. Used only to decide which way an
+/// overflowing literal goes.
+fn literal_exponent_is_negative(body : String) -> Bool {
+  for i in 0..<body.length() {
+    let ch = char_at(body, i)
+    if ch == 'e' || ch == 'E' {
+      return i + 1 < body.length() && char_at(body, i + 1) == '-'
+    }
+  }
+  false
+}
+
+///|
+/// A floating point literal. `inf` and `nan` are case-insensitive and take a
+/// sign; hex and octal forms are not float literals; a magnitude that does not
+/// fit becomes an infinity or a signed zero, as the format specifies.
+fn double_value(token : String) -> Double raise Refused {
+  let mut i = 0
+  let mut negative = false
+  if token.length() > 0 {
+    let ch = char_at(token, 0)
+    if ch == '-' {
+      negative = true
+      i = 1
+    } else if ch == '+' {
+      i = 1
+    }
+  }
+  let mut body = token[i:].to_owned()
+  if body.length() > 0 {
+    let last = char_at(body, body.length() - 1)
+    if last == 'f' || last == 'F' {
+      body = body[0:body.length() - 1].to_owned()
+    }
+  }
+  let word = lowercase_word(body)
+  if word == "inf" || word == "infinity" {
+    return if negative { @double.neg_infinity } else { @double.infinity }
+  }
+  if word == "nan" {
+    return @double.not_a_number
+  }
+  if body.length() == 0 {
+    raise BadValue(token)
+  }
+  for k in 0..<body.length() {
+    let ch = char_at(body, k)
+    if ch == 'x' || ch == 'X' {
+      raise BadValue(token)
+    }
+  }
+  // A leading zero with no fraction and no exponent is an octal integer, which
+  // is not a float literal.
+  let mut has_marker = false
+  for k in 0..<body.length() {
+    let ch = char_at(body, k)
+    if ch == '.' || ch == 'e' || ch == 'E' {
+      has_marker = true
+    }
+  }
+  if !has_marker && body.length() > 1 && char_at(body, 0) == '0' {
+    raise BadValue(token)
+  }
+  let signed = if negative { "-" + body } else { body }
+  @string.parse_double(signed) catch {
+    _ =>
+      // Only a magnitude problem reaches here: the literal is well formed, so
+      // the sign of the exponent says which side the value overflowed towards.
+      if literal_exponent_is_negative(body) {
+        if negative {
+          -0.0
+        } else {
+          0.0
+        }
+      } else if negative {
+        @double.neg_infinity
+      } else {
+        @double.infinity
+      }
+  }
+}
+
+// -- fields -----------------------------------------------------------------
+
+///|
+/// A float literal is either a number or one of the special words, which are
+/// identifiers rather than numeric tokens.
+fn read_float_token(parser : Parser) -> String raise Refused {
+  parser.skip()
+  let start = parser.pos
+  let mut sign = ""
+  match parser.peek() {
+    Some('-') => {
+      parser.expect('-')
+      sign = "-"
+    }
+    Some('+') => {
+      parser.expect('+')
+      sign = "+"
+    }
+    _ => ()
+  }
+  match parser.peek() {
+    Some(ch) =>
+      if is_ident_start(ch) {
+        sign + parser.read_ident()
+      } else {
+        parser.pos = start
+        parser.read_number_token()
+      }
+    None => raise Syntax("expected a number", parser.pos)
+  }
+}
+
+///|
+fn is_reserved_name(desc : @reflect.MessageDescriptor, name : String) -> Bool {
+  for item in desc.reserved_names {
+    if item == name {
+      return true
+    }
+  }
+  false
+}
+
+///|
+/// The field a text name selects. A group field is written with the group's
+/// type name or its own field name, and the reference parser accepts either in
+/// any case, so the last comparison ignores case.
+fn find_field(
+  desc : @reflect.MessageDescriptor,
+  name : String,
+) -> @reflect.FieldDescriptor? {
+  for field in desc.fields {
+    if field.text_name == name {
+      return Some(field)
+    }
+  }
+  for field in desc.fields {
+    if field.name == name {
+      return Some(field)
+    }
+  }
+  for field in desc.fields {
+    if field.json_name == name {
+      return Some(field)
+    }
+  }
+  let wanted = lowercase_word(name)
+  for field in desc.fields {
+    if lowercase_word(field.text_name) == wanted ||
+      lowercase_word(field.name) == wanted {
+      return Some(field)
+    }
+  }
+  None
 }
 
 ///|
@@ -679,49 +1168,60 @@ fn message_from_text(
     if parser.eof() || parser.peek() == Some('}') || parser.peek() == Some('>') {
       return
     }
-    let mut qualified : String? = None
-    let name = if parser.peek() == Some('[') {
-      parser.expect('[')
-      let key = parser.read_type_url()
-      parser.expect(']')
-      qualified = Some(key)
-      key
-    } else {
-      parser.read_ident()
-    }
-    if parser.peek() == Some(':') {
-      parser.expect(':')
-    }
-    match qualified {
-      Some(key) => {
-        if message.descriptor().full_name == "google.protobuf.Any" &&
-          key.contains("/") {
-          parse_any_text(message, key, parser, opts, depth)
-          continue
-        }
+    if parser.peek() == Some('[') {
+      let key = parser.read_bracket()
+      if parser.peek() == Some(':') {
+        parser.expect(':')
+      }
+      if message.descriptor().full_name == "google.protobuf.Any" &&
+        key.contains("/") {
+        parse_any_text(message, key, parser, opts, depth)
+      } else {
         match @reflect.global_types.find_extension_by_name(key) {
           Some(extension) => {
             let field = extension.descriptor()
             parse_field(message, field, parser, opts, depth)
-            continue
           }
-          None => if !opts.discard_unknown { raise UnknownField(key) }
-        }
-      }
-      None => ()
-    }
-    match message.descriptor().field_by_json_name(name) {
-      Some(field) => parse_field(message, field, parser, opts, depth)
-      None =>
-        match message.descriptor().field_by_name(name) {
-          Some(field) => parse_field(message, field, parser, opts, depth)
           None =>
             if !opts.discard_unknown {
-              raise UnknownField(name)
+              raise UnknownField(key)
             } else {
               skip_value(parser)
             }
         }
+      }
+    } else {
+      let name = parser.read_ident()
+      let desc = message.descriptor()
+      match find_field(desc, name) {
+        Some(field) => {
+          // The colon is required before a scalar and optional before a
+          // message, so accepting it when present covers both.
+          if parser.peek() == Some(':') {
+            parser.expect(':')
+          }
+          parse_field(message, field, parser, opts, depth)
+        }
+        None =>
+          // A name the schema reserves is skipped the way an unknown field is:
+          // the message has no field to put it in, and the reference parser
+          // treats the case as data it is allowed to drop.
+          if opts.discard_unknown || is_reserved_name(desc, name) {
+            if parser.peek() == Some(':') {
+              parser.expect(':')
+            }
+            skip_value(parser)
+          } else {
+            raise UnknownField(name)
+          }
+      }
+    }
+    // One separator may follow a field; a second one leaves `;` or `,` where
+    // the next field name belongs, which the next round refuses.
+    match parser.peek() {
+      Some(';') => parser.expect(';')
+      Some(',') => parser.expect(',')
+      _ => ()
     }
   }
 }
@@ -766,41 +1266,27 @@ fn parse_field(
   depth : Int32,
 ) -> Unit raise Refused {
   if field.is_map {
-    let entry = message.mutable(field).map()
-    let key_field = match field.map_key_field {
-      Some(item) => item
-      None => return
-    }
-    let value_field = match field.map_value_field {
-      Some(item) => item
-      None => return
-    }
-    parser.expect('{')
-    let mut key : @reflect.Value = @reflect.default_for(key_field)
-    let mut value : @reflect.Value = @reflect.new_field_value(value_field)
-    while true {
-      parser.skip()
-      if parser.peek() == Some('}') {
-        parser.expect('}')
-        break
-      }
-      let name = parser.read_ident()
-      if parser.peek() == Some(':') {
-        parser.expect(':')
-      }
-      if name == key_field.text_name {
-        key = parse_scalar(key_field, parser, opts, depth)
-      } else if name == value_field.text_name {
-        value = parse_value(value_field, parser, opts, depth)
-      } else {
-        skip_value(parser)
-      }
-    }
-    match key.map_key() {
-      Some(map_key) => entry.set(map_key, value)
-      None => ()
-    }
+    parse_map_field(message, field, parser, opts, depth)
     return
+  }
+  if parser.peek() == Some('[') && field.is_list() {
+    parser.expect('[')
+    if parser.take(']') {
+      return
+    }
+    while true {
+      let value = parse_value(field, parser, opts, depth)
+      message.mutable(field).list().append(value)
+      if parser.take(',') {
+        if parser.peek() == Some(']') {
+          raise Syntax("trailing comma in a list", parser.pos)
+        }
+      } else if parser.take(']') {
+        return
+      } else {
+        raise Syntax("expected , or ]", parser.pos)
+      }
+    }
   }
   if field.is_list() {
     let value = parse_value(field, parser, opts, depth)
@@ -813,6 +1299,54 @@ fn parse_field(
     return
   }
   message.set(field, parse_scalar(field, parser, opts, depth))
+}
+
+///|
+fn parse_map_field(
+  message : &@reflect.Message,
+  field : @reflect.FieldDescriptor,
+  parser : Parser,
+  opts : UnmarshalOptions,
+  depth : Int32,
+) -> Unit raise Refused {
+  let entry = message.mutable(field).map()
+  let key_field = match field.map_key_field {
+    Some(item) => item
+    None => return
+  }
+  let value_field = match field.map_value_field {
+    Some(item) => item
+    None => return
+  }
+  parser.expect('{')
+  let mut key : @reflect.Value = @reflect.default_for(key_field)
+  let mut value : @reflect.Value = @reflect.new_field_value(value_field)
+  while true {
+    parser.skip()
+    if parser.take('}') {
+      break
+    }
+    let name = parser.read_ident()
+    if parser.peek() == Some(':') {
+      parser.expect(':')
+    }
+    if name == key_field.text_name || name == key_field.name {
+      key = parse_scalar(key_field, parser, opts, depth)
+    } else if name == value_field.text_name || name == value_field.name {
+      value = parse_value(value_field, parser, opts, depth)
+    } else if opts.discard_unknown {
+      skip_value(parser)
+    } else {
+      raise UnknownField(name)
+    }
+    if parser.take(',') || parser.take(';') {
+      ()
+    }
+  }
+  match key.map_key() {
+    Some(map_key) => entry.set(map_key, value)
+    None => ()
+  }
 }
 
 ///|
@@ -861,17 +1395,24 @@ fn parse_scalar(
   opts : UnmarshalOptions,
   depth : Int32,
 ) -> @reflect.Value raise Refused {
+  let _ = opts
+  let _ = depth
   match field.kind {
-    @reflect.Bool => {
-      let word = parser.read_ident()
-      if word == "true" || word == "t" || word == "1" {
-        @reflect.Bool(true)
-      } else if word == "false" || word == "f" || word == "0" {
-        @reflect.Bool(false)
-      } else {
-        raise BadValue(field.name)
+    @reflect.Bool =>
+      match parser.peek() {
+        Some(ch) =>
+          if is_digit(ch) || ch == '-' || ch == '+' {
+            let value = int_value(@reflect.Int32, parser.read_number_token())
+            match value.int().to_int() {
+              0 => @reflect.Bool(false)
+              1 => @reflect.Bool(true)
+              _ => raise BadValue(field.name)
+            }
+          } else {
+            bool_word(field, parser.read_ident())
+          }
+        None => raise Syntax("expected a value", parser.pos)
       }
-    }
     @reflect.String => {
       let bytes = parser.read_string()
       @reflect.String(
@@ -881,186 +1422,96 @@ fn parse_scalar(
       )
     }
     @reflect.Bytes => @reflect.Bytes(parser.read_string())
-    @reflect.Int32 | @reflect.Sint32 | @reflect.Sfixed32 =>
-      @reflect.Int32(parse_int_text(parser.read_number()).to_int())
-    @reflect.Int64 | @reflect.Sint64 | @reflect.Sfixed64 =>
-      @reflect.Int64(parse_int_text(parser.read_number()))
-    @reflect.Uint32 | @reflect.Fixed32 =>
-      @reflect.Uint32(
-        parse_int_text(parser.read_number()).to_int().reinterpret_as_uint(),
-      )
-    @reflect.Uint64 | @reflect.Fixed64 =>
-      @reflect.Uint64(
-        parse_int_text(parser.read_number()).reinterpret_as_uint64(),
-      )
+    @reflect.Int32
+    | @reflect.Sint32
+    | @reflect.Sfixed32
+    | @reflect.Int64
+    | @reflect.Sint64
+    | @reflect.Sfixed64
+    | @reflect.Uint32
+    | @reflect.Fixed32
+    | @reflect.Uint64
+    | @reflect.Fixed64 => int_value(field.kind, parser.read_number_token())
     @reflect.Float =>
-      @reflect.Float(@float.Float::from_double(parse_float_text(parser)))
-    @reflect.Double => @reflect.Double(parse_float_text(parser))
-    @reflect.Enum => {
-      let token = parser.read_ident()
-      let mut value = None
-      match field.enum_type {
-        Some(name) =>
-          match @reflect.global_files.find_enum_by_name(name) {
-            Some(desc) =>
-              match desc.value_by_name(token) {
-                Some(item) => value = Some(item.number)
-                None => ()
-              }
-            None => ()
-          }
-        None => ()
+      @reflect.Float(
+        @float.Float::from_double(double_value(read_float_token(parser))),
+      )
+    @reflect.Double => @reflect.Double(double_value(read_float_token(parser)))
+    @reflect.Enum => parse_enum(field, parser)
+    @reflect.Message | @reflect.Group => raise BadValue(field.name)
+  }
+}
+
+///|
+fn bool_word(
+  field : @reflect.FieldDescriptor,
+  word : String,
+) -> @reflect.Value raise Refused {
+  if word == "true" || word == "t" {
+    @reflect.Bool(true)
+  } else if word == "false" || word == "f" {
+    @reflect.Bool(false)
+  } else {
+    raise BadValue(field.name)
+  }
+}
+
+///|
+/// An enum takes a value name or a number. A number has to name a value of a
+/// closed enum; an open enum keeps it, because that is what open means.
+fn parse_enum(
+  field : @reflect.FieldDescriptor,
+  parser : Parser,
+) -> @reflect.Value raise Refused {
+  let token = match parser.peek() {
+    Some(ch) =>
+      if is_digit(ch) || ch == '-' || ch == '+' {
+        let value = int_value(@reflect.Int32, parser.read_number_token())
+        let number = value.int().to_int()
+        match enum_descriptor(field) {
+          Some(item) =>
+            match item.value_by_number(number) {
+              None => if item.closed { raise BadValue(field.name) }
+              Some(_) => ()
+            }
+          None => ()
+        }
+        return @reflect.Enum(number)
+      } else {
+        parser.read_ident()
       }
-      match value {
-        Some(number) => @reflect.Enum(number)
-        None => @reflect.Enum(parse_int_text(token).to_int())
+    None => raise Syntax("expected an enum value", parser.pos)
+  }
+  match enum_descriptor(field) {
+    Some(item) =>
+      match item.value_by_name(token) {
+        Some(value) => @reflect.Enum(value.number)
+        None => raise BadValue(field.name)
       }
-    }
-    @reflect.Message | @reflect.Group => {
-      let _ = opts
-      let _ = depth
-      raise BadValue(field.name)
-    }
+    None => raise BadValue(field.name)
   }
 }
 
 ///|
-fn parse_float_text(parser : Parser) -> Double raise Refused {
-  let token = parser.read_number_or_word()
-  if token == "inf" || token == "infinity" {
-    @double.infinity
-  } else if token == "-inf" || token == "-infinity" {
-    @double.neg_infinity
-  } else if token == "nan" {
-    @double.not_a_number
-  } else {
-    parse_double_text(token)
+fn enum_descriptor(
+  field : @reflect.FieldDescriptor,
+) -> @reflect.EnumDescriptor? {
+  match field.enum_type {
+    Some(name) => @reflect.global_files.find_enum_by_name(name)
+    None => None
   }
 }
 
 ///|
-fn Parser::read_number_or_word(self : Parser) -> String raise Refused {
-  self.skip()
-  let start = self.pos
-  while self.pos < self.text.length() {
-    let ch = char_at(self.text, self.pos)
-    if is_ident_char(ch) || ch == '+' || ch == '-' {
-      self.pos = self.pos + 1
-    } else {
-      break
-    }
-  }
-  if self.pos == start {
-    raise Syntax("expected a number", self.pos)
-  }
-  self.text[start:self.pos].to_owned()
-}
-
-///|
-fn parse_int_text(text : String) -> Int64 raise Refused {
-  let mut i = 0
-  let negative = text.length() > 0 && text[0] == '-'
-  if negative || (text.length() > 0 && text[0] == '+') {
-    i = 1
-  }
-  let mut value = 0L
-  if text.length() > i + 1 &&
-    char_at(text, i) == '0' &&
-    (char_at(text, i + 1) == 'x' || char_at(text, i + 1) == 'X') {
-    i = i + 2
-    while i < text.length() {
-      value = value * 16L + hex_value(char_at(text, i))
-      i = i + 1
-    }
-  } else {
-    while i < text.length() {
-      let ch = char_at(text, i)
-      if ch < '0' || ch > '9' {
-        raise BadValue(text)
+fn skip_word(parser : Parser) -> Unit raise Refused {
+  match parser.peek() {
+    Some(ch) =>
+      if is_ident_start(ch) {
+        let _ = parser.read_ident()
+      } else {
+        let _ = parser.read_number_token()
       }
-      value = value * 10L + (ch.to_int() - '0'.to_int()).to_int64()
-      i = i + 1
-    }
-  }
-  if negative {
-    -value
-  } else {
-    value
-  }
-}
-
-///|
-fn hex_value(ch : Char) -> Int64 raise Refused {
-  if ch >= '0' && ch <= '9' {
-    (ch.to_int() - '0'.to_int()).to_int64()
-  } else if ch >= 'a' && ch <= 'f' {
-    (ch.to_int() - 'a'.to_int() + 10).to_int64()
-  } else if ch >= 'A' && ch <= 'F' {
-    (ch.to_int() - 'A'.to_int() + 10).to_int64()
-  } else {
-    raise BadValue("hex")
-  }
-}
-
-///|
-fn parse_double_text(text : String) -> Double raise Refused {
-  let mut i = 0
-  let negative = text.length() > 0 && text[0] == '-'
-  if negative || (text.length() > 0 && text[0] == '+') {
-    i = 1
-  }
-  let mut value = 0.0
-  let mut seen_digit = false
-  while i < text.length() && char_at(text, i) >= '0' && char_at(text, i) <= '9' {
-    value = value * 10.0 +
-      (char_at(text, i).to_int() - '0'.to_int()).to_double()
-    seen_digit = true
-    i = i + 1
-  }
-  if i < text.length() && char_at(text, i) == '.' {
-    i = i + 1
-    let mut scale = 0.1
-    while i < text.length() &&
-          char_at(text, i) >= '0' &&
-          char_at(text, i) <= '9' {
-      value = value +
-        (char_at(text, i).to_int() - '0'.to_int()).to_double() * scale
-      scale = scale * 0.1
-      seen_digit = true
-      i = i + 1
-    }
-  }
-  if !seen_digit {
-    raise BadValue(text)
-  }
-  if i < text.length() && (char_at(text, i) == 'e' || char_at(text, i) == 'E') {
-    i = i + 1
-    let mut exp_negative = false
-    if i < text.length() && (char_at(text, i) == '+' || char_at(text, i) == '-') {
-      exp_negative = char_at(text, i) == '-'
-      i = i + 1
-    }
-    let mut exponent = 0
-    while i < text.length() &&
-          char_at(text, i) >= '0' &&
-          char_at(text, i) <= '9' {
-      exponent = exponent * 10 + (char_at(text, i).to_int() - '0'.to_int())
-      i = i + 1
-    }
-    let mut factor = 1.0
-    for _ in 0..<exponent {
-      factor = factor * 10.0
-    }
-    if exp_negative {
-      value = value / factor
-    } else {
-      value = value * factor
-    }
-  }
-  if negative {
-    -value
-  } else {
-    value
+    None => ()
   }
 }
 
@@ -1076,15 +1527,17 @@ fn skip_value(parser : Parser) -> Unit raise Refused {
       parser.expect('<')
       skip_balanced(parser, '>')
     }
+    Some('[') => {
+      parser.expect('[')
+      skip_balanced(parser, ']')
+    }
     Some('"') => {
       let _ = parser.read_string()
     }
     Some('\'') => {
       let _ = parser.read_string()
     }
-    Some(_) => {
-      let _ = parser.read_number_or_word()
-    }
+    Some(_) => skip_word(parser)
     None => ()
   }
 }
@@ -1105,10 +1558,15 @@ fn skip_balanced(parser : Parser, close : Char) -> Unit raise Refused {
         } else if ch == '<' {
           parser.expect('<')
           skip_balanced(parser, '>')
+        } else if ch == '[' {
+          parser.expect('[')
+          skip_balanced(parser, ']')
+        } else if ch == ',' || ch == ';' || ch == ':' {
+          parser.expect(ch)
         } else if ch == '"' || ch == '\'' {
           let _ = parser.read_string()
         } else {
-          let _ = parser.read_number_or_word()
+          skip_word(parser)
         }
     }
   }
