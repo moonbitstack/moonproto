@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Playground — moonproto</title>
+<meta name="description" content="Take one message apart: its schema, its wire bytes, and the JSON and text it decodes to.">
+<link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="chrome">
+  <div class="chrome-in">
+    <a class="brand" href="index.html" aria-label="moonproto home">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M9.5 4.5H5v19h4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/><path d="M18.5 4.5H23v19h-4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/><rect x="11.4" y="11.4" width="5.2" height="5.2" rx="1" fill="currentColor"/></svg>
+      moonproto
+    </a>
+    <nav class="nav" aria-label="Sections">
+      <a href="guide.html">Guide</a>
+      <a href="api.html">API</a>
+      <a href="playground.html" aria-current="page">Playground</a>
+    </nav>
+    <div class="chrome-links">
+      <a class="pill-link" href="https://protobuf.dev" aria-label="Protocol Buffers specification">
+        <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3.5 2.2h6l3 3v8.6h-9z"/><path d="M9.5 2.2v3h3"/><path d="M5.6 8.4h4.8M5.6 10.6h4.8"/></svg>
+        <span>Spec</span>
+      </a>
+      <a class="pill-link" href="https://github.com/moonbitstack/moonproto" aria-label="moonproto on GitHub">
+        <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        <span>GitHub</span>
+      </a>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.05 3.05l1.13 1.13M11.82 11.82l1.13 1.13M12.95 3.05l-1.13 1.13M4.18 11.82l-1.13 1.13"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div style="padding: 42px 0 0; max-width: 60ch">
+    <p class="eyebrow">Playground</p>
+    <h1 style="font-size: clamp(32px, 4vw, 46px); margin: 12px 0 12px">Take a message apart</h1>
+    <p style="color: var(--ink-2); font-size: 18px; margin: 0">One schema, three samples. The bytes, the JSON and the text below were all written by this library; the page only switches between them.</p>
+  </div>
+
+  <div style="padding-top: 26px">
+    <div class="samples" role="group" aria-label="Sample messages">
+      <button type="button" data-sample="full" aria-pressed="true">full</button>
+      <button type="button" data-sample="empty" aria-pressed="false">empty</button>
+      <button type="button" data-sample="unicode" aria-pressed="false">unicode</button>
+    </div>
+  </div>
+
+  <div class="play">
+    <section class="pane">
+      <div class="pane-head"><span class="tag">1</span> envelope.proto</div>
+<pre><span class="k">syntax</span> = <span class="s">"proto3"</span>;
+<span class="k">package</span> demo;
+
+<span class="k">enum</span> Color {
+  RED  = 0;
+  BLUE = 1;
+}
+
+<span class="k">message</span> Envelope {
+  <span class="k">int32</span>  id     = 1;
+  <span class="k">string</span> name   = 2;
+  <span class="k">map</span>&lt;<span class="k">string</span>, <span class="k">int32</span>&gt; counts = 3;
+  Color  color  = 4;
+}</pre>
+    </section>
+
+    <section class="pane">
+      <div class="pane-head">
+        <span class="tag">2</span> output
+        <div class="play-tabs" role="tablist" aria-label="Output format">
+          <button type="button" role="tab" data-format="bytes" aria-selected="true">bytes</button>
+          <button type="button" role="tab" data-format="json" aria-selected="false">JSON</button>
+          <button type="button" role="tab" data-format="text" aria-selected="false">text</button>
+        </div>
+      </div>
+<pre data-view="bytes" data-sample="full"><span class="c">17 bytes</span>
+08 2a 12 04 6d 6f 6f 6e 1a 05 0a 01 61 10 01 20 01
+
+<span class="c">08</span>  <span class="c">tag</span>  field 1, varint
+<span class="c">2a</span>  <span class="c">value</span> 42
+<span class="c">12</span>  <span class="c">tag</span>  field 2, length-delimited
+<span class="c">04</span>  <span class="c">len</span>  4 bytes
+<span class="c">1a</span>  <span class="c">tag</span>  field 3, message
+<span class="c">05</span>  <span class="c">len</span>  5 bytes
+<span class="c">20</span>  <span class="c">tag</span>  field 4, varint</pre>
+<pre data-view="json" data-sample="full" hidden>{
+  "id": 42,
+  "name": "moon",
+  "counts": {
+    "a": 1
+  },
+  "color": "BLUE"
+}</pre>
+<pre data-view="text" data-sample="full" hidden>id: 42
+name: "moon"
+counts {
+  key: "a"
+  value: 1
+}
+color: BLUE</pre>
+
+<pre data-view="bytes" data-sample="empty" hidden><span class="c">0 bytes</span>
+
+<span class="c">every field holds its default, so nothing is written</span></pre>
+<pre data-view="json" data-sample="empty" hidden>{}</pre>
+<pre data-view="text" data-sample="empty" hidden><span class="c">empty</span></pre>
+
+<pre data-view="bytes" data-sample="unicode" hidden><span class="c">17 bytes</span>
+08 07 12 03 e6 9c 88 1a 05 0a 01 62 10 02 20 01
+
+<span class="c">e6 9c 88</span>  "月" in UTF-8, three bytes for one character</pre>
+<pre data-view="json" data-sample="unicode" hidden>{
+  "id": 7,
+  "name": "月",
+  "counts": {
+    "b": 2
+  },
+  "color": "BLUE"
+}</pre>
+<pre data-view="text" data-sample="unicode" hidden>id: 7
+name: "月"
+counts {
+  key: "b"
+  value: 2
+}
+color: BLUE</pre>
+    </section>
+  </div>
+
+  <div style="max-width: 68ch; padding: 0 0 40px">
+    <p style="color: var(--ink-2)">A field is one tag byte and its payload. The low three bits of the tag carry the wire type, so the decoder knows whether to read a varint, eight bytes, or a length followed by that many bytes.</p>
+    <div class="note"><b>Note.</b> The map entry is an ordinary message with fields <code>1</code> (key) and <code>2</code> (value); protobuf has no separate map encoding on the wire.</div>
+  </div>
+</div>
+
+<footer class="site">
+  <div class="wrap foot">
+    <div>
+      <a class="brand" href="index.html">
+        <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M9.5 4.5H5v19h4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/><path d="M18.5 4.5H23v19h-4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/><rect x="11.4" y="11.4" width="5.2" height="5.2" rx="1" fill="currentColor"/></svg>
+        moonproto
+      </a>
+      <p>Protocol Buffers for MoonBit. Apache-2.0.</p>
+    </div>
+    <div class="foot-links">
+      <div class="foot-col">
+        <b>Docs</b>
+        <a href="guide.html">Guide</a>
+        <a href="api.html">API reference</a>
+        <a href="playground.html">Playground</a>
+      </div>
+      <div class="foot-col">
+        <b>Elsewhere</b>
+        <a href="https://github.com/moonbitstack/moonproto">GitHub</a>
+        <a href="https://mooncakes.io/docs/moonbitstack/moonproto">mooncakes</a>
+        <a href="https://protobuf.dev">Specification</a>
+      </div>
+      <div class="foot-col">
+        <b>Use</b>
+        <a href="guide.html#install">Install</a>
+        <a href="guide.html#generate">Generate code</a>
+        <a href="https://github.com/moonbitstack/moonproto/blob/main/docs/skills/moonproto/SKILL.md">Agent skill</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+<script>
+  const sampleButtons = document.querySelectorAll("[data-sample]");
+  const formatButtons = document.querySelectorAll("[data-format]");
+  let sample = "full";
+  let format = "bytes";
+
+  const paint = () => {
+    for (const el of document.querySelectorAll("pre[data-view]")) {
+      el.hidden = el.dataset.view !== format || el.dataset.sample !== sample;
+    }
+    for (const b of sampleButtons) b.setAttribute("aria-pressed", String(b.dataset.sample === sample));
+    for (const b of formatButtons) b.setAttribute("aria-selected", String(b.dataset.format === format));
+  };
+
+  for (const b of sampleButtons) b.addEventListener("click", () => { sample = b.dataset.sample; paint(); });
+  for (const b of formatButtons) b.addEventListener("click", () => { format = b.dataset.format; paint(); });
+  paint();
+</script>
+</body>
+</html>

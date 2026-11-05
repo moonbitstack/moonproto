@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>moonproto — Protocol Buffers for MoonBit</title>
+<meta name="description" content="Binary, JSON and text encodings for Protocol Buffers in MoonBit, with the descriptor model and a protoc plugin that generates ordinary structs.">
+<link rel="icon" href="assets/mark.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="chrome">
+  <div class="chrome-in">
+    <a class="brand" href="index.html" aria-label="moonproto home">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M9.5 4.5H5v19h4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/><path d="M18.5 4.5H23v19h-4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/><rect x="11.4" y="11.4" width="5.2" height="5.2" rx="1" fill="currentColor"/></svg>
+      moonproto
+    </a>
+
+    <nav class="nav" aria-label="Sections">
+      <a href="guide.html">Guide</a>
+      <a href="api.html">API</a>
+      <a href="playground.html">Playground</a>
+    </nav>
+
+    <div class="chrome-links">
+      <a class="pill-link" href="https://protobuf.dev" aria-label="Protocol Buffers specification">
+        <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3.5 2.2h6l3 3v8.6h-9z"/><path d="M9.5 2.2v3h3"/><path d="M5.6 8.4h4.8M5.6 10.6h4.8"/></svg>
+        <span>Spec</span>
+      </a>
+      <a class="pill-link" href="https://github.com/moonbitstack/moonproto" aria-label="moonproto on GitHub">
+        <svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.4 7.4 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        <span>GitHub</span>
+      </a>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch colour theme">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="3.2"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3.05 3.05l1.13 1.13M11.82 11.82l1.13 1.13M12.95 3.05l-1.13 1.13M4.18 11.82l-1.13 1.13"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Protocol Buffers · MoonBit</p>
+      <h1>Protocol Buffers <em>for MoonBit</em>.</h1>
+      <p class="lede">Binary, JSON and text encodings, the descriptor model, and a protoc plugin that writes ordinary structs — no hidden dynamic message.</p>
+
+      <div class="install">
+        <span class="prompt">$</span>
+        <code>moon add moonbitstack/moonproto</code>
+        <button class="copy" type="button" data-copy="moon add moonbitstack/moonproto" aria-label="Copy the install command">
+          <svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="5.5" y="5.5" width="8" height="8" rx="1.4"/><path d="M10.5 5.5v-2a1.4 1.4 0 0 0-1.4-1.4H3.9A1.4 1.4 0 0 0 2.5 3.5v5.2A1.4 1.4 0 0 0 3.9 10h2"/></svg>
+        </button>
+      </div>
+
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="guide.html">Read the guide <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="playground.html">Open the playground</a>
+      </div>
+    </div>
+
+    <div class="strip" aria-label="One message in three forms">
+      <div class="strip-pane">
+        <div class="strip-label"><span>envelope.proto</span><span>source</span></div>
+<pre><span class="k">message</span> Envelope {
+  <span class="n">int32</span>  id     = <span class="n">1</span>;
+  <span class="n">string</span> name   = <span class="n">2</span>;
+  <span class="k">map</span>&lt;<span class="n">string</span>, <span class="n">int32</span>&gt; counts = <span class="n">3</span>;
+  Color  color  = <span class="n">4</span>;
+}</pre>
+      </div>
+      <div class="strip-pane">
+        <div class="strip-label"><span>wire</span><span>17 bytes</span></div>
+        <p class="bytes"><span class="t">08</span> <span class="v">2a</span> <span class="t">12</span> <span class="l">04</span> <span class="v">6d 6f 6f 6e</span> <span class="t">1a</span> <span class="l">05</span> <span class="v">0a 01 61 10 01</span> <span class="t">20</span> <span class="v">01</span></p>
+      </div>
+      <div class="strip-pane">
+        <div class="strip-label"><span>decoded</span><span>4 fields</span></div>
+        <table class="fields">
+          <tr><td>1 id</td><td>42</td></tr>
+          <tr><td>2 name</td><td>"moon"</td></tr>
+          <tr><td>3 counts</td><td>{"a": 1}</td></tr>
+          <tr><td>4 color</td><td>BLUE</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="numbers" aria-label="At a glance">
+    <div class="number"><b>5</b><span>wire types</span></div>
+    <div class="number"><b>15</b><span>scalar kinds</span></div>
+    <div class="number"><b>3</b><span>encodings</span></div>
+    <div class="number"><b>2</b><span>editions · 2023, 2024</span></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>One message, three encodings</h2>
+      <p>Every encoder walks the same descriptor through the same trait, so a message type implements the mapping once.</p>
+    </div>
+
+    <div class="encodings">
+      <article class="pane">
+        <div class="pane-head"><span class="tag">1</span> binary</div>
+<pre><span class="c">// 17 bytes, field 1 to 4</span>
+08 2a
+12 04 6d 6f 6f 6e
+1a 05 0a 01 61 10 01
+20 01</pre>
+      </article>
+      <article class="pane">
+        <div class="pane-head"><span class="tag">2</span> JSON</div>
+<pre>{
+  <span class="k">"id"</span>: 42,
+  <span class="k">"name"</span>: <span class="s">"moon"</span>,
+  <span class="k">"counts"</span>: {
+    <span class="k">"a"</span>: 1
+  },
+  <span class="k">"color"</span>: <span class="s">"BLUE"</span>
+}</pre>
+      </article>
+      <article class="pane">
+        <div class="pane-head"><span class="tag">3</span> text</div>
+<pre>id: 42
+name: <span class="s">"moon"</span>
+counts {
+  key: <span class="s">"a"</span>
+  value: 1
+}
+color: BLUE</pre>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>What is in the box</h2>
+      <p>One module, thirteen packages. Import the ones a program needs.</p>
+    </div>
+
+    <div class="cards">
+      <article class="card">
+        <span class="glyph">0x08</span>
+        <h3>Binary</h3>
+        <p>Varints, fixed-width numbers, length-delimited values and groups. Unknown fields are kept and written back.</p>
+      </article>
+      <article class="card">
+        <span class="glyph">{ }</span>
+        <h3>JSON</h3>
+        <p>64-bit integers as strings, enums by name, bytes in base64, and the well-known type forms.</p>
+      </article>
+      <article class="card">
+        <span class="glyph">a: 1</span>
+        <h3>Text</h3>
+        <p>The full grammar: groups, lists, separators, octal and hexadecimal literals, comments.</p>
+      </article>
+      <article class="card">
+        <span class="glyph">struct</span>
+        <h3>Generated structs</h3>
+        <p><code>protoc-gen-mbt</code> writes a struct whose fields are the protobuf fields. Repeated becomes <code>Array</code>, map becomes <code>Map</code>, oneof becomes an enum.</p>
+      </article>
+      <article class="card">
+        <span class="glyph">desc</span>
+        <h3>Descriptors at run time</h3>
+        <p>A <code>.proto</code> parser builds the descriptor model in memory, so a schema can be read without a code generation step.</p>
+      </article>
+      <article class="card">
+        <span class="glyph">reflect</span>
+        <h3>One trait</h3>
+        <p>Encode, decode, size, merge, JSON and text all reach a message through <code>reflect.Message</code>.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="teaser">
+      <div>
+        <h2>Take a message apart</h2>
+        <p>The playground writes a schema to bytes, then reads the bytes back as JSON and text. Every value comes from this library.</p>
+        <a class="btn btn-primary" href="playground.html">Open the playground <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="mini" aria-hidden="true"><span class="t">08</span> <span class="v">2a</span> <span class="t">12</span> <span class="l">04</span> <span class="v">6d 6f 6f 6e</span> <span class="t">1a</span> <span class="l">05</span> <span class="v">0a 01 61 10 01</span> <span class="t">20</span> <span class="v">01</span>
+
+  field 1  varint   42
+  field 2  string   "moon"
+  field 3  message  { key: "a" value: 1 }
+  field 4  varint   BLUE</div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap foot">
+    <div>
+      <a class="brand" href="index.html">
+        <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M9.5 4.5H5v19h4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/><path d="M18.5 4.5H23v19h-4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/><rect x="11.4" y="11.4" width="5.2" height="5.2" rx="1" fill="currentColor"/></svg>
+        moonproto
+      </a>
+      <p>Protocol Buffers for MoonBit. Apache-2.0.</p>
+    </div>
+    <div class="foot-links">
+      <div class="foot-col">
+        <b>Docs</b>
+        <a href="guide.html">Guide</a>
+        <a href="api.html">API reference</a>
+        <a href="playground.html">Playground</a>
+      </div>
+      <div class="foot-col">
+        <b>Elsewhere</b>
+        <a href="https://github.com/moonbitstack/moonproto">GitHub</a>
+        <a href="https://mooncakes.io/docs/moonbitstack/moonproto">mooncakes</a>
+        <a href="https://protobuf.dev">Specification</a>
+      </div>
+      <div class="foot-col">
+        <b>Use</b>
+        <a href="guide.html#install">Install</a>
+        <a href="guide.html#generate">Generate code</a>
+        <a href="https://github.com/moonbitstack/moonproto/blob/main/docs/skills/moonproto/SKILL.md">Agent skill</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

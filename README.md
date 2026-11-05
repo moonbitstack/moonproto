@@ -6,7 +6,7 @@ parser, and a `protoc` plugin that generates MoonBit message code.
 
 <div align="center">
 
-[Overview](#moonproto) · [Design](docs/design/interface.md) · [Capability inventory](docs/design/inventory.md) · [Skill](docs/skills/moonproto/SKILL.md) · [mooncakes](https://mooncakes.io/docs/moonbitstack/moonproto)
+[Home](https://moonbitstack.github.io/moonproto/) · [Guide](https://moonbitstack.github.io/moonproto/guide.html) · [API reference](https://moonbitstack.github.io/moonproto/api.html) · [mooncakes](https://mooncakes.io/docs/moonbitstack/moonproto) · [Specification](https://protobuf.dev)
 
 </div>
 
