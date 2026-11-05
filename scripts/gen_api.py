@@ -166,7 +166,7 @@ FOOTER = """<footer class="site">
       <div class="foot-col">
         <b>Elsewhere</b>
         <a href="https://github.com/moonbitstack/moonproto">GitHub</a>
-        <a href="https://mooncakes.io/docs/moonbitstack/moonproto">mooncakes</a>
+        <a href="https://mooncakes.io/docs/moonbitstack/moonproto">MoonCakes</a>
         <a href="https://protobuf.dev">Specification</a>
       </div>
       <div class="foot-col">
