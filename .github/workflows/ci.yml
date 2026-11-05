@@ -5,28 +5,43 @@ on:
   push:
     branches:
       - master
+  workflow_dispatch:
 
 jobs:
   build:
     permissions:
       contents: read
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-26.04, macos-26, windows-2025]
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: tests/gointerop/go.mod
+          cache-dependency-path: tests/gointerop/go.sum
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
       - name: install-unix
         if: ${{ runner.os != 'Windows' }}
         run: |
           curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
-          echo "$HOME/.moon/bin" >> $GITHUB_PATH
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
 
       - name: install-windows
         if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
         run: |
           Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; irm https://cli.moonbitlang.com/install/powershell.ps1 | iex
           "C:\Users\runneradmin\.moon\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
@@ -35,6 +50,12 @@ jobs:
         run: |
           moon version --all
           moon update
+
+      - name: pin protoc 36.2
+        run: |
+          eval "$(bash scripts/setup-protoc.sh)"
+          echo "PROTOC=$PROTOC" >> "$GITHUB_ENV"
+          echo "PROTOC_INCLUDE=$PROTOC_INCLUDE" >> "$GITHUB_ENV"
 
       - name: moon check
         run: moon check --target all --deny-warn
@@ -48,10 +69,44 @@ jobs:
       - name: examples run
         if: runner.os == 'Linux'
         run: |
+          shopt -s nullglob
           for dir in src/examples/*/; do
             if grep -q 'kind: "executable"' "$dir/moon.pkg" && ! grep -q 'supported_targets = "js"' "$dir/moon.pkg"; then
               moon run "$dir" --target native > /dev/null
             fi
+          done
+
+      - name: conformance descriptors are current
+        run: bash scripts/check-conformance-types.sh
+
+      - name: failure lists are honest
+        run: bash scripts/check-failure-lists.sh
+
+      - name: generated code (proto2, proto3, editions 2023 and 2024)
+        run: bash scripts/check-codegen.sh
+
+      - name: protoc-gen-go schema is reproducible
+        run: bash scripts/check-gointerop.sh
+
+      - name: protoc-gen-go bidirectional interop
+        run: bash scripts/interop-go.sh
+
+      # The official C++ runner is built in its own Linux job. Every platform
+      # still drives the same testee over the same framing here.
+      - name: conformance framing self-check
+        if: runner.os != 'Linux'
+        run: bash scripts/conformance.sh
+
+      - name: mutation checks
+        if: runner.os == 'Linux'
+        run: bash scripts/mutation-check.sh
+
+      - name: the skills are valid
+        if: runner.os == 'Linux'
+        run: |
+          for dir in docs/skills/*/; do
+            [ -f "$dir/SKILL.md" ] || continue
+            pipx run --spec skills-ref agentskills validate "$dir"
           done
 
       - name: lint (fmt is clean)
@@ -61,3 +116,74 @@ jobs:
       - name: interfaces are up to date
         run: |
           moon info --target all && git diff --exit-code
+
+  official-conformance:
+    # protobuf's conformance_test_runner is a C++ binary; there is no published
+    # build, so it is compiled from the pinned v36.2 sources on Linux.
+    permissions:
+      contents: read
+    runs-on: ubuntu-26.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: install moonbit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: post install
+        run: |
+          moon version --all
+          moon update
+
+      - uses: actions/cache@v4
+        id: runner-cache
+        with:
+          path: .cache/pbbuild/conformance_test_runner
+          key: conformance-test-runner-v36.2-ubuntu-26.04-r1
+
+      - name: build protobuf 36.2 conformance_test_runner
+        if: steps.runner-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build build-essential
+          pb="$GITHUB_WORKSPACE/.cache/protobuf-36.2"
+          build="$GITHUB_WORKSPACE/.cache/pbbuild"
+          git clone --depth 1 --branch v36.2 --recurse-submodules \
+            https://github.com/protocolbuffers/protobuf.git "$pb"
+          cmake -S "$pb" -B "$build" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -Dprotobuf_BUILD_CONFORMANCE=ON \
+            -Dprotobuf_BUILD_TESTS=OFF \
+            -Dprotobuf_BUILD_SHARED_LIBS=OFF \
+            -Dprotobuf_BUILD_EXAMPLES=OFF \
+            -Dprotobuf_BUILD_LIBPROTOC=OFF \
+            -Dprotobuf_INSTALL=OFF
+          cmake --build "$build" --target conformance_test_runner -j2
+
+      - name: failure lists are honest
+        run: bash scripts/check-failure-lists.sh
+
+      - name: official conformance suites
+        env:
+          CONFORMANCE_RUNNER: ${{ github.workspace }}/.cache/pbbuild/conformance_test_runner
+        run: |
+          chmod +x "$CONFORMANCE_RUNNER"
+          set +e
+          bash scripts/conformance.sh > "$RUNNER_TEMP/conformance.log" 2>&1
+          status=$?
+          cat "$RUNNER_TEMP/conformance.log"
+          if [ "$status" -ne 0 ]; then exit "$status"; fi
+          test "$(grep -c 'CONFORMANCE SUITE PASSED' "$RUNNER_TEMP/conformance.log")" -eq 2
+          ! grep -q 'CONFORMANCE SUITE FAILED' "$RUNNER_TEMP/conformance.log"
+          ! grep -Eq 'unexpected failures: [1-9]' "$RUNNER_TEMP/conformance.log"
+          echo "official binary/JSON and text-format suites passed"
