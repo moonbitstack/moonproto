@@ -221,7 +221,9 @@ pub fn consume_tag(
   limit~ : Int32 = 0x7FFF_FFFF,
 ) -> (FieldNumber, WireType, Int32) raise Refused {
   let (tag, next) = consume_varint(b, at~, limit~)
-  if tag > 0xFFFF_FFFFUL {
+  // A tag is at most five octets: the largest field number fits in 29 bits.
+  // A longer encoding of a small tag is not canonical and must be refused.
+  if next - at > 5 || tag > 0xFFFF_FFFFUL {
     raise Malformed(at, tag.to_int(), 0)
   }
   let number = (tag >> 3).to_int()
@@ -346,7 +348,8 @@ fn skip_value(
       let (_, next) = consume_group_body(b, number, at, limit, depth, limits)
       next
     }
-    EndGroup => at
+    // An end-group tag outside a matching group has nothing to close.
+    EndGroup => raise Malformed(at, number, 0)
     Fixed32 => need(at, 4, min_int(b.length(), limit))
   }
 }

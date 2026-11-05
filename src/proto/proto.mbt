@@ -595,6 +595,9 @@ fn decode_message(
     let (number, wire_type, next) = @wire.consume_tag(bytes, at~, limit=end) catch {
       err => raise Wire(err)
     }
+    if wire_type == @wire.EndGroup {
+      raise Wire(@wire.Malformed(at, number, 0))
+    }
     match field_lookup(message, desc, number) {
       None => {
         let after = @wire.skip_field(bytes, at~, limit=end) catch {
@@ -662,14 +665,19 @@ fn decode_field(
   opts : UnmarshalOptions,
 ) -> Int32 raise Refused {
   if field.is_map {
+    check_wire(field, wire_type, @wire.LengthDelimited)
     let (body, next) = @wire.consume_bytes(bytes, at~, limit=end) catch {
       err => raise Wire(err)
     }
     decode_map_entry(message, field, body, depth, opts)
     return next
   }
+  // A numeric field accepts a packed payload whether or not its schema says
+  // `packed`: proto2 senders may still choose the shorter encoding.
+  let packed_shape = field.kind.is_numeric() &&
+    wire_type == @wire.LengthDelimited
   if field.is_list() {
-    if field.packed && wire_type == LengthDelimited {
+    if packed_shape {
       let (body, next) = @wire.consume_bytes(bytes, at~, limit=end) catch {
         err => raise Wire(err)
       }
@@ -678,7 +686,7 @@ fn decode_field(
       while inner < body.length() {
         let (value, after) = decode_scalar(
           field,
-          bytes_of(body),
+          body,
           inner,
           body.length(),
           depth,
@@ -689,14 +697,42 @@ fn decode_field(
       }
       return next
     }
+    check_wire(field, wire_type, expected_wire(field))
     let (value, next) = decode_value(
       field, wire_type, bytes, at, end, depth, opts,
     )
     message.mutable(field).list().append(value)
     return next
   }
+  // A singular numeric field with a packed payload takes the last element,
+  // which is what every implementation does for a repeated occurrence.
+  if packed_shape {
+    let (body, next) = @wire.consume_bytes(bytes, at~, limit=end) catch {
+      err => raise Wire(err)
+    }
+    let mut inner = 0
+    let mut last : @reflect.Value? = None
+    while inner < body.length() {
+      let (value, after) = decode_scalar(
+        field,
+        body,
+        inner,
+        body.length(),
+        depth,
+        opts,
+      )
+      last = Some(value)
+      inner = after
+    }
+    match last {
+      Some(value) => message.set(field, value)
+      None => ()
+    }
+    return next
+  }
+  check_wire(field, wire_type, expected_wire(field))
   if field.kind.is_message() {
-    if wire_type == StartGroup {
+    if wire_type == @wire.StartGroup {
       let (body, next) = @wire.consume_group(
         bytes,
         field.number,
@@ -724,8 +760,27 @@ fn decode_field(
 }
 
 ///|
-fn bytes_of(body : BytesView) -> BytesView {
-  body
+/// A field's declared wire type. A tag carrying a different one is malformed
+/// rather than an invitation to reinterpret the bytes.
+fn expected_wire(field : @reflect.FieldDescriptor) -> @wire.WireType {
+  match field.kind {
+    @reflect.String | @reflect.Bytes | @reflect.Message => @wire.LengthDelimited
+    @reflect.Group => @wire.StartGroup
+    @reflect.Double | @reflect.Fixed64 | @reflect.Sfixed64 => @wire.Fixed64
+    @reflect.Float | @reflect.Fixed32 | @reflect.Sfixed32 => @wire.Fixed32
+    _ => @wire.Varint
+  }
+}
+
+///|
+fn check_wire(
+  field : @reflect.FieldDescriptor,
+  got : @wire.WireType,
+  want : @wire.WireType,
+) -> Unit raise Refused {
+  if got != want {
+    raise Mismatch(field.full_name)
+  }
 }
 
 ///|
@@ -892,7 +947,7 @@ fn decode_scalar(
       let (v, next) = @wire.consume_varint(bytes, at~, limit=end) catch {
         err => raise Wire(err)
       }
-      (Int32(@wire.decode_zigzag(v).to_int()), next)
+      (Int32(@wire.decode_zigzag(v & 0xFFFF_FFFFUL).to_int()), next)
     }
     @reflect.Sint64 => {
       let (v, next) = @wire.consume_varint(bytes, at~, limit=end) catch {

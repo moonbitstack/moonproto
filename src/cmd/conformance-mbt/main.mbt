@@ -1,39 +1,57 @@
 ///|
 /// The framing the conformance runner expects: a 4-byte little-endian length,
-/// then that many bytes of `ConformanceRequest`, repeated until the input ends.
+/// then that many bytes of `ConformanceRequest`. The runner waits for each
+/// response before it writes the next request, so the testee answers as soon as
+/// a whole frame has arrived.
 async fn main {
   @conformance.register_test_types()
   @conformance.register_known_types()
-  let input = Buffer()
+  @conformance.register_official_types()
   while true {
-    match @stdio.stdin.read_some() {
-      Some(chunk) => input.write_bytes(chunk)
+    match read_frame(4) {
       None => break
+      Some(header) => {
+        let size = length_at(header, 0)
+        if size < 0 || size > 67108864 {
+          break
+        }
+        match read_frame(size) {
+          None => break
+          Some(request) => write_frame(@conformance.handle(request))
+        }
+      }
     }
   }
-  let bytes = input.to_bytes()
-  let output = Buffer()
-  let mut at = 0
-  while at + 4 <= bytes.length() {
-    let size = length_at(bytes, at)
-    let start = at + 4
-    let end = start + size
-    if end > bytes.length() {
-      break
+}
+
+///|
+async fn read_frame(size : Int32) -> Bytes? {
+  let buf = Buffer()
+  let mut have = 0
+  while have < size {
+    match @stdio.stdin.read_some(max_len=size - have) {
+      Some(chunk) => {
+        buf.write_bytes(chunk)
+        have = have + chunk.length()
+      }
+      None => return None
     }
-    let request = bytes.exact_view(start~, end~).to_owned()
-    let response = @conformance.handle(request)
-    write_length(output, response.length())
-    output.write_bytes(response)
-    at = end
   }
-  let result = output.to_bytes()
+  Some(buf.to_bytes())
+}
+
+///|
+async fn write_frame(response : Bytes) -> Unit {
+  let buf = Buffer()
+  write_length(buf, response.length())
+  buf.write_bytes(response)
+  let bytes = buf.to_bytes()
   let mut written = 0
-  while written < result.length() {
+  while written < bytes.length() {
     let count = @stdio.stdout.write_once(
-      result,
+      bytes,
       offset=written,
-      len=result.length() - written,
+      len=bytes.length() - written,
     )
     if count <= 0 {
       break

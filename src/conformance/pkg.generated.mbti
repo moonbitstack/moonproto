@@ -8,7 +8,11 @@ import {
 // Values
 pub fn handle(Bytes) -> Bytes
 
+pub fn official_files() -> Array[@desc.FileDescriptorProto]
+
 pub fn register_known_types() -> Unit
+
+pub fn register_official_types() -> Unit
 
 pub fn register_test_types() -> Unit
 

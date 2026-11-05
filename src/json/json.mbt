@@ -183,6 +183,9 @@ fn object_to_json(
   let desc = message.descriptor()
   let fields : Map[String, @cjson.Json] = Map([])
   for field in desc.fields {
+    if !active_oneof_member(message, desc, field) {
+      continue
+    }
     let name = if opts.use_proto_names { field.name } else { field.json_name }
     if field.is_map {
       let mut emit = opts.emit_unpopulated || opts.emit_default_values
@@ -201,7 +204,15 @@ fn object_to_json(
         fields.set(name, list_to_json(field, message, opts, depth))
       }
     } else if message.has(field) {
-      fields.set(name, singular_to_json(field, message.get(field), opts, depth))
+      let value = message.get(field)
+      // A proto3 scalar without presence is absent when it holds its zero,
+      // even if the input explicitly mentioned it.
+      if !opts.emit_default_values &&
+        !field.has_presence &&
+        value.equal(@reflect.default_for(field)) {
+        continue
+      }
+      fields.set(name, singular_to_json(field, value, opts, depth))
     } else if opts.emit_unpopulated || opts.emit_default_values {
       fields.set(name, default_to_json(field, opts, depth))
     }
@@ -222,6 +233,32 @@ fn object_to_json(
     }
   }
   @cjson.Json::object(fields)
+}
+
+///|
+/// A wire payload may carry two members of the same oneof; only the active one
+/// belongs in JSON, otherwise the resulting object cannot be parsed back.
+fn active_oneof_member(
+  message : &@reflect.Message,
+  desc : @reflect.MessageDescriptor,
+  field : @reflect.FieldDescriptor,
+) -> Bool {
+  match field.oneof_index {
+    Some(index) => {
+      if index < 0 || index >= desc.oneofs.length() {
+        return true
+      }
+      let oneof = desc.oneofs[index]
+      if oneof.synthetic {
+        return true
+      }
+      match message.which_oneof(oneof) {
+        Some(number) => number == field.number
+        None => true
+      }
+    }
+    None => true
+  }
 }
 
 ///|
@@ -410,14 +447,30 @@ fn two_numbers(message : &@reflect.Message) -> (Int64, Int32) {
 }
 
 ///|
-fn timestamp_to_json(message : &@reflect.Message) -> @cjson.Json {
+fn timestamp_to_json(message : &@reflect.Message) -> @cjson.Json raise Refused {
   let (seconds, nanos) = two_numbers(message)
+  // 0001-01-01T00:00:00Z through 9999-12-31T23:59:59Z, nanos in [0, 1e9).
+  if seconds < 0L - 62135596800L ||
+    seconds > 253402300799L ||
+    nanos < 0 ||
+    nanos > 999999999 {
+    raise BadValue("timestamp")
+  }
   @cjson.Json::string(format_timestamp(seconds, nanos))
 }
 
 ///|
-fn duration_to_json(message : &@reflect.Message) -> @cjson.Json {
+fn duration_to_json(message : &@reflect.Message) -> @cjson.Json raise Refused {
   let (seconds, nanos) = two_numbers(message)
+  // Seconds and nanos must agree in sign, with |seconds| <= 315576000000.
+  if seconds < 0L - 315576000000L ||
+    seconds > 315576000000L ||
+    nanos < 0 - 999999999 ||
+    nanos > 999999999 ||
+    (seconds < 0L && nanos > 0) ||
+    (seconds > 0L && nanos < 0) {
+    raise BadValue("duration")
+  }
   @cjson.Json::string(format_duration(seconds, nanos))
 }
 
@@ -493,12 +546,20 @@ fn any_to_json(
       @proto.decode(body, nested) catch {
         _ => raise BadValue("Any.value")
       }
-      match message_to_json(nested, opts, depth + 1) {
-        @cjson.Json::Object(fields) =>
-          for pair in fields {
-            out.set(pair.0, pair.1)
-          }
-        _ => ()
+      let custom = message_to_json(nested, opts, depth + 1)
+      // Empty has no value field; the C++ JSON parser rejects "value": {}.
+      if name == "google.protobuf.Empty" {
+        ()
+      } else if any_custom_json(name) {
+        out.set("value", custom)
+      } else {
+        match custom {
+          @cjson.Json::Object(fields) =>
+            for pair in fields {
+              out.set(pair.0, pair.1)
+            }
+          _ => ()
+        }
       }
     }
     None => raise NoType(name)
@@ -562,9 +623,11 @@ fn object_from_json(
 ) -> Unit raise Refused {
   let object = match value {
     @cjson.Json::Object(fields) => fields
-    @cjson.Json::Null => return
     _ => raise Syntax("expected an object")
   }
+  // A oneof may be set once per object. `null` does not set a member, so a
+  // null member followed by a real one is still valid.
+  let oneofs : Array[Int32] = []
   for pair in object {
     let name = pair.0
     if name.has_prefix("[") && name.has_suffix("]") {
@@ -583,7 +646,22 @@ fn object_from_json(
       None => message.descriptor().field_by_name(name)
     }
     match field {
-      Some(found) => field_from_json(message, found, pair.1, opts, depth)
+      Some(found) => {
+        if !(pair.1 is @cjson.Json::Null) {
+          match found.oneof_index {
+            Some(index) => {
+              for seen in oneofs {
+                if seen == index {
+                  raise Syntax("duplicate oneof field " + name)
+                }
+              }
+              oneofs.push(index)
+            }
+            None => ()
+          }
+        }
+        field_from_json(message, found, pair.1, opts, depth)
+      }
       None => if !opts.discard_unknown { raise UnknownField(name) }
     }
   }
@@ -732,6 +810,11 @@ fn value_from_json(
   if depth > opts.recursion_limit {
     raise Recursion(opts.recursion_limit)
   }
+  // A Value may be filled more than once (a map entry or a re-parsed Any).
+  // Clear the oneof so the previous choice cannot survive alongside the new.
+  for field in message.descriptor().fields {
+    message.clear(field)
+  }
   match value {
     @cjson.Json::Null =>
       match message_field_by_name(message, "null_value") {
@@ -792,7 +875,13 @@ fn field_from_json(
   depth : Int32,
 ) -> Unit raise Refused {
   if value is @cjson.Json::Null {
-    message.clear(field)
+    // `google.protobuf.Value` maps JSON null to NullValue, not to an unset
+    // field. Every other message field is cleared by null.
+    match field.message_type {
+      Some("google.protobuf.Value") =>
+        value_from_json(message.mutable(field).message(), value, opts, depth)
+      _ => message.clear(field)
+    }
     return
   }
   if field.is_map {
@@ -865,19 +954,37 @@ fn json_to_value(
         _ => raise BadValue(field.name)
       }
     @reflect.Int32 | @reflect.Sint32 | @reflect.Sfixed32 =>
-      @reflect.Int32(parse_int64(numeric_text(value, field.name)).to_int())
+      @reflect.Int32(int32_from_json(value, field.name))
     @reflect.Uint32 | @reflect.Fixed32 =>
-      @reflect.Uint32(parse_uint64(numeric_text(value, field.name)).to_uint())
+      @reflect.Uint32(uint32_from_json(value, field.name))
     @reflect.Int64 | @reflect.Sint64 | @reflect.Sfixed64 =>
       @reflect.Int64(parse_int64(numeric_text(value, field.name)))
     @reflect.Uint64 | @reflect.Fixed64 =>
       @reflect.Uint64(parse_uint64(numeric_text(value, field.name)))
-    @reflect.Float =>
-      @reflect.Float(@float.Float::from_double(float_value(value, field.name)))
+    @reflect.Float => {
+      let number = float_value(value, field.name)
+      let narrow = @float.Float::from_double(number)
+      if narrow.is_inf() && !number.is_inf() {
+        raise BadValue(field.name)
+      }
+      @reflect.Float(narrow)
+    }
     @reflect.Double => @reflect.Double(float_value(value, field.name))
     @reflect.Enum => enum_from_json(field, value)
     @reflect.Message | @reflect.Group => {
-      let nested = @reflect.new_field_value(field)
+      if value is @cjson.Json::Null {
+        raise Syntax("expected a message for " + field.name)
+      }
+      // This is an element of a list or a map value, not the container field.
+      // `new_field_value` would build a list for a repeated field and the
+      // following `.message()` would abort.
+      let nested = @reflect.new_element_value(field.kind, field.message_type)
+      if !nested.is_valid() {
+        match field.message_type {
+          Some(name) => raise NoType(name)
+          None => raise BadValue(field.name)
+        }
+      }
       message_from_json(nested.message(), value, opts, depth + 1)
       nested
     }
@@ -885,8 +992,12 @@ fn json_to_value(
 }
 
 ///|
+/// Exact decimal digits of a JSON number. A JSON parser is allowed to read a
+/// number into an IEEE-754 double, so `repr` is the only lossless source for a
+/// 64-bit integer. `decode` turns `preserve_number_repr` on.
 fn numeric_text(value : @cjson.Json, name : String) -> String raise Refused {
   match value {
+    @cjson.Json::Number(_, repr=Some(text)) => text
     @cjson.Json::Number(number, ..) => number.to_string()
     @cjson.Json::String(text) => text
     _ => raise BadValue(name)
@@ -894,50 +1005,164 @@ fn numeric_text(value : @cjson.Json, name : String) -> String raise Refused {
 }
 
 ///|
-fn parse_int64(text : StringView) -> Int64 raise Refused {
+/// A JSON number as a sign, an exact integer magnitude and a power of ten.
+/// Protobuf accepts exponent notation in a quoted integer, so "1e5" is 100000
+/// and "1.5e1" is 15. Magnitudes are accumulated in UInt64 with an explicit
+/// overflow check, so out-of-range values are rejected instead of wrapping.
+fn parse_decimal(text : StringView) -> (Bool, UInt64, Int32) raise Refused {
+  let uint64_max = 0xFFFF_FFFF_FFFF_FFFFUL
   let mut i = 0
   let negative = text.length() > 0 && text[0] == '-'
   if negative {
     i = 1
   }
-  if text.length() == i {
-    raise BadValue("number")
-  }
-  let mut value = 0L
-  while i < text.length() {
-    let c = text[i]
-    if c < '0' || c > '9' {
+  let mut magnitude = 0UL
+  let mut digits = 0
+  while i < text.length() && text[i] >= '0' && text[i] <= '9' {
+    let digit = (text[i].to_int() - 48).to_uint64()
+    if magnitude > (uint64_max - digit) / 10UL {
       raise BadValue("number")
     }
-    value = value * 10L + (c.to_int() - '0'.to_int()).to_int64()
+    magnitude = magnitude * 10UL + digit
+    digits = digits + 1
     i = i + 1
   }
-  if negative {
-    -value
-  } else {
-    value
+  if digits == 0 {
+    raise BadValue("number")
   }
+  let mut scale = 0
+  if i < text.length() && text[i] == '.' {
+    i = i + 1
+    while i < text.length() && text[i] >= '0' && text[i] <= '9' {
+      let digit = (text[i].to_int() - 48).to_uint64()
+      if magnitude > (uint64_max - digit) / 10UL {
+        raise BadValue("number")
+      }
+      magnitude = magnitude * 10UL + digit
+      scale = scale - 1
+      i = i + 1
+    }
+  }
+  if i < text.length() && (text[i] == 'e' || text[i] == 'E') {
+    i = i + 1
+    let mut exponent_negative = false
+    if i < text.length() && (text[i] == '+' || text[i] == '-') {
+      exponent_negative = text[i] == '-'
+      i = i + 1
+    }
+    let mut exponent = 0
+    let mut exponent_digits = 0
+    while i < text.length() && text[i] >= '0' && text[i] <= '9' {
+      exponent = exponent * 10 + text[i].to_int() - 48
+      exponent_digits = exponent_digits + 1
+      if exponent_digits > 6 {
+        raise BadValue("number")
+      }
+      i = i + 1
+    }
+    if exponent_digits == 0 {
+      raise BadValue("number")
+    }
+    let signed_exponent = if exponent_negative { -exponent } else { exponent }
+    scale = scale + signed_exponent
+  }
+  if i != text.length() {
+    raise BadValue("number")
+  }
+  (negative, magnitude, scale)
 }
 
 ///|
-fn parse_uint64(text : StringView) -> UInt64 raise Refused {
-  let mut i = 0
-  let mut value = 0UL
-  while i < text.length() {
-    let c = text[i]
-    if c < '0' || c > '9' {
+/// Apply the decimal exponent, rejecting overflow and fractional results.
+fn scale_decimal(
+  magnitude : UInt64,
+  scale : Int32,
+  limit : UInt64,
+) -> UInt64 raise Refused {
+  let mut value = magnitude
+  let mut remaining = scale
+  while remaining > 0 {
+    if value > limit / 10UL {
       raise BadValue("number")
     }
-    value = value * 10UL + (c.to_int() - '0'.to_int()).to_uint64()
-    i = i + 1
+    value = value * 10UL
+    remaining = remaining - 1
+  }
+  if remaining < -20 {
+    raise BadValue("number")
+  }
+  while remaining < 0 {
+    if value % 10UL != 0UL {
+      raise BadValue("number")
+    }
+    value = value / 10UL
+    remaining = remaining + 1
   }
   value
 }
 
 ///|
+fn parse_int64(text : StringView) -> Int64 raise Refused {
+  let (negative, magnitude, scale) = parse_decimal(text)
+  let limit : UInt64 = if negative {
+    0x8000_0000_0000_0000UL
+  } else {
+    0x7FFF_FFFF_FFFF_FFFFUL
+  }
+  let value = scale_decimal(magnitude, scale, limit)
+  if value > limit {
+    raise BadValue("number")
+  }
+  if negative {
+    if value == 0x8000_0000_0000_0000UL {
+      0L - 0x7FFF_FFFF_FFFF_FFFFL - 1L
+    } else {
+      0L - value.reinterpret_as_int64()
+    }
+  } else {
+    value.reinterpret_as_int64()
+  }
+}
+
+///|
+fn parse_uint64(text : StringView) -> UInt64 raise Refused {
+  let (negative, magnitude, scale) = parse_decimal(text)
+  if negative && magnitude != 0UL {
+    raise BadValue("number")
+  }
+  scale_decimal(magnitude, scale, 0xFFFF_FFFF_FFFF_FFFFUL)
+}
+
+///|
+fn int32_from_json(value : @cjson.Json, name : String) -> Int32 raise Refused {
+  let number = parse_int64(numeric_text(value, name))
+  if number < 0L - 2147483648L || number > 2147483647L {
+    raise BadValue(name)
+  }
+  number.to_int()
+}
+
+///|
+fn uint32_from_json(value : @cjson.Json, name : String) -> UInt32 raise Refused {
+  let number = parse_uint64(numeric_text(value, name))
+  if number > 0xFFFF_FFFFUL {
+    raise BadValue(name)
+  }
+  number.to_uint()
+}
+
+///|
+fn finite_number(number : Double, name : String) -> Double raise Refused {
+  if number.is_inf() || number.is_nan() {
+    raise BadValue(name)
+  }
+  number
+}
+
+///|
 fn float_value(value : @cjson.Json, name : String) -> Double raise Refused {
   match value {
-    @cjson.Json::Number(number, ..) => number
+    @cjson.Json::Number(number, ..) => finite_number(number, name)
     @cjson.Json::String("NaN") => @double.not_a_number
     @cjson.Json::String("Infinity") => @double.infinity
     @cjson.Json::String("-Infinity") => @double.neg_infinity
@@ -946,7 +1171,7 @@ fn float_value(value : @cjson.Json, name : String) -> Double raise Refused {
         (@cjson.parse(text, preserve_number_repr=true) catch {
           _ => raise BadValue(name)
         }) {
-        @cjson.Json::Number(number, ..) => number
+        @cjson.Json::Number(number, ..) => finite_number(number, name)
         _ => raise BadValue(name)
       }
     _ => raise BadValue(name)
@@ -959,7 +1184,8 @@ fn enum_from_json(
   value : @cjson.Json,
 ) -> @reflect.Value raise Refused {
   match value {
-    @cjson.Json::Number(number, ..) => @reflect.Enum(number.to_int())
+    @cjson.Json::Number(_, ..) =>
+      @reflect.Enum(int32_from_json(value, field.name))
     @cjson.Json::String(name) =>
       match field.enum_type {
         Some(enum_name) =>
@@ -1078,12 +1304,32 @@ fn field_mask_from_json(
       let list = message.mutable(field).list()
       if text.length() > 0 {
         for part in text.split(",") {
-          list.append(@reflect.String(part.to_owned()))
+          list.append(@reflect.String(field_mask_path(part)))
         }
       }
     }
     None => ()
   }
+}
+
+///|
+/// A FieldMask path is lowerCamelCase in JSON and snake_case in the message.
+/// Underscores and non-alphanumeric characters are not valid in the JSON form.
+fn field_mask_path(text : StringView) -> String raise Refused {
+  let mut result = ""
+  let mut i = 0
+  while i < text.length() {
+    let code = text[i].to_int()
+    if code >= 65 && code <= 90 {
+      result = result + "_" + (code + 32).unsafe_to_char().to_string()
+    } else if (code >= 97 && code <= 122) || (code >= 48 && code <= 57) {
+      result = result + code.unsafe_to_char().to_string()
+    } else {
+      raise BadValue("field mask")
+    }
+    i = i + 1
+  }
+  result
 }
 
 ///|
@@ -1099,6 +1345,12 @@ fn any_from_json(
   }
   let type_url = match object.get("@type") {
     Some(@cjson.Json::String(text)) => text
+    // Without @type the object is an Any in its own schema, not a packed
+    // message. An empty object is a completely unset Any.
+    None => {
+      object_from_json(message, value, opts, depth)
+      return
+    }
     _ => raise BadValue("@type")
   }
   let name = type_url_after_slash(type_url)
@@ -1113,10 +1365,35 @@ fn any_from_json(
       rest.set(pair.0, pair.1)
     }
   }
-  message_from_json(nested, @cjson.Json::object(rest), opts, depth + 1)
+  // Well-known types use `{"@type": ..., "value": <their JSON form>}` rather
+  // than a second object of their own fields.
+  let body = if any_custom_json(name) {
+    match rest.get("value") {
+      Some(item) => item
+      None => @cjson.Json::object(rest)
+    }
+  } else {
+    @cjson.Json::object(rest)
+  }
+  message_from_json(nested, body, opts, depth + 1)
   let body = @proto.encode(nested) catch { _ => raise BadValue("Any.value") }
   set_number_field(message, 1, @reflect.String(type_url))
   set_number_field(message, 2, @reflect.Bytes(body))
+}
+
+///|
+/// The types whose Any JSON representation carries a `value` member holding
+/// their custom JSON form instead of their own fields.
+fn any_custom_json(name : String) -> Bool {
+  name == "google.protobuf.Any" ||
+  name == "google.protobuf.Timestamp" ||
+  name == "google.protobuf.Duration" ||
+  name == "google.protobuf.FieldMask" ||
+  name == "google.protobuf.Struct" ||
+  name == "google.protobuf.Value" ||
+  name == "google.protobuf.ListValue" ||
+  name == "google.protobuf.Empty" ||
+  (name.has_prefix("google.protobuf.") && name.has_suffix("Value"))
 }
 
 // -- time formatting --------------------------------------------------------
@@ -1147,6 +1424,17 @@ fn pad2(value : Int32) -> String {
 }
 
 ///|
+/// The year is always four digits, including year 1 at the lower bound.
+fn pad4(value : Int64) -> String {
+  let text = value.to_string()
+  let mut result = ""
+  for _ in 0..<(4 - text.length()) {
+    result = result + "0"
+  }
+  result + text
+}
+
+///|
 fn pad9(value : Int32) -> String {
   let text = value.to_string()
   let mut result = ""
@@ -1168,7 +1456,7 @@ fn format_timestamp(seconds : Int64, nanos : Int32) -> String {
   let hour = (rem / 3600L).to_int()
   let minute = (rem % 3600L / 60L).to_int()
   let second = (rem % 60L).to_int()
-  let base = year.to_string() +
+  let base = pad4(year) +
     "-" +
     pad2(month) +
     "-" +
@@ -1199,69 +1487,178 @@ fn format_duration(seconds : Int64, nanos : Int32) -> String {
 }
 
 ///|
+fn digit_value(text : StringView, at : Int32) -> Int32? {
+  if at < 0 || at >= text.length() {
+    return None
+  }
+  let c = text[at]
+  if c < '0' || c > '9' {
+    return None
+  }
+  Some(c.to_int() - 48)
+}
+
+///|
+fn fixed_number(
+  text : StringView,
+  at : Int32,
+  count : Int32,
+) -> Int32 raise Refused {
+  let mut value = 0
+  for i in 0..<count {
+    match digit_value(text, at + i) {
+      Some(digit) => value = value * 10 + digit
+      None => raise Syntax("bad numeric field")
+    }
+  }
+  value
+}
+
+///|
+/// Scan a run of decimal digits, returning its end offset.
+fn digit_run_end(text : StringView, at : Int32) -> Int32 {
+  let mut end = at
+  let mut scanning = true
+  while end < text.length() && scanning {
+    match digit_value(text, end) {
+      Some(_) => end = end + 1
+      None => scanning = false
+    }
+  }
+  end
+}
+
+///|
+/// Fractional digits are nanoseconds; anything past the ninth is ignored.
+fn fraction_nanos(
+  text : StringView,
+  at : Int32,
+) -> (Int32, Int32) raise Refused {
+  let end = digit_run_end(text, at)
+  if end == at {
+    raise Syntax("bad fraction")
+  }
+  let mut nanos = 0
+  let mut digits = 0
+  let mut i = at
+  while i < end && digits < 9 {
+    match digit_value(text, i) {
+      Some(digit) => nanos = nanos * 10 + digit
+      None => ()
+    }
+    digits = digits + 1
+    i = i + 1
+  }
+  while digits < 9 {
+    nanos = nanos * 10
+    digits = digits + 1
+  }
+  (nanos, end)
+}
+
+///|
 fn parse_timestamp(text : String) -> (Int64, Int32) raise Refused {
-  // YYYY-MM-DDTHH:MM:SS[.fffffffff]Z
+  // YYYY-MM-DDTHH:MM:SS[.digits](Z | +HH:MM | -HH:MM)
   if text.length() < 20 {
     raise Syntax("bad timestamp")
   }
-  let year = parse_int64(text[0:4])
-  let month = parse_int64(text[5:7]).to_int()
-  let day = parse_int64(text[8:10]).to_int()
-  let hour = parse_int64(text[11:13]).to_int()
-  let minute = parse_int64(text[14:16]).to_int()
-  let second = parse_int64(text[17:19]).to_int()
-  let mut nanos = 0
-  if text.length() > 20 && text[19] == '.' {
-    let mut i = 20
-    let mut digits = 0
-    while i < text.length() && text[i] != 'Z' && digits < 9 {
-      nanos = nanos * 10 + (text[i].to_int() - '0'.to_int())
-      digits = digits + 1
-      i = i + 1
-    }
-    while digits < 9 {
-      nanos = nanos * 10
-      digits = digits + 1
-    }
+  if text[4] != '-' ||
+    text[7] != '-' ||
+    text[10] != 'T' ||
+    text[13] != ':' ||
+    text[16] != ':' {
+    raise Syntax("bad timestamp")
   }
-  let days = days_from_civil(year, month, day)
-  let seconds = days * 86400L + (hour * 3600 + minute * 60 + second).to_int64()
+  let year = fixed_number(text, 0, 4)
+  let month = fixed_number(text, 5, 2)
+  let day = fixed_number(text, 8, 2)
+  let hour = fixed_number(text, 11, 2)
+  let minute = fixed_number(text, 14, 2)
+  let second = fixed_number(text, 17, 2)
+  if year < 1 ||
+    year > 9999 ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31 ||
+    hour > 23 ||
+    minute > 59 ||
+    second > 59 {
+    raise Syntax("bad timestamp")
+  }
+  let mut at = 19
+  let mut nanos = 0
+  if at < text.length() && text[at] == '.' {
+    let (fraction, end) = fraction_nanos(text, at + 1)
+    nanos = fraction
+    at = end
+  }
+  let mut offset = 0
+  if at < text.length() && text[at] == 'Z' {
+    at = at + 1
+  } else if at < text.length() && (text[at] == '+' || text[at] == '-') {
+    let sign = if text[at] == '+' { 1 } else { 0 - 1 }
+    at = at + 1
+    if at + 5 != text.length() || text[at + 2] != ':' {
+      raise Syntax("bad timestamp")
+    }
+    let offset_hour = fixed_number(text, at, 2)
+    let offset_minute = fixed_number(text, at + 3, 2)
+    if offset_hour > 23 || offset_minute > 59 {
+      raise Syntax("bad timestamp")
+    }
+    offset = sign * (offset_hour * 3600 + offset_minute * 60)
+    at = at + 5
+  } else {
+    raise Syntax("bad timestamp")
+  }
+  if at != text.length() {
+    raise Syntax("bad timestamp")
+  }
+  let days = days_from_civil(year.to_int64(), month, day)
+  let seconds = days * 86400L +
+    (hour * 3600 + minute * 60 + second).to_int64() -
+    offset.to_int64()
+  if seconds < 0L - 62135596800L || seconds > 253402300799L {
+    raise Syntax("bad timestamp")
+  }
   (seconds, nanos)
 }
 
 ///|
 fn parse_duration(text : String) -> (Int64, Int32) raise Refused {
+  // [-]seconds[.digits]s, with |seconds| <= 315576000000.
   if text.length() < 2 {
     raise Syntax("bad duration")
   }
   let negative = text[0] == '-'
-  let body = if negative { text[1:].to_owned() } else { text }
-  if body[body.length() - 1] != 's' {
+  let mut at = if negative { 1 } else { 0 }
+  let end = digit_run_end(text, at)
+  if end == at {
     raise Syntax("bad duration")
   }
-  let number = body[:body.length() - 1].to_owned()
   let mut seconds = 0L
-  let mut nanos = 0
-  let mut i = 0
-  while i < number.length() && number[i] != '.' {
-    seconds = seconds * 10L + (number[i].to_int() - '0'.to_int()).to_int64()
-    i = i + 1
+  for i in at..<end {
+    match digit_value(text, i) {
+      Some(digit) => seconds = seconds * 10L + digit.to_int64()
+      None => ()
+    }
   }
-  if i < number.length() && number[i] == '.' {
-    i = i + 1
-    let mut digits = 0
-    while i < number.length() && digits < 9 {
-      nanos = nanos * 10 + (number[i].to_int() - '0'.to_int())
-      digits = digits + 1
-      i = i + 1
-    }
-    while digits < 9 {
-      nanos = nanos * 10
-      digits = digits + 1
-    }
+  if seconds > 315576000000L {
+    raise Syntax("bad duration")
+  }
+  at = end
+  let mut nanos = 0
+  if at < text.length() && text[at] == '.' {
+    let (fraction, after) = fraction_nanos(text, at + 1)
+    nanos = fraction
+    at = after
+  }
+  if at + 1 != text.length() || text[at] != 's' {
+    raise Syntax("bad duration")
   }
   if negative {
-    (-seconds, -nanos)
+    (0L - seconds, 0 - nanos)
   } else {
     (seconds, nanos)
   }

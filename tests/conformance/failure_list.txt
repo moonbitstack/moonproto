@@ -1,0 +1,6 @@
+# Expected failures for the protobuf conformance_test_runner (v36.2).
+#
+# One test name per line; everything else is a comment. The suite is run with
+# `scripts/conformance.sh`. An empty list means every case in the binary and
+# JSON suites passes. Any entry added here must be followed by a comment that
+# states the specific unsupported behaviour and why it is not implemented.

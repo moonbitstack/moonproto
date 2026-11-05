@@ -69,8 +69,9 @@ fn request_descriptor() -> @desc.FileDescriptorProto {
       ),
       f("message_type", 4, 1, 9, None, None),
       f("test_category", 5, 1, 14, Some(".conformance.TestCategory"), None),
-      f("print_unknown_fields", 7, 1, 8, None, None),
+      f("jspb_payload", 7, 1, 9, None, None),
       f("text_payload", 8, 1, 9, None, None),
+      f("print_unknown_fields", 9, 1, 8, None, None),
     ],
     [],
     [],
@@ -86,7 +87,9 @@ fn request_descriptor() -> @desc.FileDescriptorProto {
       f("json_payload", 4, 1, 9, None, None),
       f("skipped", 5, 1, 9, None, None),
       f("serialize_error", 6, 1, 9, None, None),
-      f("text_payload", 7, 1, 9, None, None),
+      f("jspb_payload", 7, 1, 9, None, None),
+      f("text_payload", 8, 1, 9, None, None),
+      f("timeout_error", 9, 1, 9, None, None),
     ],
     [],
     [],
@@ -239,13 +242,64 @@ fn register_messages(
 }
 
 ///|
-/// Register the test message into the global registry, so a `Message` can be
-/// built from its name.
-
-///|
 /// Register the well-known types too, so a request that names one resolves.
 pub fn register_known_types() -> Unit {
   @known.register_all()
+}
+
+///|
+/// Register the message types the official runner names: proto2, proto3,
+/// editions and edition-unstable test schemas. Their descriptors come from the
+/// pinned descriptor set, so the testee has no build-time dependency on protoc.
+pub fn register_official_types() -> Unit {
+  for file in official_files() {
+    let built = @desc.build_file(file) catch { _ => continue }
+    @reflect.global_files.register(built) catch {
+      _ => ()
+    }
+    register_official_file(built)
+  }
+}
+
+///|
+fn register_official_file(file : @reflect.FileDescriptor) -> Unit {
+  register_official_messages(file.messages)
+  for item in file.enums {
+    @reflect.global_types.register_enum(@dynamic.new_enum_type(item)) catch {
+      _ => ()
+    }
+  }
+  for extension in file.extensions {
+    @reflect.global_types.register_extension(
+      @dynamic.new_extension_type(extension),
+    ) catch {
+      _ => ()
+    }
+  }
+}
+
+///|
+fn register_official_messages(
+  messages : Array[@reflect.MessageDescriptor],
+) -> Unit {
+  for message in messages {
+    @reflect.global_types.register_message(@dynamic.new_message_type(message)) catch {
+      _ => ()
+    }
+    for item in message.nested_enums {
+      @reflect.global_types.register_enum(@dynamic.new_enum_type(item)) catch {
+        _ => ()
+      }
+    }
+    for item in message.nested_extensions {
+      @reflect.global_types.register_extension(
+        @dynamic.new_extension_type(item),
+      ) catch {
+        _ => ()
+      }
+    }
+    register_official_messages(message.nested_messages)
+  }
 }
 
 ///|
@@ -362,38 +416,46 @@ pub fn handle(request_bytes : Bytes) -> Bytes {
   }
   let request = request_type.new_message()
   @proto.decode(request_bytes, request) catch {
-    _ => return error_response("could not decode the request", false)
+    _ => return error_response("could not decode the request", 2)
   }
   let message_type = get_string(request, 4)
   let output_format = get_int(request, 3)
+  let test_category = get_int(request, 5)
   let message_type_info = match find_type(message_type) {
     Some(found) => found
-    None => return error_response("unknown message type " + message_type, false)
+    None => return error_response("unknown message type " + message_type, 2)
   }
   let message = message_type_info.new_message()
   let decoded = if has_field(request, 1) {
     @proto.decode(get_bytes(request, 1), message) catch {
       err => {
         let _ = err
-        return error_response("binary parse failed", true)
+        return error_response("binary parse failed", 1)
       }
     }
     true
   } else if has_field(request, 2) {
-    @json.decode(get_string(request, 2), message) catch {
-      _ => return error_response("json parse failed", true)
+    // Category 3 asks for unknown JSON fields to be discarded rather than
+    // refused, which is an optional part of the conformance protocol.
+    let options = if test_category == 3 {
+      { ..@json.unmarshal_options, discard_unknown: true, }
+    } else {
+      @json.unmarshal_options
+    }
+    @json.decode(get_string(request, 2), message, unmarshal_options=options) catch {
+      _ => return error_response("json parse failed", 1)
     }
     true
   } else if has_field(request, 8) {
     @text.decode(get_string(request, 8), message) catch {
-      _ => return error_response("text parse failed", true)
+      _ => return error_response("text parse failed", 1)
     }
     true
   } else {
     false
   }
   if !decoded {
-    return error_response("no payload", true)
+    return error_response("no payload", 1)
   }
   let response = match
     conformance_types.find_message_by_name("conformance.ConformanceResponse") {
@@ -402,21 +464,26 @@ pub fn handle(request_bytes : Bytes) -> Bytes {
   }
   let encoded = if output_format == 1 {
     let bytes = @proto.encode(message) catch {
-      _ => return error_response("binary serialize failed", false)
+      _ => return error_response("binary serialize failed", 6)
     }
     set_bytes(response, 3, bytes)
     true
   } else if output_format == 2 {
     let text = @json.encode(message) catch {
-      _ => return error_response("json serialize failed", false)
+      _ => return error_response("json serialize failed", 6)
     }
     set_string(response, 4, text)
     true
   } else if output_format == 4 {
     let text = @text.encode(message) catch {
-      _ => return error_response("text serialize failed", false)
+      _ => return error_response("text serialize failed", 6)
     }
+    // Field 7 is `jspb_payload` in conformance.proto; the harness that
+    // predates the official runner reads the text answer from there. Writing
+    // both keeps that harness and the official runner, which reads field 8,
+    // in agreement. Field 8 is last, so the runner's oneof ends on it.
     set_string(response, 7, text)
+    set_string(response, 8, text)
     true
   } else {
     false
@@ -424,7 +491,7 @@ pub fn handle(request_bytes : Bytes) -> Bytes {
   if !encoded {
     return error_response(
       "unsupported output format " + output_format.to_string(),
-      false,
+      2,
     )
   }
   @proto.encode(response) catch {
@@ -433,17 +500,14 @@ pub fn handle(request_bytes : Bytes) -> Bytes {
 }
 
 ///|
-fn error_response(text : String, parse : Bool) -> Bytes {
+fn error_response(text : String, field : Int32) -> Bytes {
   let response = match
     conformance_types.find_message_by_name("conformance.ConformanceResponse") {
     Some(found) => found.new_message()
     None => return b""
   }
-  if parse {
-    set_string(response, 1, text)
-  } else {
-    set_string(response, 2, text)
-  }
+  // 1 parse_error, 2 runtime_error, 6 serialize_error.
+  set_string(response, field, text)
   @proto.encode(response) catch {
     _ => b""
   }

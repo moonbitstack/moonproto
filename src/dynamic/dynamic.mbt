@@ -196,6 +196,18 @@ pub impl @reflect.Message for Message with fn mutable(
   if index >= 0 {
     return self.fields[index].1
   }
+  // `mutable` is how a nested message is decoded. It has the same oneof
+  // semantics as `set`: the last member on the wire wins, so earlier members
+  // must go, otherwise both look present to the encoders.
+  match field.oneof_index {
+    Some(index) =>
+      if index >= 0 && index < self.desc.oneofs.length() {
+        for number in self.desc.oneofs[index].field_numbers {
+          self.remove_field(number)
+        }
+      }
+    None => ()
+  }
   let value = @reflect.new_field_value(field)
   self.put_field(field.number, value)
   value

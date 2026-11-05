@@ -72,7 +72,7 @@ def main():
     cases = [
         ("binary to JSON", request(1, bytes.fromhex("089601"), 2), 4, b'"i32":150'),
         ("JSON to binary", request(2, b'{"i32":150}', 1), 3, bytes.fromhex("089601")),
-        ("binary to text", request(1, bytes.fromhex("089601"), 4), 7, b"i32: 150"),
+        ("binary to text", request(1, bytes.fromhex("089601"), 4), 8, b"i32: 150"),
     ]
     payload = b"".join(frame(case[1]) for case in cases)
     result = subprocess.run([exe], input=payload, capture_output=True)
