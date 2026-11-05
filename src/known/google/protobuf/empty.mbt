@@ -85,21 +85,12 @@ fn find_message_google_protobuf_empty_proto(
 
 ///|
 pub struct Empty {
-  inner : @dynamic.Message
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn Empty::new() -> Empty {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_empty_proto("google.protobuf.Empty"),
-    ),
-  }
-}
-
-///|
-pub fn Empty::message(self : Empty) -> @dynamic.Message {
-  self.inner
+  { unknown_fields: b"", }
 }
 
 ///|
@@ -115,8 +106,25 @@ pub fn Empty::from_json(text : String) -> Empty raise @json.Refused {
 }
 
 ///|
+fn Empty::read_field(
+  self : Empty,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_empty_proto_Empty : @reflect.MessageDescriptor = find_message_google_protobuf_empty_proto(
+  "google.protobuf.Empty",
+)
+
+///|
 pub impl @reflect.Message for Empty with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_empty_proto_Empty
 }
 
 ///|
@@ -127,7 +135,8 @@ pub impl @reflect.Message for Empty with fn message_type(self) -> &@reflect.Mess
 
 ///|
 pub impl @reflect.Message for Empty with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -135,7 +144,13 @@ pub impl @reflect.Message for Empty with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_empty_proto_Empty.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -143,7 +158,8 @@ pub impl @reflect.Message for Empty with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -151,7 +167,10 @@ pub impl @reflect.Message for Empty with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    _ => false
+  }
 }
 
 ///|
@@ -159,7 +178,10 @@ pub impl @reflect.Message for Empty with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    _ => ()
+  }
 }
 
 ///|
@@ -167,7 +189,7 @@ pub impl @reflect.Message for Empty with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  Empty::read_field(self, field)
 }
 
 ///|
@@ -176,7 +198,11 @@ pub impl @reflect.Message for Empty with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    _ => ()
+  }
 }
 
 ///|
@@ -184,7 +210,10 @@ pub impl @reflect.Message for Empty with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => Empty::read_field(self, field)
+  }
 }
 
 ///|
@@ -192,7 +221,10 @@ pub impl @reflect.Message for Empty with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -200,12 +232,15 @@ pub impl @reflect.Message for Empty with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for Empty with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -213,7 +248,7 @@ pub impl @reflect.Message for Empty with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -264,7 +299,7 @@ pub impl @reflect.MessageType for EmptyType with fn zero(_self) -> &@reflect.Mes
 
 ///|
 pub impl @reflect.MessageType for EmptyType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_empty_proto("google.protobuf.Empty")
+  descriptor_google_protobuf_empty_proto_Empty
 }
 
 ///|

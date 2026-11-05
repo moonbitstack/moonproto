@@ -5,6 +5,9 @@ pub(all) suberror Refused {
   Protocol(String)
   Proto(@proto.Refused)
   Desc(@desc.Refused)
+  /// A field refers to a type no file in the request declares, so the
+  /// generated source could not name it.
+  Unknown(String)
 }
 
 ///|
@@ -13,6 +16,7 @@ pub impl Show for Refused with fn output(self, logger) {
     Protocol(message) => logger.write_string("protocol: " + message)
     Proto(_) => logger.write_string("message could not be decoded")
     Desc(_) => logger.write_string("descriptor could not be built")
+    Unknown(name) => logger.write_string("no generated type for " + name)
   }
 }
 

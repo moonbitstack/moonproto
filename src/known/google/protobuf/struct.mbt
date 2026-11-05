@@ -388,30 +388,6 @@ fn find_message_google_protobuf_struct_proto(
 }
 
 ///|
-fn field_of_google_protobuf_struct_proto(
-  message : @dynamic.Message,
-  number : Int32,
-) -> @reflect.FieldDescriptor {
-  match message.descriptor().field_by_number(number) {
-    Some(field) => field
-    None => abort("moonproto: missing field " + number.to_string())
-  }
-}
-
-///|
-fn oneof_of_google_protobuf_struct_proto(
-  message : @dynamic.Message,
-  name : String,
-) -> @reflect.OneofDescriptor {
-  for item in message.descriptor().oneofs {
-    if item.name == name {
-      return item
-    }
-  }
-  abort("moonproto: missing oneof " + name)
-}
-
-///|
 pub(all) enum NullValue {
   NULL_VALUE
   Unknown(Int32)
@@ -435,32 +411,27 @@ pub fn NullValue::of(n : Int32) -> NullValue {
 
 ///|
 pub struct Struct {
-  inner : @dynamic.Message
+  fields : Map[String, Value]
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn Struct::new() -> Struct {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_struct_proto("google.protobuf.Struct"),
-    ),
-  }
-}
-
-///|
-pub fn Struct::message(self : Struct) -> @dynamic.Message {
-  self.inner
+  { fields: Map([]), unknown_fields: b"", }
 }
 
 ///|
 pub fn Struct::fields(self : Struct) -> &@reflect.MapField {
-  let f = field_of_google_protobuf_struct_proto(self.inner, 1)
-  self.inner.mutable(f).map()
-}
-
-///|
-pub fn Struct::set_fields(self : Struct, value : @reflect.Value) -> Unit {
-  self.inner.set(field_of_google_protobuf_struct_proto(self.inner, 1), value)
+  @reflect.map_view(
+    self.fields,
+    k => @reflect.String(k),
+    k => k.string(),
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => Value::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
+  )
 }
 
 ///|
@@ -476,8 +447,38 @@ pub fn Struct::from_json(text : String) -> Struct raise @json.Refused {
 }
 
 ///|
+fn Struct::read_field(
+  self : Struct,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 =>
+      @reflect.MapView(
+        @reflect.map_view(
+          self.fields,
+          k => @reflect.String(k),
+          k => k.string(),
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => Value::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_struct_proto_Struct : @reflect.MessageDescriptor = find_message_google_protobuf_struct_proto(
+  "google.protobuf.Struct",
+)
+
+///|
 pub impl @reflect.Message for Struct with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_struct_proto_Struct
 }
 
 ///|
@@ -488,7 +489,8 @@ pub impl @reflect.Message for Struct with fn message_type(self) -> &@reflect.Mes
 
 ///|
 pub impl @reflect.Message for Struct with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -496,7 +498,13 @@ pub impl @reflect.Message for Struct with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_struct_proto_Struct.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -504,7 +512,8 @@ pub impl @reflect.Message for Struct with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -512,7 +521,11 @@ pub impl @reflect.Message for Struct with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.fields.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -520,7 +533,11 @@ pub impl @reflect.Message for Struct with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.fields.clear()
+    _ => ()
+  }
 }
 
 ///|
@@ -528,7 +545,7 @@ pub impl @reflect.Message for Struct with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  Struct::read_field(self, field)
 }
 
 ///|
@@ -537,7 +554,22 @@ pub impl @reflect.Message for Struct with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 =>
+      @reflect.assign_map(
+        self.fields,
+        value.map(),
+        k => k.string(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => Value::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    _ => ()
+  }
 }
 
 ///|
@@ -545,7 +577,10 @@ pub impl @reflect.Message for Struct with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => Struct::read_field(self, field)
+  }
 }
 
 ///|
@@ -553,7 +588,10 @@ pub impl @reflect.Message for Struct with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -561,12 +599,15 @@ pub impl @reflect.Message for Struct with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for Struct with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -574,7 +615,7 @@ pub impl @reflect.Message for Struct with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -625,7 +666,7 @@ pub impl @reflect.MessageType for StructType with fn zero(_self) -> &@reflect.Me
 
 ///|
 pub impl @reflect.MessageType for StructType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_struct_proto("google.protobuf.Struct")
+  descriptor_google_protobuf_struct_proto_Struct
 }
 
 ///|
@@ -636,443 +677,119 @@ pub let struct_type : &@reflect.MessageType = StructType::new()
   as &@reflect.MessageType
 
 ///|
-pub struct Struct_FieldsEntry {
-  inner : @dynamic.Message
-}
-
-///|
-pub fn Struct_FieldsEntry::new() -> Struct_FieldsEntry {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_struct_proto(
-        "google.protobuf.Struct.FieldsEntry",
-      ),
-    ),
-  }
-}
-
-///|
-pub fn Struct_FieldsEntry::message(
-  self : Struct_FieldsEntry,
-) -> @dynamic.Message {
-  self.inner
-}
-
-///|
-pub fn Struct_FieldsEntry::key(self : Struct_FieldsEntry) -> String {
-  let f = field_of_google_protobuf_struct_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
-}
-
-///|
-pub fn Struct_FieldsEntry::set_key(
-  self : Struct_FieldsEntry,
-  value : String,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_struct_proto(self.inner, 1),
-    @reflect.String(value),
-  )
-}
-
-///|
-pub fn Struct_FieldsEntry::value(self : Struct_FieldsEntry) -> @reflect.Value {
-  let f = field_of_google_protobuf_struct_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
-  }
-}
-
-///|
-pub fn Struct_FieldsEntry::set_value(
-  self : Struct_FieldsEntry,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(field_of_google_protobuf_struct_proto(self.inner, 2), value)
-}
-
-///|
-pub fn Struct_FieldsEntry::to_json(
-  self : Struct_FieldsEntry,
-) -> String raise @json.Refused {
-  @json.encode(self)
-}
-
-///|
-pub fn Struct_FieldsEntry::from_json(
-  text : String,
-) -> Struct_FieldsEntry raise @json.Refused {
-  let message = Struct_FieldsEntry::new()
-  @json.decode(text, message)
-  message
-}
-
-///|
-pub impl @reflect.Message for Struct_FieldsEntry with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
-}
-
-///|
-pub impl @reflect.Message for Struct_FieldsEntry with fn message_type(self) -> &@reflect.MessageType {
-  let _ = self
-  struct_FieldsEntry_type
-}
-
-///|
-pub impl @reflect.Message for Struct_FieldsEntry with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
-}
-
-///|
-pub impl @reflect.Message for Struct_FieldsEntry with fn range(
-  self,
-  f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
-) -> Unit {
-  self.inner.range(f)
-}
-
-///|
-pub impl @reflect.Message for Struct_FieldsEntry with fn range_extensions(
-  self,
-  f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
-) -> Unit {
-  self.inner.range_extensions(f)
-}
-
-///|
-pub impl @reflect.Message for Struct_FieldsEntry with fn has(
-  self,
-  field : @reflect.FieldDescriptor,
-) -> Bool {
-  self.inner.has(field)
-}
-
-///|
-pub impl @reflect.Message for Struct_FieldsEntry with fn clear(
-  self,
-  field : @reflect.FieldDescriptor,
-) -> Unit {
-  self.inner.clear(field)
-}
-
-///|
-pub impl @reflect.Message for Struct_FieldsEntry with fn get(
-  self,
-  field : @reflect.FieldDescriptor,
-) -> @reflect.Value {
-  self.inner.get(field)
-}
-
-///|
-pub impl @reflect.Message for Struct_FieldsEntry with fn set(
-  self,
-  field : @reflect.FieldDescriptor,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(field, value)
-}
-
-///|
-pub impl @reflect.Message for Struct_FieldsEntry with fn mutable(
-  self,
-  field : @reflect.FieldDescriptor,
-) -> @reflect.Value {
-  self.inner.mutable(field)
-}
-
-///|
-pub impl @reflect.Message for Struct_FieldsEntry with fn new_field(
-  self,
-  field : @reflect.FieldDescriptor,
-) -> @reflect.Value {
-  self.inner.new_field(field)
-}
-
-///|
-pub impl @reflect.Message for Struct_FieldsEntry with fn which_oneof(
-  self,
-  oneof : @reflect.OneofDescriptor,
-) -> Int32? {
-  self.inner.which_oneof(oneof)
-}
-
-///|
-pub impl @reflect.Message for Struct_FieldsEntry with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
-}
-
-///|
-pub impl @reflect.Message for Struct_FieldsEntry with fn set_unknown(
-  self,
-  raw : @reflect.RawFields,
-) -> Unit {
-  self.inner.set_unknown(raw)
-}
-
-///|
-pub extend Struct_FieldsEntry with @reflect.Message::{
-  descriptor,
-  message_type,
-  is_valid,
-  range,
-  range_extensions,
-  has,
-  clear,
-  get,
-  set,
-  mutable,
-  new_field,
-  which_oneof,
-  get_unknown,
-  set_unknown,
-}
-
-///|
-pub impl @reflect.Fresh for Struct_FieldsEntry with fn fresh(_self) -> Struct_FieldsEntry {
-  Struct_FieldsEntry::new()
-}
-
-///|
-pub extend Struct_FieldsEntry with @reflect.Fresh::{fresh}
-
-///|
-pub struct Struct_FieldsEntryType {
-  marker : Unit
-}
-
-///|
-pub fn Struct_FieldsEntryType::new() -> Struct_FieldsEntryType {
-  { marker: (), }
-}
-
-///|
-pub impl @reflect.MessageType for Struct_FieldsEntryType with fn new_message(
-  _self,
-) -> &@reflect.Message {
-  Struct_FieldsEntry::new() as &@reflect.Message
-}
-
-///|
-pub impl @reflect.MessageType for Struct_FieldsEntryType with fn zero(_self) -> &@reflect.Message {
-  Struct_FieldsEntry::new() as &@reflect.Message
-}
-
-///|
-pub impl @reflect.MessageType for Struct_FieldsEntryType with fn descriptor(
-  _self,
-) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_struct_proto(
-    "google.protobuf.Struct.FieldsEntry",
-  )
-}
-
-///|
-pub extend Struct_FieldsEntryType with @reflect.MessageType::{
-  new_message,
-  zero,
-  descriptor,
-}
-
-///|
-pub let struct_FieldsEntry_type : &@reflect.MessageType = Struct_FieldsEntryType::new()
-  as &@reflect.MessageType
-
-///|
 pub struct Value {
-  inner : @dynamic.Message
+  mut kind : Value_Kind
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn Value::new() -> Value {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_struct_proto("google.protobuf.Value"),
-    ),
-  }
-}
-
-///|
-pub fn Value::message(self : Value) -> @dynamic.Message {
-  self.inner
+  { kind: Value_Kind::NoKind, unknown_fields: b"", }
 }
 
 ///|
 pub fn Value::null_value(self : Value) -> Int32 {
-  let f = field_of_google_protobuf_struct_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
+  match self.kind {
+    Null_value(v) => v.code()
+    _ => 0
   }
 }
 
 ///|
 pub fn Value::set_null_value(self : Value, value : Int32) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_struct_proto(self.inner, 1),
-    @reflect.Enum(value),
-  )
+  self.kind = Value_Kind::Null_value(NullValue::of(value))
 }
 
 ///|
 pub fn Value::number_value(self : Value) -> Double {
-  let f = field_of_google_protobuf_struct_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).float()
-  } else {
-    0.0
+  match self.kind {
+    Number_value(v) => v
+    _ => 0.0
   }
 }
 
 ///|
 pub fn Value::set_number_value(self : Value, value : Double) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_struct_proto(self.inner, 2),
-    @reflect.Double(value),
-  )
+  self.kind = Value_Kind::Number_value(value)
 }
 
 ///|
 pub fn Value::string_value(self : Value) -> String {
-  let f = field_of_google_protobuf_struct_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
+  match self.kind {
+    String_value(v) => v
+    _ => ""
   }
 }
 
 ///|
 pub fn Value::set_string_value(self : Value, value : String) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_struct_proto(self.inner, 3),
-    @reflect.String(value),
-  )
+  self.kind = Value_Kind::String_value(value)
 }
 
 ///|
 pub fn Value::bool_value(self : Value) -> Bool {
-  let f = field_of_google_protobuf_struct_proto(self.inner, 4)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
+  match self.kind {
+    Bool_value(v) => v
+    _ => false
   }
 }
 
 ///|
 pub fn Value::set_bool_value(self : Value, value : Bool) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_struct_proto(self.inner, 4),
-    @reflect.Bool(value),
-  )
+  self.kind = Value_Kind::Bool_value(value)
 }
 
 ///|
 pub fn Value::struct_value(self : Value) -> @reflect.Value {
-  let f = field_of_google_protobuf_struct_proto(self.inner, 5)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.kind {
+    Value_Kind::Struct_value(v) => @reflect.Message(v as &@reflect.Message)
+    _ => @reflect.Message(Struct::new() as &@reflect.Message)
   }
 }
 
 ///|
 pub fn Value::set_struct_value(self : Value, value : @reflect.Value) -> Unit {
-  self.inner.set(field_of_google_protobuf_struct_proto(self.inner, 5), value)
+  let source = value.message()
+  let target = Struct::new()
+  @proto.merge(target, source)
+  self.kind = Value_Kind::Struct_value(target)
 }
 
 ///|
 pub fn Value::list_value(self : Value) -> @reflect.Value {
-  let f = field_of_google_protobuf_struct_proto(self.inner, 6)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.kind {
+    Value_Kind::List_value(v) => @reflect.Message(v as &@reflect.Message)
+    _ => @reflect.Message(ListValue::new() as &@reflect.Message)
   }
 }
 
 ///|
 pub fn Value::set_list_value(self : Value, value : @reflect.Value) -> Unit {
-  self.inner.set(field_of_google_protobuf_struct_proto(self.inner, 6), value)
+  let source = value.message()
+  let target = ListValue::new()
+  @proto.merge(target, source)
+  self.kind = Value_Kind::List_value(target)
 }
 
 ///|
 pub(all) enum Value_Kind {
-  Null_value(@reflect.Value)
+  Null_value(NullValue)
   Number_value(Double)
   String_value(String)
   Bool_value(Bool)
-  Struct_value(@reflect.Value)
-  List_value(@reflect.Value)
+  Struct_value(Struct)
+  List_value(ListValue)
   NoKind
 }
 
 ///|
 pub fn Value::kind(self : Value) -> Value_Kind {
-  let oneof = oneof_of_google_protobuf_struct_proto(self.inner, "kind")
-  match self.inner.which_oneof(oneof) {
-    Some(1) => {
-      let field = field_of_google_protobuf_struct_proto(self.inner, 1)
-      Value_Kind::Null_value(self.inner.get(field))
-    }
-    Some(2) => {
-      let field = field_of_google_protobuf_struct_proto(self.inner, 2)
-      Value_Kind::Number_value(self.inner.get(field).float())
-    }
-    Some(3) => {
-      let field = field_of_google_protobuf_struct_proto(self.inner, 3)
-      Value_Kind::String_value(self.inner.get(field).string())
-    }
-    Some(4) => {
-      let field = field_of_google_protobuf_struct_proto(self.inner, 4)
-      Value_Kind::Bool_value(self.inner.get(field).bool())
-    }
-    Some(5) => {
-      let field = field_of_google_protobuf_struct_proto(self.inner, 5)
-      Value_Kind::Struct_value(self.inner.get(field))
-    }
-    Some(6) => {
-      let field = field_of_google_protobuf_struct_proto(self.inner, 6)
-      Value_Kind::List_value(self.inner.get(field))
-    }
-    _ => Value_Kind::NoKind
-  }
+  self.kind
 }
 
 ///|
 pub fn Value::set_kind(self : Value, value : Value_Kind) -> Unit {
-  match value {
-    Value_Kind::Null_value(item) =>
-      self.inner.set(field_of_google_protobuf_struct_proto(self.inner, 1), item)
-    Value_Kind::Number_value(item) =>
-      self.inner.set(
-        field_of_google_protobuf_struct_proto(self.inner, 2),
-        @reflect.Double(item),
-      )
-    Value_Kind::String_value(item) =>
-      self.inner.set(
-        field_of_google_protobuf_struct_proto(self.inner, 3),
-        @reflect.String(item),
-      )
-    Value_Kind::Bool_value(item) =>
-      self.inner.set(
-        field_of_google_protobuf_struct_proto(self.inner, 4),
-        @reflect.Bool(item),
-      )
-    Value_Kind::Struct_value(item) =>
-      self.inner.set(field_of_google_protobuf_struct_proto(self.inner, 5), item)
-    Value_Kind::List_value(item) =>
-      self.inner.set(field_of_google_protobuf_struct_proto(self.inner, 6), item)
-    _ => self.inner.clear(field_of_google_protobuf_struct_proto(self.inner, 1))
-  }
+  self.kind = value
 }
 
 ///|
@@ -1088,8 +805,55 @@ pub fn Value::from_json(text : String) -> Value raise @json.Refused {
 }
 
 ///|
+fn Value::read_field(
+  self : Value,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 =>
+      match self.kind {
+        Null_value(v) => @reflect.Enum(v.code())
+        _ => @reflect.default_for(field)
+      }
+    2 =>
+      match self.kind {
+        Number_value(v) => @reflect.Double(v)
+        _ => @reflect.default_for(field)
+      }
+    3 =>
+      match self.kind {
+        String_value(v) => @reflect.String(v)
+        _ => @reflect.default_for(field)
+      }
+    4 =>
+      match self.kind {
+        Bool_value(v) => @reflect.Bool(v)
+        _ => @reflect.default_for(field)
+      }
+    5 =>
+      match self.kind {
+        Struct_value(v) => @reflect.Message(v as &@reflect.Message)
+        _ => @reflect.default_for(field)
+      }
+    6 =>
+      match self.kind {
+        List_value(v) => @reflect.Message(v as &@reflect.Message)
+        _ => @reflect.default_for(field)
+      }
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_struct_proto_Value : @reflect.MessageDescriptor = find_message_google_protobuf_struct_proto(
+  "google.protobuf.Value",
+)
+
+///|
 pub impl @reflect.Message for Value with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_struct_proto_Value
 }
 
 ///|
@@ -1100,7 +864,8 @@ pub impl @reflect.Message for Value with fn message_type(self) -> &@reflect.Mess
 
 ///|
 pub impl @reflect.Message for Value with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -1108,7 +873,13 @@ pub impl @reflect.Message for Value with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_struct_proto_Value.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -1116,7 +887,8 @@ pub impl @reflect.Message for Value with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -1124,7 +896,40 @@ pub impl @reflect.Message for Value with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 =>
+      match self.kind {
+        Null_value(_) => true
+        _ => false
+      }
+    2 =>
+      match self.kind {
+        Number_value(_) => true
+        _ => false
+      }
+    3 =>
+      match self.kind {
+        String_value(_) => true
+        _ => false
+      }
+    4 =>
+      match self.kind {
+        Bool_value(_) => true
+        _ => false
+      }
+    5 =>
+      match self.kind {
+        Struct_value(_) => true
+        _ => false
+      }
+    6 =>
+      match self.kind {
+        List_value(_) => true
+        _ => false
+      }
+    _ => false
+  }
 }
 
 ///|
@@ -1132,7 +937,16 @@ pub impl @reflect.Message for Value with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.kind = Value_Kind::NoKind
+    2 => self.kind = Value_Kind::NoKind
+    3 => self.kind = Value_Kind::NoKind
+    4 => self.kind = Value_Kind::NoKind
+    5 => self.kind = Value_Kind::NoKind
+    6 => self.kind = Value_Kind::NoKind
+    _ => ()
+  }
 }
 
 ///|
@@ -1140,7 +954,7 @@ pub impl @reflect.Message for Value with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  Value::read_field(self, field)
 }
 
 ///|
@@ -1149,7 +963,27 @@ pub impl @reflect.Message for Value with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.kind = Value_Kind::Null_value(NullValue::of(value.enum_number()))
+    2 => self.kind = Value_Kind::Number_value(value.float())
+    3 => self.kind = Value_Kind::String_value(value.string())
+    4 => self.kind = Value_Kind::Bool_value(value.bool())
+    5 => {
+      let source = value.message()
+      let target = Struct::new()
+      @proto.merge(target, source)
+      self.kind = Value_Kind::Struct_value(target)
+    }
+    6 => {
+      let source = value.message()
+      let target = ListValue::new()
+      @proto.merge(target, source)
+      self.kind = Value_Kind::List_value(target)
+    }
+    _ => ()
+  }
 }
 
 ///|
@@ -1157,7 +991,28 @@ pub impl @reflect.Message for Value with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    5 =>
+      match self.kind {
+        Struct_value(v) => @reflect.Message(v as &@reflect.Message)
+        _ => {
+          let v = Struct::new()
+          self.kind = Value_Kind::Struct_value(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    6 =>
+      match self.kind {
+        List_value(v) => @reflect.Message(v as &@reflect.Message)
+        _ => {
+          let v = ListValue::new()
+          self.kind = Value_Kind::List_value(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => Value::read_field(self, field)
+  }
 }
 
 ///|
@@ -1165,7 +1020,12 @@ pub impl @reflect.Message for Value with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    5 => @reflect.Message(Struct::new() as &@reflect.Message)
+    6 => @reflect.Message(ListValue::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -1173,12 +1033,25 @@ pub impl @reflect.Message for Value with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    "kind" =>
+      match self.kind {
+        Value_Kind::Null_value(_) => Some(1)
+        Value_Kind::Number_value(_) => Some(2)
+        Value_Kind::String_value(_) => Some(3)
+        Value_Kind::Bool_value(_) => Some(4)
+        Value_Kind::Struct_value(_) => Some(5)
+        Value_Kind::List_value(_) => Some(6)
+        _ => None
+      }
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for Value with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -1186,7 +1059,7 @@ pub impl @reflect.Message for Value with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -1237,7 +1110,7 @@ pub impl @reflect.MessageType for ValueType with fn zero(_self) -> &@reflect.Mes
 
 ///|
 pub impl @reflect.MessageType for ValueType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_struct_proto("google.protobuf.Value")
+  descriptor_google_protobuf_struct_proto_Value
 }
 
 ///|
@@ -1249,32 +1122,25 @@ pub let value_type : &@reflect.MessageType = ValueType::new()
 
 ///|
 pub struct ListValue {
-  inner : @dynamic.Message
+  values : Array[Value]
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn ListValue::new() -> ListValue {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_struct_proto("google.protobuf.ListValue"),
-    ),
-  }
-}
-
-///|
-pub fn ListValue::message(self : ListValue) -> @dynamic.Message {
-  self.inner
+  { values: [], unknown_fields: b"", }
 }
 
 ///|
 pub fn ListValue::values(self : ListValue) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_struct_proto(self.inner, 1)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn ListValue::set_values(self : ListValue, value : @reflect.Value) -> Unit {
-  self.inner.set(field_of_google_protobuf_struct_proto(self.inner, 1), value)
+  @reflect.list_view(
+    self.values,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => Value::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
+  )
 }
 
 ///|
@@ -1290,8 +1156,36 @@ pub fn ListValue::from_json(text : String) -> ListValue raise @json.Refused {
 }
 
 ///|
+fn ListValue::read_field(
+  self : ListValue,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.values,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => Value::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_struct_proto_ListValue : @reflect.MessageDescriptor = find_message_google_protobuf_struct_proto(
+  "google.protobuf.ListValue",
+)
+
+///|
 pub impl @reflect.Message for ListValue with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_struct_proto_ListValue
 }
 
 ///|
@@ -1302,7 +1196,8 @@ pub impl @reflect.Message for ListValue with fn message_type(self) -> &@reflect.
 
 ///|
 pub impl @reflect.Message for ListValue with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -1310,7 +1205,13 @@ pub impl @reflect.Message for ListValue with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_struct_proto_ListValue.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -1318,7 +1219,8 @@ pub impl @reflect.Message for ListValue with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -1326,7 +1228,11 @@ pub impl @reflect.Message for ListValue with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.values.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -1334,7 +1240,11 @@ pub impl @reflect.Message for ListValue with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.values.clear()
+    _ => ()
+  }
 }
 
 ///|
@@ -1342,7 +1252,7 @@ pub impl @reflect.Message for ListValue with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  ListValue::read_field(self, field)
 }
 
 ///|
@@ -1351,7 +1261,21 @@ pub impl @reflect.Message for ListValue with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 =>
+      @reflect.assign_list(
+        self.values,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => Value::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    _ => ()
+  }
 }
 
 ///|
@@ -1359,7 +1283,10 @@ pub impl @reflect.Message for ListValue with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => ListValue::read_field(self, field)
+  }
 }
 
 ///|
@@ -1367,7 +1294,10 @@ pub impl @reflect.Message for ListValue with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -1375,12 +1305,15 @@ pub impl @reflect.Message for ListValue with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for ListValue with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -1388,7 +1321,7 @@ pub impl @reflect.Message for ListValue with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -1439,7 +1372,7 @@ pub impl @reflect.MessageType for ListValueType with fn zero(_self) -> &@reflect
 
 ///|
 pub impl @reflect.MessageType for ListValueType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_struct_proto("google.protobuf.ListValue")
+  descriptor_google_protobuf_struct_proto_ListValue
 }
 
 ///|

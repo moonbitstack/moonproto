@@ -108,45 +108,19 @@ fn find_message_google_protobuf_source_context_proto(
 }
 
 ///|
-fn field_of_google_protobuf_source_context_proto(
-  message : @dynamic.Message,
-  number : Int32,
-) -> @reflect.FieldDescriptor {
-  match message.descriptor().field_by_number(number) {
-    Some(field) => field
-    None => abort("moonproto: missing field " + number.to_string())
-  }
-}
-
-///|
 pub struct SourceContext {
-  inner : @dynamic.Message
+  mut file_name : String
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn SourceContext::new() -> SourceContext {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_source_context_proto(
-        "google.protobuf.SourceContext",
-      ),
-    ),
-  }
-}
-
-///|
-pub fn SourceContext::message(self : SourceContext) -> @dynamic.Message {
-  self.inner
+  { file_name: "", unknown_fields: b"", }
 }
 
 ///|
 pub fn SourceContext::file_name(self : SourceContext) -> String {
-  let f = field_of_google_protobuf_source_context_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.file_name
 }
 
 ///|
@@ -154,10 +128,7 @@ pub fn SourceContext::set_file_name(
   self : SourceContext,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_source_context_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.file_name = value
 }
 
 ///|
@@ -177,8 +148,26 @@ pub fn SourceContext::from_json(
 }
 
 ///|
+fn SourceContext::read_field(
+  self : SourceContext,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.file_name)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_source_context_proto_SourceContext : @reflect.MessageDescriptor = find_message_google_protobuf_source_context_proto(
+  "google.protobuf.SourceContext",
+)
+
+///|
 pub impl @reflect.Message for SourceContext with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_source_context_proto_SourceContext
 }
 
 ///|
@@ -189,7 +178,8 @@ pub impl @reflect.Message for SourceContext with fn message_type(self) -> &@refl
 
 ///|
 pub impl @reflect.Message for SourceContext with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -197,7 +187,14 @@ pub impl @reflect.Message for SourceContext with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_source_context_proto_SourceContext.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -205,7 +202,8 @@ pub impl @reflect.Message for SourceContext with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -213,7 +211,11 @@ pub impl @reflect.Message for SourceContext with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.file_name.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -221,7 +223,11 @@ pub impl @reflect.Message for SourceContext with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.file_name = ""
+    _ => ()
+  }
 }
 
 ///|
@@ -229,7 +235,7 @@ pub impl @reflect.Message for SourceContext with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  SourceContext::read_field(self, field)
 }
 
 ///|
@@ -238,7 +244,12 @@ pub impl @reflect.Message for SourceContext with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.file_name = value.string()
+    _ => ()
+  }
 }
 
 ///|
@@ -246,7 +257,10 @@ pub impl @reflect.Message for SourceContext with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => SourceContext::read_field(self, field)
+  }
 }
 
 ///|
@@ -254,7 +268,10 @@ pub impl @reflect.Message for SourceContext with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -262,12 +279,15 @@ pub impl @reflect.Message for SourceContext with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for SourceContext with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -275,7 +295,7 @@ pub impl @reflect.Message for SourceContext with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -326,9 +346,7 @@ pub impl @reflect.MessageType for SourceContextType with fn zero(_self) -> &@ref
 
 ///|
 pub impl @reflect.MessageType for SourceContextType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_source_context_proto(
-    "google.protobuf.SourceContext",
-  )
+  descriptor_google_protobuf_source_context_proto_SourceContext
 }
 
 ///|

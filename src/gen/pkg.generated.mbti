@@ -2,6 +2,7 @@
 package "moonbitstack/moonproto/gen"
 
 import {
+  "moonbitlang/core/buffer",
   "moonbitstack/moonproto/desc",
   "moonbitstack/moonproto/proto",
   "moonbitstack/moonproto/reflect",
@@ -12,11 +13,15 @@ pub fn decode_request(Bytes) -> Request raise Refused
 
 pub fn decode_response(Bytes) -> (Array[(String, String)], String?) raise Refused
 
+pub fn emit_message(@reflect.MessageDescriptor, String, String, Naming, @buffer.Buffer) -> Unit raise Refused
+
 pub fn encode_request(Request) -> Bytes raise Refused
 
 pub fn encode_response(Array[(String, String)], String?) -> Bytes raise Refused
 
 pub fn generate_source(@desc.FileDescriptorProto) -> String raise Refused
+
+pub fn generate_source_with(@desc.FileDescriptorProto, Symbols) -> String raise Refused
 
 pub fn plugin_main(Bytes) -> Bytes
 
@@ -29,16 +34,35 @@ pub(all) suberror Refused {
   Protocol(String)
   Proto(@proto.Refused)
   Desc(@desc.Refused)
+  Unknown(String)
 }
 pub fn Refused::output(Self, &Logger) -> Unit
 pub fn Refused::to_string(Self) -> String
 pub impl Show for Refused
 
 // Types and methods
+pub struct Naming {
+  dir : String
+  symbols : Symbols
+  imports : Array[(String, String)]
+}
+pub fn Naming::new(String, Symbols) -> Self
+
 pub(all) struct Request {
   files_to_generate : Array[String]
   parameter : String
   proto_file : Array[@desc.FileDescriptorProto]
+}
+
+pub struct Symbols {
+  types : Map[String, TypeRef]
+}
+pub fn Symbols::add_file(Self, @desc.FileDescriptorProto) -> Unit
+pub fn Symbols::new() -> Self
+
+pub(all) struct TypeRef {
+  dir : String
+  name : String
 }
 
 // Type aliases

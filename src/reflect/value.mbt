@@ -385,3 +385,52 @@ pub fn RawFields::is_valid(self : RawFields) -> Bool {
   }
   true
 }
+
+///|
+/// Whether an optional field slot has a value.
+pub fn[T] is_set(value : T?) -> Bool {
+  match value {
+    Some(_) => true
+    None => false
+  }
+}
+
+///|
+/// A 32-bit float carried as the double the wire and the encoders use.
+pub fn float_value(value : Double) -> Value {
+  Float(@float.Float::from_double(value))
+}
+
+///|
+pub fn MapKey::bool(self : MapKey) -> Bool {
+  match self {
+    Bool(value) => value
+    _ => abort("map key is not a bool")
+  }
+}
+
+///|
+pub fn MapKey::int(self : MapKey) -> Int64 {
+  match self {
+    Int32(value) => value.to_int64()
+    Int64(value) => value
+    _ => abort("map key is not an integer")
+  }
+}
+
+///|
+pub fn MapKey::uint(self : MapKey) -> UInt64 {
+  match self {
+    Uint32(value) => value.to_uint64()
+    Uint64(value) => value
+    _ => abort("map key is not an unsigned integer")
+  }
+}
+
+///|
+pub fn MapKey::string(self : MapKey) -> String {
+  match self {
+    String(value) => value
+    _ => abort("map key is not a string")
+  }
+}

@@ -3,7 +3,6 @@ package "moonbitstack/moonproto/known/google/protobuf"
 
 import {
   "moonbitstack/moonproto/desc",
-  "moonbitstack/moonproto/dynamic",
   "moonbitstack/moonproto/json",
   "moonbitstack/moonproto/reflect",
 }
@@ -137,8 +136,6 @@ pub let sourceContext_type : &@reflect.MessageType
 
 pub let stringValue_type : &@reflect.MessageType
 
-pub let struct_FieldsEntry_type : &@reflect.MessageType
-
 pub let struct_type : &@reflect.MessageType
 
 pub let timestamp_type : &@reflect.MessageType
@@ -159,7 +156,9 @@ pub let value_type : &@reflect.MessageType
 
 // Types and methods
 pub struct Any {
-  inner : @dynamic.Message
+  mut type_url : String
+  mut value : Bytes
+  mut unknown_fields : Bytes
 }
 pub fn Any::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn Any::descriptor(Self) -> @reflect.MessageDescriptor
@@ -169,7 +168,6 @@ pub fn Any::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Any::get_unknown(Self) -> @reflect.RawFields
 pub fn Any::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Any::is_valid(Self) -> Bool
-pub fn Any::message(Self) -> @dynamic.Message
 pub fn Any::message_type(Self) -> &@reflect.MessageType
 pub fn Any::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Any::new() -> Self
@@ -197,7 +195,15 @@ pub fn AnyType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for AnyType
 
 pub struct Api {
-  inner : @dynamic.Message
+  mut name : String
+  methods : Array[Method]
+  options : Array[Option_]
+  mut version : String
+  mut source_context : SourceContext?
+  mixins : Array[Mixin]
+  mut syntax : Syntax
+  mut edition : String
+  mut unknown_fields : Bytes
 }
 pub fn Api::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn Api::descriptor(Self) -> @reflect.MessageDescriptor
@@ -208,7 +214,6 @@ pub fn Api::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Api::get_unknown(Self) -> @reflect.RawFields
 pub fn Api::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Api::is_valid(Self) -> Bool
-pub fn Api::message(Self) -> @dynamic.Message
 pub fn Api::message_type(Self) -> &@reflect.MessageType
 pub fn Api::methods(Self) -> &@reflect.ListField
 pub fn Api::mixins(Self) -> &@reflect.ListField
@@ -221,10 +226,7 @@ pub fn Api::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> U
 pub fn Api::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn Api::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
 pub fn Api::set_edition(Self, String) -> Unit
-pub fn Api::set_methods(Self, @reflect.Value) -> Unit
-pub fn Api::set_mixins(Self, @reflect.Value) -> Unit
 pub fn Api::set_name(Self, String) -> Unit
-pub fn Api::set_options(Self, @reflect.Value) -> Unit
 pub fn Api::set_source_context(Self, @reflect.Value) -> Unit
 pub fn Api::set_syntax(Self, Int32) -> Unit
 pub fn Api::set_unknown(Self, @reflect.RawFields) -> Unit
@@ -247,7 +249,8 @@ pub fn ApiType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for ApiType
 
 pub struct BoolValue {
-  inner : @dynamic.Message
+  mut value : Bool
+  mut unknown_fields : Bytes
 }
 pub fn BoolValue::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn BoolValue::descriptor(Self) -> @reflect.MessageDescriptor
@@ -257,7 +260,6 @@ pub fn BoolValue::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn BoolValue::get_unknown(Self) -> @reflect.RawFields
 pub fn BoolValue::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn BoolValue::is_valid(Self) -> Bool
-pub fn BoolValue::message(Self) -> @dynamic.Message
 pub fn BoolValue::message_type(Self) -> &@reflect.MessageType
 pub fn BoolValue::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn BoolValue::new() -> Self
@@ -283,7 +285,8 @@ pub fn BoolValueType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for BoolValueType
 
 pub struct BytesValue {
-  inner : @dynamic.Message
+  mut value : Bytes
+  mut unknown_fields : Bytes
 }
 pub fn BytesValue::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn BytesValue::descriptor(Self) -> @reflect.MessageDescriptor
@@ -293,7 +296,6 @@ pub fn BytesValue::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn BytesValue::get_unknown(Self) -> @reflect.RawFields
 pub fn BytesValue::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn BytesValue::is_valid(Self) -> Bool
-pub fn BytesValue::message(Self) -> @dynamic.Message
 pub fn BytesValue::message_type(Self) -> &@reflect.MessageType
 pub fn BytesValue::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn BytesValue::new() -> Self
@@ -319,7 +321,18 @@ pub fn BytesValueType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for BytesValueType
 
 pub struct DescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  field : Array[FieldDescriptorProto]
+  extension : Array[FieldDescriptorProto]
+  nested_type : Array[DescriptorProto]
+  enum_type : Array[EnumDescriptorProto]
+  extension_range : Array[DescriptorProto_ExtensionRange]
+  oneof_decl : Array[OneofDescriptorProto]
+  mut options : MessageOptions?
+  reserved_range : Array[DescriptorProto_ReservedRange]
+  reserved_name : Array[String]
+  mut visibility : SymbolVisibility
+  mut unknown_fields : Bytes
 }
 pub fn DescriptorProto::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn DescriptorProto::descriptor(Self) -> @reflect.MessageDescriptor
@@ -333,7 +346,6 @@ pub fn DescriptorProto::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn DescriptorProto::get_unknown(Self) -> @reflect.RawFields
 pub fn DescriptorProto::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn DescriptorProto::is_valid(Self) -> Bool
-pub fn DescriptorProto::message(Self) -> @dynamic.Message
 pub fn DescriptorProto::message_type(Self) -> &@reflect.MessageType
 pub fn DescriptorProto::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn DescriptorProto::name(Self) -> String
@@ -347,15 +359,8 @@ pub fn DescriptorProto::range_extensions(Self, (@reflect.FieldDescriptor, @refle
 pub fn DescriptorProto::reserved_name(Self) -> &@reflect.ListField
 pub fn DescriptorProto::reserved_range(Self) -> &@reflect.ListField
 pub fn DescriptorProto::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
-pub fn DescriptorProto::set_enum_type(Self, @reflect.Value) -> Unit
-pub fn DescriptorProto::set_extension(Self, @reflect.Value) -> Unit
-pub fn DescriptorProto::set_extension_range(Self, @reflect.Value) -> Unit
-pub fn DescriptorProto::set_field(Self, @reflect.Value) -> Unit
 pub fn DescriptorProto::set_name(Self, String) -> Unit
-pub fn DescriptorProto::set_nested_type(Self, @reflect.Value) -> Unit
-pub fn DescriptorProto::set_oneof_decl(Self, @reflect.Value) -> Unit
 pub fn DescriptorProto::set_options(Self, @reflect.Value) -> Unit
-pub fn DescriptorProto::set_reserved_range(Self, @reflect.Value) -> Unit
 pub fn DescriptorProto::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn DescriptorProto::set_visibility(Self, Int32) -> Unit
 pub fn DescriptorProto::to_json(Self) -> String raise @json.Refused
@@ -374,7 +379,10 @@ pub fn DescriptorProtoType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for DescriptorProtoType
 
 pub struct DescriptorProto_ExtensionRange {
-  inner : @dynamic.Message
+  mut start : Int32
+  mut end : Int32
+  mut options : ExtensionRangeOptions?
+  mut unknown_fields : Bytes
 }
 pub fn DescriptorProto_ExtensionRange::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn DescriptorProto_ExtensionRange::descriptor(Self) -> @reflect.MessageDescriptor
@@ -385,7 +393,6 @@ pub fn DescriptorProto_ExtensionRange::get(Self, @reflect.FieldDescriptor) -> @r
 pub fn DescriptorProto_ExtensionRange::get_unknown(Self) -> @reflect.RawFields
 pub fn DescriptorProto_ExtensionRange::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn DescriptorProto_ExtensionRange::is_valid(Self) -> Bool
-pub fn DescriptorProto_ExtensionRange::message(Self) -> @dynamic.Message
 pub fn DescriptorProto_ExtensionRange::message_type(Self) -> &@reflect.MessageType
 pub fn DescriptorProto_ExtensionRange::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn DescriptorProto_ExtensionRange::new() -> Self
@@ -414,7 +421,9 @@ pub fn DescriptorProto_ExtensionRangeType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for DescriptorProto_ExtensionRangeType
 
 pub struct DescriptorProto_ReservedRange {
-  inner : @dynamic.Message
+  mut start : Int32
+  mut end : Int32
+  mut unknown_fields : Bytes
 }
 pub fn DescriptorProto_ReservedRange::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn DescriptorProto_ReservedRange::descriptor(Self) -> @reflect.MessageDescriptor
@@ -425,7 +434,6 @@ pub fn DescriptorProto_ReservedRange::get(Self, @reflect.FieldDescriptor) -> @re
 pub fn DescriptorProto_ReservedRange::get_unknown(Self) -> @reflect.RawFields
 pub fn DescriptorProto_ReservedRange::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn DescriptorProto_ReservedRange::is_valid(Self) -> Bool
-pub fn DescriptorProto_ReservedRange::message(Self) -> @dynamic.Message
 pub fn DescriptorProto_ReservedRange::message_type(Self) -> &@reflect.MessageType
 pub fn DescriptorProto_ReservedRange::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn DescriptorProto_ReservedRange::new() -> Self
@@ -452,7 +460,8 @@ pub fn DescriptorProto_ReservedRangeType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for DescriptorProto_ReservedRangeType
 
 pub struct DoubleValue {
-  inner : @dynamic.Message
+  mut value : Double
+  mut unknown_fields : Bytes
 }
 pub fn DoubleValue::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn DoubleValue::descriptor(Self) -> @reflect.MessageDescriptor
@@ -462,7 +471,6 @@ pub fn DoubleValue::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn DoubleValue::get_unknown(Self) -> @reflect.RawFields
 pub fn DoubleValue::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn DoubleValue::is_valid(Self) -> Bool
-pub fn DoubleValue::message(Self) -> @dynamic.Message
 pub fn DoubleValue::message_type(Self) -> &@reflect.MessageType
 pub fn DoubleValue::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn DoubleValue::new() -> Self
@@ -488,7 +496,9 @@ pub fn DoubleValueType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for DoubleValueType
 
 pub struct Duration {
-  inner : @dynamic.Message
+  mut seconds : Int64
+  mut nanos : Int32
+  mut unknown_fields : Bytes
 }
 pub fn Duration::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn Duration::descriptor(Self) -> @reflect.MessageDescriptor
@@ -498,7 +508,6 @@ pub fn Duration::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Duration::get_unknown(Self) -> @reflect.RawFields
 pub fn Duration::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Duration::is_valid(Self) -> Bool
-pub fn Duration::message(Self) -> @dynamic.Message
 pub fn Duration::message_type(Self) -> &@reflect.MessageType
 pub fn Duration::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Duration::nanos(Self) -> Int32
@@ -546,7 +555,7 @@ pub fn Edition::code(Self) -> Int32
 pub fn Edition::of(Int32) -> Self
 
 pub struct Empty {
-  inner : @dynamic.Message
+  mut unknown_fields : Bytes
 }
 pub fn Empty::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn Empty::descriptor(Self) -> @reflect.MessageDescriptor
@@ -556,7 +565,6 @@ pub fn Empty::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Empty::get_unknown(Self) -> @reflect.RawFields
 pub fn Empty::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Empty::is_valid(Self) -> Bool
-pub fn Empty::message(Self) -> @dynamic.Message
 pub fn Empty::message_type(Self) -> &@reflect.MessageType
 pub fn Empty::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Empty::new() -> Self
@@ -580,7 +588,13 @@ pub fn EmptyType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for EmptyType
 
 pub struct Enum {
-  inner : @dynamic.Message
+  mut name : String
+  enumvalue : Array[EnumValue]
+  options : Array[Option_]
+  mut source_context : SourceContext?
+  mut syntax : Syntax
+  mut edition : String
+  mut unknown_fields : Bytes
 }
 pub fn Enum::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn Enum::descriptor(Self) -> @reflect.MessageDescriptor
@@ -592,7 +606,6 @@ pub fn Enum::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Enum::get_unknown(Self) -> @reflect.RawFields
 pub fn Enum::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Enum::is_valid(Self) -> Bool
-pub fn Enum::message(Self) -> @dynamic.Message
 pub fn Enum::message_type(Self) -> &@reflect.MessageType
 pub fn Enum::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Enum::name(Self) -> String
@@ -603,9 +616,7 @@ pub fn Enum::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> 
 pub fn Enum::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn Enum::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
 pub fn Enum::set_edition(Self, String) -> Unit
-pub fn Enum::set_enumvalue(Self, @reflect.Value) -> Unit
 pub fn Enum::set_name(Self, String) -> Unit
-pub fn Enum::set_options(Self, @reflect.Value) -> Unit
 pub fn Enum::set_source_context(Self, @reflect.Value) -> Unit
 pub fn Enum::set_syntax(Self, Int32) -> Unit
 pub fn Enum::set_unknown(Self, @reflect.RawFields) -> Unit
@@ -617,7 +628,13 @@ pub impl @reflect.Fresh for Enum
 pub impl @reflect.Message for Enum
 
 pub struct EnumDescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  value : Array[EnumValueDescriptorProto]
+  mut options : EnumOptions?
+  reserved_range : Array[EnumDescriptorProto_EnumReservedRange]
+  reserved_name : Array[String]
+  mut visibility : SymbolVisibility
+  mut unknown_fields : Bytes
 }
 pub fn EnumDescriptorProto::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn EnumDescriptorProto::descriptor(Self) -> @reflect.MessageDescriptor
@@ -627,7 +644,6 @@ pub fn EnumDescriptorProto::get(Self, @reflect.FieldDescriptor) -> @reflect.Valu
 pub fn EnumDescriptorProto::get_unknown(Self) -> @reflect.RawFields
 pub fn EnumDescriptorProto::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn EnumDescriptorProto::is_valid(Self) -> Bool
-pub fn EnumDescriptorProto::message(Self) -> @dynamic.Message
 pub fn EnumDescriptorProto::message_type(Self) -> &@reflect.MessageType
 pub fn EnumDescriptorProto::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn EnumDescriptorProto::name(Self) -> String
@@ -641,9 +657,7 @@ pub fn EnumDescriptorProto::reserved_range(Self) -> &@reflect.ListField
 pub fn EnumDescriptorProto::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
 pub fn EnumDescriptorProto::set_name(Self, String) -> Unit
 pub fn EnumDescriptorProto::set_options(Self, @reflect.Value) -> Unit
-pub fn EnumDescriptorProto::set_reserved_range(Self, @reflect.Value) -> Unit
 pub fn EnumDescriptorProto::set_unknown(Self, @reflect.RawFields) -> Unit
-pub fn EnumDescriptorProto::set_value(Self, @reflect.Value) -> Unit
 pub fn EnumDescriptorProto::set_visibility(Self, Int32) -> Unit
 pub fn EnumDescriptorProto::to_json(Self) -> String raise @json.Refused
 pub fn EnumDescriptorProto::value(Self) -> &@reflect.ListField
@@ -662,7 +676,9 @@ pub fn EnumDescriptorProtoType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for EnumDescriptorProtoType
 
 pub struct EnumDescriptorProto_EnumReservedRange {
-  inner : @dynamic.Message
+  mut start : Int32
+  mut end : Int32
+  mut unknown_fields : Bytes
 }
 pub fn EnumDescriptorProto_EnumReservedRange::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn EnumDescriptorProto_EnumReservedRange::descriptor(Self) -> @reflect.MessageDescriptor
@@ -673,7 +689,6 @@ pub fn EnumDescriptorProto_EnumReservedRange::get(Self, @reflect.FieldDescriptor
 pub fn EnumDescriptorProto_EnumReservedRange::get_unknown(Self) -> @reflect.RawFields
 pub fn EnumDescriptorProto_EnumReservedRange::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn EnumDescriptorProto_EnumReservedRange::is_valid(Self) -> Bool
-pub fn EnumDescriptorProto_EnumReservedRange::message(Self) -> @dynamic.Message
 pub fn EnumDescriptorProto_EnumReservedRange::message_type(Self) -> &@reflect.MessageType
 pub fn EnumDescriptorProto_EnumReservedRange::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn EnumDescriptorProto_EnumReservedRange::new() -> Self
@@ -700,7 +715,13 @@ pub fn EnumDescriptorProto_EnumReservedRangeType::zero(Self) -> &@reflect.Messag
 pub impl @reflect.MessageType for EnumDescriptorProto_EnumReservedRangeType
 
 pub struct EnumOptions {
-  inner : @dynamic.Message
+  mut allow_alias : Bool
+  mut deprecated : Bool
+  mut deprecated_legacy_json_field_conflicts : Bool
+  mut features : FeatureSet?
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 pub fn EnumOptions::allow_alias(Self) -> Bool
 pub fn EnumOptions::clear(Self, @reflect.FieldDescriptor) -> Unit
@@ -714,7 +735,6 @@ pub fn EnumOptions::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn EnumOptions::get_unknown(Self) -> @reflect.RawFields
 pub fn EnumOptions::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn EnumOptions::is_valid(Self) -> Bool
-pub fn EnumOptions::message(Self) -> @dynamic.Message
 pub fn EnumOptions::message_type(Self) -> &@reflect.MessageType
 pub fn EnumOptions::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn EnumOptions::new() -> Self
@@ -726,7 +746,6 @@ pub fn EnumOptions::set_allow_alias(Self, Bool) -> Unit
 pub fn EnumOptions::set_deprecated(Self, Bool) -> Unit
 pub fn EnumOptions::set_deprecated_legacy_json_field_conflicts(Self, Bool) -> Unit
 pub fn EnumOptions::set_features(Self, @reflect.Value) -> Unit
-pub fn EnumOptions::set_uninterpreted_option(Self, @reflect.Value) -> Unit
 pub fn EnumOptions::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn EnumOptions::to_json(Self) -> String raise @json.Refused
 pub fn EnumOptions::uninterpreted_option(Self) -> &@reflect.ListField
@@ -753,7 +772,10 @@ pub fn EnumType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for EnumType
 
 pub struct EnumValue {
-  inner : @dynamic.Message
+  mut name : String
+  mut number : Int32
+  options : Array[Option_]
+  mut unknown_fields : Bytes
 }
 pub fn EnumValue::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn EnumValue::descriptor(Self) -> @reflect.MessageDescriptor
@@ -763,7 +785,6 @@ pub fn EnumValue::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn EnumValue::get_unknown(Self) -> @reflect.RawFields
 pub fn EnumValue::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn EnumValue::is_valid(Self) -> Bool
-pub fn EnumValue::message(Self) -> @dynamic.Message
 pub fn EnumValue::message_type(Self) -> &@reflect.MessageType
 pub fn EnumValue::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn EnumValue::name(Self) -> String
@@ -776,7 +797,6 @@ pub fn EnumValue::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Val
 pub fn EnumValue::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
 pub fn EnumValue::set_name(Self, String) -> Unit
 pub fn EnumValue::set_number(Self, Int32) -> Unit
-pub fn EnumValue::set_options(Self, @reflect.Value) -> Unit
 pub fn EnumValue::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn EnumValue::to_json(Self) -> String raise @json.Refused
 pub fn EnumValue::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
@@ -784,7 +804,10 @@ pub impl @reflect.Fresh for EnumValue
 pub impl @reflect.Message for EnumValue
 
 pub struct EnumValueDescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  mut number : Int32
+  mut options : EnumValueOptions?
+  mut unknown_fields : Bytes
 }
 pub fn EnumValueDescriptorProto::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn EnumValueDescriptorProto::descriptor(Self) -> @reflect.MessageDescriptor
@@ -794,7 +817,6 @@ pub fn EnumValueDescriptorProto::get(Self, @reflect.FieldDescriptor) -> @reflect
 pub fn EnumValueDescriptorProto::get_unknown(Self) -> @reflect.RawFields
 pub fn EnumValueDescriptorProto::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn EnumValueDescriptorProto::is_valid(Self) -> Bool
-pub fn EnumValueDescriptorProto::message(Self) -> @dynamic.Message
 pub fn EnumValueDescriptorProto::message_type(Self) -> &@reflect.MessageType
 pub fn EnumValueDescriptorProto::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn EnumValueDescriptorProto::name(Self) -> String
@@ -824,7 +846,13 @@ pub fn EnumValueDescriptorProtoType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for EnumValueDescriptorProtoType
 
 pub struct EnumValueOptions {
-  inner : @dynamic.Message
+  mut deprecated : Bool
+  mut features : FeatureSet?
+  mut debug_redact : Bool
+  mut feature_support : FieldOptions_FeatureSupport?
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 pub fn EnumValueOptions::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn EnumValueOptions::debug_redact(Self) -> Bool
@@ -838,7 +866,6 @@ pub fn EnumValueOptions::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn EnumValueOptions::get_unknown(Self) -> @reflect.RawFields
 pub fn EnumValueOptions::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn EnumValueOptions::is_valid(Self) -> Bool
-pub fn EnumValueOptions::message(Self) -> @dynamic.Message
 pub fn EnumValueOptions::message_type(Self) -> &@reflect.MessageType
 pub fn EnumValueOptions::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn EnumValueOptions::new() -> Self
@@ -850,7 +877,6 @@ pub fn EnumValueOptions::set_debug_redact(Self, Bool) -> Unit
 pub fn EnumValueOptions::set_deprecated(Self, Bool) -> Unit
 pub fn EnumValueOptions::set_feature_support(Self, @reflect.Value) -> Unit
 pub fn EnumValueOptions::set_features(Self, @reflect.Value) -> Unit
-pub fn EnumValueOptions::set_uninterpreted_option(Self, @reflect.Value) -> Unit
 pub fn EnumValueOptions::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn EnumValueOptions::to_json(Self) -> String raise @json.Refused
 pub fn EnumValueOptions::uninterpreted_option(Self) -> &@reflect.ListField
@@ -877,7 +903,12 @@ pub fn EnumValueType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for EnumValueType
 
 pub struct ExtensionRangeOptions {
-  inner : @dynamic.Message
+  uninterpreted_option : Array[UninterpretedOption]
+  declaration : Array[ExtensionRangeOptions_Declaration]
+  mut features : FeatureSet?
+  mut verification : ExtensionRangeOptions_VerificationState
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 pub fn ExtensionRangeOptions::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn ExtensionRangeOptions::declaration(Self) -> &@reflect.ListField
@@ -889,7 +920,6 @@ pub fn ExtensionRangeOptions::get(Self, @reflect.FieldDescriptor) -> @reflect.Va
 pub fn ExtensionRangeOptions::get_unknown(Self) -> @reflect.RawFields
 pub fn ExtensionRangeOptions::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn ExtensionRangeOptions::is_valid(Self) -> Bool
-pub fn ExtensionRangeOptions::message(Self) -> @dynamic.Message
 pub fn ExtensionRangeOptions::message_type(Self) -> &@reflect.MessageType
 pub fn ExtensionRangeOptions::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn ExtensionRangeOptions::new() -> Self
@@ -897,9 +927,7 @@ pub fn ExtensionRangeOptions::new_field(Self, @reflect.FieldDescriptor) -> @refl
 pub fn ExtensionRangeOptions::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn ExtensionRangeOptions::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn ExtensionRangeOptions::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
-pub fn ExtensionRangeOptions::set_declaration(Self, @reflect.Value) -> Unit
 pub fn ExtensionRangeOptions::set_features(Self, @reflect.Value) -> Unit
-pub fn ExtensionRangeOptions::set_uninterpreted_option(Self, @reflect.Value) -> Unit
 pub fn ExtensionRangeOptions::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn ExtensionRangeOptions::set_verification(Self, Int32) -> Unit
 pub fn ExtensionRangeOptions::to_json(Self) -> String raise @json.Refused
@@ -919,7 +947,12 @@ pub fn ExtensionRangeOptionsType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for ExtensionRangeOptionsType
 
 pub struct ExtensionRangeOptions_Declaration {
-  inner : @dynamic.Message
+  mut number : Int32
+  mut full_name : String
+  mut type_ : String
+  mut reserved : Bool
+  mut repeated : Bool
+  mut unknown_fields : Bytes
 }
 pub fn ExtensionRangeOptions_Declaration::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn ExtensionRangeOptions_Declaration::descriptor(Self) -> @reflect.MessageDescriptor
@@ -930,7 +963,6 @@ pub fn ExtensionRangeOptions_Declaration::get(Self, @reflect.FieldDescriptor) ->
 pub fn ExtensionRangeOptions_Declaration::get_unknown(Self) -> @reflect.RawFields
 pub fn ExtensionRangeOptions_Declaration::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn ExtensionRangeOptions_Declaration::is_valid(Self) -> Bool
-pub fn ExtensionRangeOptions_Declaration::message(Self) -> @dynamic.Message
 pub fn ExtensionRangeOptions_Declaration::message_type(Self) -> &@reflect.MessageType
 pub fn ExtensionRangeOptions_Declaration::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn ExtensionRangeOptions_Declaration::new() -> Self
@@ -962,8 +994,26 @@ pub fn ExtensionRangeOptions_DeclarationType::new_message(Self) -> &@reflect.Mes
 pub fn ExtensionRangeOptions_DeclarationType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for ExtensionRangeOptions_DeclarationType
 
+pub(all) enum ExtensionRangeOptions_VerificationState {
+  DECLARATION
+  UNVERIFIED
+  Unknown(Int32)
+}
+pub fn ExtensionRangeOptions_VerificationState::code(Self) -> Int32
+pub fn ExtensionRangeOptions_VerificationState::of(Int32) -> Self
+
 pub struct FeatureSet {
-  inner : @dynamic.Message
+  mut field_presence : FeatureSet_FieldPresence
+  mut enum_type : FeatureSet_EnumType
+  mut repeated_field_encoding : FeatureSet_RepeatedFieldEncoding
+  mut utf8_validation : FeatureSet_Utf8Validation
+  mut message_encoding : FeatureSet_MessageEncoding
+  mut json_format : FeatureSet_JsonFormat
+  mut enforce_naming_style : FeatureSet_EnforceNamingStyle
+  mut default_symbol_visibility : FeatureSet_VisibilityFeature_DefaultSymbolVisibility
+  mut enforce_proto_limits : FeatureSet_ProtoLimitsFeature_EnforceProtoLimits
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 pub fn FeatureSet::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn FeatureSet::default_symbol_visibility(Self) -> Int32
@@ -979,7 +1029,6 @@ pub fn FeatureSet::get_unknown(Self) -> @reflect.RawFields
 pub fn FeatureSet::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn FeatureSet::is_valid(Self) -> Bool
 pub fn FeatureSet::json_format(Self) -> Int32
-pub fn FeatureSet::message(Self) -> @dynamic.Message
 pub fn FeatureSet::message_encoding(Self) -> Int32
 pub fn FeatureSet::message_type(Self) -> &@reflect.MessageType
 pub fn FeatureSet::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
@@ -1006,7 +1055,10 @@ pub impl @reflect.Fresh for FeatureSet
 pub impl @reflect.Message for FeatureSet
 
 pub struct FeatureSetDefaults {
-  inner : @dynamic.Message
+  defaults : Array[FeatureSetDefaults_FeatureSetEditionDefault]
+  mut minimum_edition : Edition
+  mut maximum_edition : Edition
+  mut unknown_fields : Bytes
 }
 pub fn FeatureSetDefaults::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn FeatureSetDefaults::defaults(Self) -> &@reflect.ListField
@@ -1018,7 +1070,6 @@ pub fn FeatureSetDefaults::get_unknown(Self) -> @reflect.RawFields
 pub fn FeatureSetDefaults::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn FeatureSetDefaults::is_valid(Self) -> Bool
 pub fn FeatureSetDefaults::maximum_edition(Self) -> Int32
-pub fn FeatureSetDefaults::message(Self) -> @dynamic.Message
 pub fn FeatureSetDefaults::message_type(Self) -> &@reflect.MessageType
 pub fn FeatureSetDefaults::minimum_edition(Self) -> Int32
 pub fn FeatureSetDefaults::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
@@ -1027,7 +1078,6 @@ pub fn FeatureSetDefaults::new_field(Self, @reflect.FieldDescriptor) -> @reflect
 pub fn FeatureSetDefaults::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn FeatureSetDefaults::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn FeatureSetDefaults::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
-pub fn FeatureSetDefaults::set_defaults(Self, @reflect.Value) -> Unit
 pub fn FeatureSetDefaults::set_maximum_edition(Self, Int32) -> Unit
 pub fn FeatureSetDefaults::set_minimum_edition(Self, Int32) -> Unit
 pub fn FeatureSetDefaults::set_unknown(Self, @reflect.RawFields) -> Unit
@@ -1046,7 +1096,10 @@ pub fn FeatureSetDefaultsType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FeatureSetDefaultsType
 
 pub struct FeatureSetDefaults_FeatureSetEditionDefault {
-  inner : @dynamic.Message
+  mut edition : Edition
+  mut overridable_features : FeatureSet?
+  mut fixed_features : FeatureSet?
+  mut unknown_fields : Bytes
 }
 pub fn FeatureSetDefaults_FeatureSetEditionDefault::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn FeatureSetDefaults_FeatureSetEditionDefault::descriptor(Self) -> @reflect.MessageDescriptor
@@ -1058,7 +1111,6 @@ pub fn FeatureSetDefaults_FeatureSetEditionDefault::get(Self, @reflect.FieldDesc
 pub fn FeatureSetDefaults_FeatureSetEditionDefault::get_unknown(Self) -> @reflect.RawFields
 pub fn FeatureSetDefaults_FeatureSetEditionDefault::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn FeatureSetDefaults_FeatureSetEditionDefault::is_valid(Self) -> Bool
-pub fn FeatureSetDefaults_FeatureSetEditionDefault::message(Self) -> @dynamic.Message
 pub fn FeatureSetDefaults_FeatureSetEditionDefault::message_type(Self) -> &@reflect.MessageType
 pub fn FeatureSetDefaults_FeatureSetEditionDefault::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn FeatureSetDefaults_FeatureSetEditionDefault::new() -> Self
@@ -1094,8 +1146,55 @@ pub fn FeatureSetType::new_message(Self) -> &@reflect.Message
 pub fn FeatureSetType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FeatureSetType
 
+pub(all) enum FeatureSet_EnforceNamingStyle {
+  ENFORCE_NAMING_STYLE_UNKNOWN
+  STYLE2024
+  STYLE_LEGACY
+  STYLE2026
+  Unknown(Int32)
+}
+pub fn FeatureSet_EnforceNamingStyle::code(Self) -> Int32
+pub fn FeatureSet_EnforceNamingStyle::of(Int32) -> Self
+
+pub(all) enum FeatureSet_EnumType {
+  ENUM_TYPE_UNKNOWN
+  OPEN
+  CLOSED
+  Unknown(Int32)
+}
+pub fn FeatureSet_EnumType::code(Self) -> Int32
+pub fn FeatureSet_EnumType::of(Int32) -> Self
+
+pub(all) enum FeatureSet_FieldPresence {
+  FIELD_PRESENCE_UNKNOWN
+  EXPLICIT
+  IMPLICIT
+  LEGACY_REQUIRED
+  Unknown(Int32)
+}
+pub fn FeatureSet_FieldPresence::code(Self) -> Int32
+pub fn FeatureSet_FieldPresence::of(Int32) -> Self
+
+pub(all) enum FeatureSet_JsonFormat {
+  JSON_FORMAT_UNKNOWN
+  ALLOW
+  LEGACY_BEST_EFFORT
+  Unknown(Int32)
+}
+pub fn FeatureSet_JsonFormat::code(Self) -> Int32
+pub fn FeatureSet_JsonFormat::of(Int32) -> Self
+
+pub(all) enum FeatureSet_MessageEncoding {
+  MESSAGE_ENCODING_UNKNOWN
+  LENGTH_PREFIXED
+  DELIMITED
+  Unknown(Int32)
+}
+pub fn FeatureSet_MessageEncoding::code(Self) -> Int32
+pub fn FeatureSet_MessageEncoding::of(Int32) -> Self
+
 pub struct FeatureSet_ProtoLimitsFeature {
-  inner : @dynamic.Message
+  mut unknown_fields : Bytes
 }
 pub fn FeatureSet_ProtoLimitsFeature::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn FeatureSet_ProtoLimitsFeature::descriptor(Self) -> @reflect.MessageDescriptor
@@ -1105,7 +1204,6 @@ pub fn FeatureSet_ProtoLimitsFeature::get(Self, @reflect.FieldDescriptor) -> @re
 pub fn FeatureSet_ProtoLimitsFeature::get_unknown(Self) -> @reflect.RawFields
 pub fn FeatureSet_ProtoLimitsFeature::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn FeatureSet_ProtoLimitsFeature::is_valid(Self) -> Bool
-pub fn FeatureSet_ProtoLimitsFeature::message(Self) -> @dynamic.Message
 pub fn FeatureSet_ProtoLimitsFeature::message_type(Self) -> &@reflect.MessageType
 pub fn FeatureSet_ProtoLimitsFeature::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn FeatureSet_ProtoLimitsFeature::new() -> Self
@@ -1128,8 +1226,35 @@ pub fn FeatureSet_ProtoLimitsFeatureType::new_message(Self) -> &@reflect.Message
 pub fn FeatureSet_ProtoLimitsFeatureType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FeatureSet_ProtoLimitsFeatureType
 
+pub(all) enum FeatureSet_ProtoLimitsFeature_EnforceProtoLimits {
+  PROTO_LIMITS_UNKNOWN
+  LEGACY_NO_EXPLICIT_LIMITS
+  PROTO_LIMITS2026
+  Unknown(Int32)
+}
+pub fn FeatureSet_ProtoLimitsFeature_EnforceProtoLimits::code(Self) -> Int32
+pub fn FeatureSet_ProtoLimitsFeature_EnforceProtoLimits::of(Int32) -> Self
+
+pub(all) enum FeatureSet_RepeatedFieldEncoding {
+  REPEATED_FIELD_ENCODING_UNKNOWN
+  PACKED
+  EXPANDED
+  Unknown(Int32)
+}
+pub fn FeatureSet_RepeatedFieldEncoding::code(Self) -> Int32
+pub fn FeatureSet_RepeatedFieldEncoding::of(Int32) -> Self
+
+pub(all) enum FeatureSet_Utf8Validation {
+  UTF8_VALIDATION_UNKNOWN
+  VERIFY
+  NONE
+  Unknown(Int32)
+}
+pub fn FeatureSet_Utf8Validation::code(Self) -> Int32
+pub fn FeatureSet_Utf8Validation::of(Int32) -> Self
+
 pub struct FeatureSet_VisibilityFeature {
-  inner : @dynamic.Message
+  mut unknown_fields : Bytes
 }
 pub fn FeatureSet_VisibilityFeature::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn FeatureSet_VisibilityFeature::descriptor(Self) -> @reflect.MessageDescriptor
@@ -1139,7 +1264,6 @@ pub fn FeatureSet_VisibilityFeature::get(Self, @reflect.FieldDescriptor) -> @ref
 pub fn FeatureSet_VisibilityFeature::get_unknown(Self) -> @reflect.RawFields
 pub fn FeatureSet_VisibilityFeature::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn FeatureSet_VisibilityFeature::is_valid(Self) -> Bool
-pub fn FeatureSet_VisibilityFeature::message(Self) -> @dynamic.Message
 pub fn FeatureSet_VisibilityFeature::message_type(Self) -> &@reflect.MessageType
 pub fn FeatureSet_VisibilityFeature::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn FeatureSet_VisibilityFeature::new() -> Self
@@ -1162,8 +1286,29 @@ pub fn FeatureSet_VisibilityFeatureType::new_message(Self) -> &@reflect.Message
 pub fn FeatureSet_VisibilityFeatureType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FeatureSet_VisibilityFeatureType
 
+pub(all) enum FeatureSet_VisibilityFeature_DefaultSymbolVisibility {
+  DEFAULT_SYMBOL_VISIBILITY_UNKNOWN
+  EXPORT_ALL
+  EXPORT_TOP_LEVEL
+  LOCAL_ALL
+  STRICT
+  Unknown(Int32)
+}
+pub fn FeatureSet_VisibilityFeature_DefaultSymbolVisibility::code(Self) -> Int32
+pub fn FeatureSet_VisibilityFeature_DefaultSymbolVisibility::of(Int32) -> Self
+
 pub struct Field {
-  inner : @dynamic.Message
+  mut kind : Field_Kind
+  mut cardinality : Field_Cardinality
+  mut number : Int32
+  mut name : String
+  mut type_url : String
+  mut oneof_index : Int32
+  mut packed : Bool
+  options : Array[Option_]
+  mut json_name : String
+  mut default_value : String
+  mut unknown_fields : Bytes
 }
 pub fn Field::cardinality(Self) -> Int32
 pub fn Field::clear(Self, @reflect.FieldDescriptor) -> Unit
@@ -1177,7 +1322,6 @@ pub fn Field::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Field::is_valid(Self) -> Bool
 pub fn Field::json_name(Self) -> String
 pub fn Field::kind(Self) -> Int32
-pub fn Field::message(Self) -> @dynamic.Message
 pub fn Field::message_type(Self) -> &@reflect.MessageType
 pub fn Field::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Field::name(Self) -> String
@@ -1197,7 +1341,6 @@ pub fn Field::set_kind(Self, Int32) -> Unit
 pub fn Field::set_name(Self, String) -> Unit
 pub fn Field::set_number(Self, Int32) -> Unit
 pub fn Field::set_oneof_index(Self, Int32) -> Unit
-pub fn Field::set_options(Self, @reflect.Value) -> Unit
 pub fn Field::set_packed(Self, Bool) -> Unit
 pub fn Field::set_type_url(Self, String) -> Unit
 pub fn Field::set_unknown(Self, @reflect.RawFields) -> Unit
@@ -1208,7 +1351,18 @@ pub impl @reflect.Fresh for Field
 pub impl @reflect.Message for Field
 
 pub struct FieldDescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  mut number : Int32
+  mut label : FieldDescriptorProto_Label
+  mut type_ : FieldDescriptorProto_Type
+  mut type_name : String
+  mut extendee : String
+  mut default_value : String
+  mut oneof_index : Int32
+  mut json_name : String
+  mut options : FieldOptions?
+  mut proto3_optional : Bool
+  mut unknown_fields : Bytes
 }
 pub fn FieldDescriptorProto::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn FieldDescriptorProto::default_value(Self) -> String
@@ -1222,7 +1376,6 @@ pub fn FieldDescriptorProto::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn FieldDescriptorProto::is_valid(Self) -> Bool
 pub fn FieldDescriptorProto::json_name(Self) -> String
 pub fn FieldDescriptorProto::label(Self) -> Int32
-pub fn FieldDescriptorProto::message(Self) -> @dynamic.Message
 pub fn FieldDescriptorProto::message_type(Self) -> &@reflect.MessageType
 pub fn FieldDescriptorProto::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn FieldDescriptorProto::name(Self) -> String
@@ -1263,8 +1416,42 @@ pub fn FieldDescriptorProtoType::new_message(Self) -> &@reflect.Message
 pub fn FieldDescriptorProtoType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FieldDescriptorProtoType
 
+pub(all) enum FieldDescriptorProto_Label {
+  LABEL_OPTIONAL
+  LABEL_REPEATED
+  LABEL_REQUIRED
+  Unknown(Int32)
+}
+pub fn FieldDescriptorProto_Label::code(Self) -> Int32
+pub fn FieldDescriptorProto_Label::of(Int32) -> Self
+
+pub(all) enum FieldDescriptorProto_Type {
+  TYPE_DOUBLE
+  TYPE_FLOAT
+  TYPE_INT64
+  TYPE_UINT64
+  TYPE_INT32
+  TYPE_FIXED64
+  TYPE_FIXED32
+  TYPE_BOOL
+  TYPE_STRING
+  TYPE_GROUP
+  TYPE_MESSAGE
+  TYPE_BYTES
+  TYPE_UINT32
+  TYPE_ENUM
+  TYPE_SFIXED32
+  TYPE_SFIXED64
+  TYPE_SINT32
+  TYPE_SINT64
+  Unknown(Int32)
+}
+pub fn FieldDescriptorProto_Type::code(Self) -> Int32
+pub fn FieldDescriptorProto_Type::of(Int32) -> Self
+
 pub struct FieldMask {
-  inner : @dynamic.Message
+  paths : Array[String]
+  mut unknown_fields : Bytes
 }
 pub fn FieldMask::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn FieldMask::descriptor(Self) -> @reflect.MessageDescriptor
@@ -1274,7 +1461,6 @@ pub fn FieldMask::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn FieldMask::get_unknown(Self) -> @reflect.RawFields
 pub fn FieldMask::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn FieldMask::is_valid(Self) -> Bool
-pub fn FieldMask::message(Self) -> @dynamic.Message
 pub fn FieldMask::message_type(Self) -> &@reflect.MessageType
 pub fn FieldMask::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn FieldMask::new() -> Self
@@ -1299,7 +1485,22 @@ pub fn FieldMaskType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FieldMaskType
 
 pub struct FieldOptions {
-  inner : @dynamic.Message
+  mut ctype : FieldOptions_CType
+  mut packed : Bool
+  mut jstype : FieldOptions_JSType
+  mut lazy_ : Bool
+  mut unverified_lazy : Bool
+  mut deprecated : Bool
+  mut weak : Bool
+  mut debug_redact : Bool
+  mut retention : FieldOptions_OptionRetention
+  targets : Array[FieldOptions_OptionTargetType]
+  edition_defaults : Array[FieldOptions_EditionDefault]
+  mut features : FeatureSet?
+  mut feature_support : FieldOptions_FeatureSupport?
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 pub fn FieldOptions::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn FieldOptions::ctype(Self) -> Int32
@@ -1317,7 +1518,6 @@ pub fn FieldOptions::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn FieldOptions::is_valid(Self) -> Bool
 pub fn FieldOptions::jstype(Self) -> Int32
 pub fn FieldOptions::lazy_(Self) -> Bool
-pub fn FieldOptions::message(Self) -> @dynamic.Message
 pub fn FieldOptions::message_type(Self) -> &@reflect.MessageType
 pub fn FieldOptions::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn FieldOptions::new() -> Self
@@ -1330,14 +1530,12 @@ pub fn FieldOptions::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
 pub fn FieldOptions::set_ctype(Self, Int32) -> Unit
 pub fn FieldOptions::set_debug_redact(Self, Bool) -> Unit
 pub fn FieldOptions::set_deprecated(Self, Bool) -> Unit
-pub fn FieldOptions::set_edition_defaults(Self, @reflect.Value) -> Unit
 pub fn FieldOptions::set_feature_support(Self, @reflect.Value) -> Unit
 pub fn FieldOptions::set_features(Self, @reflect.Value) -> Unit
 pub fn FieldOptions::set_jstype(Self, Int32) -> Unit
 pub fn FieldOptions::set_lazy_(Self, Bool) -> Unit
 pub fn FieldOptions::set_packed(Self, Bool) -> Unit
 pub fn FieldOptions::set_retention(Self, Int32) -> Unit
-pub fn FieldOptions::set_uninterpreted_option(Self, @reflect.Value) -> Unit
 pub fn FieldOptions::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn FieldOptions::set_unverified_lazy(Self, Bool) -> Unit
 pub fn FieldOptions::set_weak(Self, Bool) -> Unit
@@ -1359,8 +1557,19 @@ pub fn FieldOptionsType::new_message(Self) -> &@reflect.Message
 pub fn FieldOptionsType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FieldOptionsType
 
+pub(all) enum FieldOptions_CType {
+  STRING
+  CORD
+  STRING_PIECE
+  Unknown(Int32)
+}
+pub fn FieldOptions_CType::code(Self) -> Int32
+pub fn FieldOptions_CType::of(Int32) -> Self
+
 pub struct FieldOptions_EditionDefault {
-  inner : @dynamic.Message
+  mut edition : Edition
+  mut value : String
+  mut unknown_fields : Bytes
 }
 pub fn FieldOptions_EditionDefault::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn FieldOptions_EditionDefault::descriptor(Self) -> @reflect.MessageDescriptor
@@ -1371,7 +1580,6 @@ pub fn FieldOptions_EditionDefault::get(Self, @reflect.FieldDescriptor) -> @refl
 pub fn FieldOptions_EditionDefault::get_unknown(Self) -> @reflect.RawFields
 pub fn FieldOptions_EditionDefault::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn FieldOptions_EditionDefault::is_valid(Self) -> Bool
-pub fn FieldOptions_EditionDefault::message(Self) -> @dynamic.Message
 pub fn FieldOptions_EditionDefault::message_type(Self) -> &@reflect.MessageType
 pub fn FieldOptions_EditionDefault::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn FieldOptions_EditionDefault::new() -> Self
@@ -1398,7 +1606,12 @@ pub fn FieldOptions_EditionDefaultType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FieldOptions_EditionDefaultType
 
 pub struct FieldOptions_FeatureSupport {
-  inner : @dynamic.Message
+  mut edition_introduced : Edition
+  mut edition_deprecated : Edition
+  mut deprecation_warning : String
+  mut edition_removed : Edition
+  mut removal_error : String
+  mut unknown_fields : Bytes
 }
 pub fn FieldOptions_FeatureSupport::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn FieldOptions_FeatureSupport::deprecation_warning(Self) -> String
@@ -1412,7 +1625,6 @@ pub fn FieldOptions_FeatureSupport::get(Self, @reflect.FieldDescriptor) -> @refl
 pub fn FieldOptions_FeatureSupport::get_unknown(Self) -> @reflect.RawFields
 pub fn FieldOptions_FeatureSupport::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn FieldOptions_FeatureSupport::is_valid(Self) -> Bool
-pub fn FieldOptions_FeatureSupport::message(Self) -> @dynamic.Message
 pub fn FieldOptions_FeatureSupport::message_type(Self) -> &@reflect.MessageType
 pub fn FieldOptions_FeatureSupport::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn FieldOptions_FeatureSupport::new() -> Self
@@ -1441,6 +1653,40 @@ pub fn FieldOptions_FeatureSupportType::new_message(Self) -> &@reflect.Message
 pub fn FieldOptions_FeatureSupportType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FieldOptions_FeatureSupportType
 
+pub(all) enum FieldOptions_JSType {
+  JS_NORMAL
+  JS_STRING
+  JS_NUMBER
+  Unknown(Int32)
+}
+pub fn FieldOptions_JSType::code(Self) -> Int32
+pub fn FieldOptions_JSType::of(Int32) -> Self
+
+pub(all) enum FieldOptions_OptionRetention {
+  RETENTION_UNKNOWN
+  RETENTION_RUNTIME
+  RETENTION_SOURCE
+  Unknown(Int32)
+}
+pub fn FieldOptions_OptionRetention::code(Self) -> Int32
+pub fn FieldOptions_OptionRetention::of(Int32) -> Self
+
+pub(all) enum FieldOptions_OptionTargetType {
+  TARGET_TYPE_UNKNOWN
+  TARGET_TYPE_FILE
+  TARGET_TYPE_EXTENSION_RANGE
+  TARGET_TYPE_MESSAGE
+  TARGET_TYPE_FIELD
+  TARGET_TYPE_ONEOF
+  TARGET_TYPE_ENUM
+  TARGET_TYPE_ENUM_ENTRY
+  TARGET_TYPE_SERVICE
+  TARGET_TYPE_METHOD
+  Unknown(Int32)
+}
+pub fn FieldOptions_OptionTargetType::code(Self) -> Int32
+pub fn FieldOptions_OptionTargetType::of(Int32) -> Self
+
 pub struct FieldType {
   marker : Unit
 }
@@ -1450,8 +1696,57 @@ pub fn FieldType::new_message(Self) -> &@reflect.Message
 pub fn FieldType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FieldType
 
+pub(all) enum Field_Cardinality {
+  CARDINALITY_UNKNOWN
+  CARDINALITY_OPTIONAL
+  CARDINALITY_REQUIRED
+  CARDINALITY_REPEATED
+  Unknown(Int32)
+}
+pub fn Field_Cardinality::code(Self) -> Int32
+pub fn Field_Cardinality::of(Int32) -> Self
+
+pub(all) enum Field_Kind {
+  TYPE_UNKNOWN
+  TYPE_DOUBLE
+  TYPE_FLOAT
+  TYPE_INT64
+  TYPE_UINT64
+  TYPE_INT32
+  TYPE_FIXED64
+  TYPE_FIXED32
+  TYPE_BOOL
+  TYPE_STRING
+  TYPE_GROUP
+  TYPE_MESSAGE
+  TYPE_BYTES
+  TYPE_UINT32
+  TYPE_ENUM
+  TYPE_SFIXED32
+  TYPE_SFIXED64
+  TYPE_SINT32
+  TYPE_SINT64
+  Unknown(Int32)
+}
+pub fn Field_Kind::code(Self) -> Int32
+pub fn Field_Kind::of(Int32) -> Self
+
 pub struct FileDescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  mut package_ : String
+  dependency : Array[String]
+  public_dependency : Array[Int32]
+  weak_dependency : Array[Int32]
+  option_dependency : Array[String]
+  message_type_field : Array[DescriptorProto]
+  enum_type : Array[EnumDescriptorProto]
+  service : Array[ServiceDescriptorProto]
+  extension : Array[FieldDescriptorProto]
+  mut options : FileOptions?
+  mut source_code_info : SourceCodeInfo?
+  mut syntax : String
+  mut edition : Edition
+  mut unknown_fields : Bytes
 }
 pub fn FileDescriptorProto::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn FileDescriptorProto::dependency(Self) -> &@reflect.ListField
@@ -1465,7 +1760,6 @@ pub fn FileDescriptorProto::get(Self, @reflect.FieldDescriptor) -> @reflect.Valu
 pub fn FileDescriptorProto::get_unknown(Self) -> @reflect.RawFields
 pub fn FileDescriptorProto::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn FileDescriptorProto::is_valid(Self) -> Bool
-pub fn FileDescriptorProto::message(Self) -> @dynamic.Message
 pub fn FileDescriptorProto::message_type(Self) -> &@reflect.MessageType
 pub fn FileDescriptorProto::message_type_field(Self) -> &@reflect.ListField
 pub fn FileDescriptorProto::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
@@ -1481,13 +1775,9 @@ pub fn FileDescriptorProto::range_extensions(Self, (@reflect.FieldDescriptor, @r
 pub fn FileDescriptorProto::service(Self) -> &@reflect.ListField
 pub fn FileDescriptorProto::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
 pub fn FileDescriptorProto::set_edition(Self, Int32) -> Unit
-pub fn FileDescriptorProto::set_enum_type(Self, @reflect.Value) -> Unit
-pub fn FileDescriptorProto::set_extension(Self, @reflect.Value) -> Unit
-pub fn FileDescriptorProto::set_message_type_field(Self, @reflect.Value) -> Unit
 pub fn FileDescriptorProto::set_name(Self, String) -> Unit
 pub fn FileDescriptorProto::set_options(Self, @reflect.Value) -> Unit
 pub fn FileDescriptorProto::set_package_(Self, String) -> Unit
-pub fn FileDescriptorProto::set_service(Self, @reflect.Value) -> Unit
 pub fn FileDescriptorProto::set_source_code_info(Self, @reflect.Value) -> Unit
 pub fn FileDescriptorProto::set_syntax(Self, String) -> Unit
 pub fn FileDescriptorProto::set_unknown(Self, @reflect.RawFields) -> Unit
@@ -1509,7 +1799,9 @@ pub fn FileDescriptorProtoType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FileDescriptorProtoType
 
 pub struct FileDescriptorSet {
-  inner : @dynamic.Message
+  file : Array[FileDescriptorProto]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 pub fn FileDescriptorSet::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn FileDescriptorSet::descriptor(Self) -> @reflect.MessageDescriptor
@@ -1520,7 +1812,6 @@ pub fn FileDescriptorSet::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn FileDescriptorSet::get_unknown(Self) -> @reflect.RawFields
 pub fn FileDescriptorSet::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn FileDescriptorSet::is_valid(Self) -> Bool
-pub fn FileDescriptorSet::message(Self) -> @dynamic.Message
 pub fn FileDescriptorSet::message_type(Self) -> &@reflect.MessageType
 pub fn FileDescriptorSet::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn FileDescriptorSet::new() -> Self
@@ -1528,7 +1819,6 @@ pub fn FileDescriptorSet::new_field(Self, @reflect.FieldDescriptor) -> @reflect.
 pub fn FileDescriptorSet::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn FileDescriptorSet::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn FileDescriptorSet::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
-pub fn FileDescriptorSet::set_file(Self, @reflect.Value) -> Unit
 pub fn FileDescriptorSet::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn FileDescriptorSet::to_json(Self) -> String raise @json.Refused
 pub fn FileDescriptorSet::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
@@ -1545,7 +1835,29 @@ pub fn FileDescriptorSetType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FileDescriptorSetType
 
 pub struct FileOptions {
-  inner : @dynamic.Message
+  mut java_package : String
+  mut java_outer_classname : String
+  mut java_multiple_files : Bool
+  mut java_generate_equals_and_hash : Bool
+  mut java_string_check_utf8 : Bool
+  mut optimize_for : FileOptions_OptimizeMode
+  mut go_package : String
+  mut cc_generic_services : Bool
+  mut java_generic_services : Bool
+  mut py_generic_services : Bool
+  mut deprecated : Bool
+  mut cc_enable_arenas : Bool
+  mut objc_class_prefix : String
+  mut csharp_namespace : String
+  mut swift_prefix : String
+  mut php_class_prefix : String
+  mut php_namespace : String
+  mut php_metadata_namespace : String
+  mut ruby_package : String
+  mut features : FeatureSet?
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 pub fn FileOptions::cc_enable_arenas(Self) -> Bool
 pub fn FileOptions::cc_generic_services(Self) -> Bool
@@ -1567,7 +1879,6 @@ pub fn FileOptions::java_multiple_files(Self) -> Bool
 pub fn FileOptions::java_outer_classname(Self) -> String
 pub fn FileOptions::java_package(Self) -> String
 pub fn FileOptions::java_string_check_utf8(Self) -> Bool
-pub fn FileOptions::message(Self) -> @dynamic.Message
 pub fn FileOptions::message_type(Self) -> &@reflect.MessageType
 pub fn FileOptions::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn FileOptions::new() -> Self
@@ -1602,7 +1913,6 @@ pub fn FileOptions::set_php_namespace(Self, String) -> Unit
 pub fn FileOptions::set_py_generic_services(Self, Bool) -> Unit
 pub fn FileOptions::set_ruby_package(Self, String) -> Unit
 pub fn FileOptions::set_swift_prefix(Self, String) -> Unit
-pub fn FileOptions::set_uninterpreted_option(Self, @reflect.Value) -> Unit
 pub fn FileOptions::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn FileOptions::swift_prefix(Self) -> String
 pub fn FileOptions::to_json(Self) -> String raise @json.Refused
@@ -1620,8 +1930,18 @@ pub fn FileOptionsType::new_message(Self) -> &@reflect.Message
 pub fn FileOptionsType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FileOptionsType
 
+pub(all) enum FileOptions_OptimizeMode {
+  SPEED
+  CODE_SIZE
+  LITE_RUNTIME
+  Unknown(Int32)
+}
+pub fn FileOptions_OptimizeMode::code(Self) -> Int32
+pub fn FileOptions_OptimizeMode::of(Int32) -> Self
+
 pub struct FloatValue {
-  inner : @dynamic.Message
+  mut value : Double
+  mut unknown_fields : Bytes
 }
 pub fn FloatValue::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn FloatValue::descriptor(Self) -> @reflect.MessageDescriptor
@@ -1631,7 +1951,6 @@ pub fn FloatValue::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn FloatValue::get_unknown(Self) -> @reflect.RawFields
 pub fn FloatValue::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn FloatValue::is_valid(Self) -> Bool
-pub fn FloatValue::message(Self) -> @dynamic.Message
 pub fn FloatValue::message_type(Self) -> &@reflect.MessageType
 pub fn FloatValue::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn FloatValue::new() -> Self
@@ -1657,7 +1976,8 @@ pub fn FloatValueType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for FloatValueType
 
 pub struct GeneratedCodeInfo {
-  inner : @dynamic.Message
+  annotation : Array[GeneratedCodeInfo_Annotation]
+  mut unknown_fields : Bytes
 }
 pub fn GeneratedCodeInfo::annotation(Self) -> &@reflect.ListField
 pub fn GeneratedCodeInfo::clear(Self, @reflect.FieldDescriptor) -> Unit
@@ -1668,7 +1988,6 @@ pub fn GeneratedCodeInfo::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn GeneratedCodeInfo::get_unknown(Self) -> @reflect.RawFields
 pub fn GeneratedCodeInfo::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn GeneratedCodeInfo::is_valid(Self) -> Bool
-pub fn GeneratedCodeInfo::message(Self) -> @dynamic.Message
 pub fn GeneratedCodeInfo::message_type(Self) -> &@reflect.MessageType
 pub fn GeneratedCodeInfo::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn GeneratedCodeInfo::new() -> Self
@@ -1676,7 +1995,6 @@ pub fn GeneratedCodeInfo::new_field(Self, @reflect.FieldDescriptor) -> @reflect.
 pub fn GeneratedCodeInfo::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn GeneratedCodeInfo::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn GeneratedCodeInfo::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
-pub fn GeneratedCodeInfo::set_annotation(Self, @reflect.Value) -> Unit
 pub fn GeneratedCodeInfo::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn GeneratedCodeInfo::to_json(Self) -> String raise @json.Refused
 pub fn GeneratedCodeInfo::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
@@ -1693,7 +2011,12 @@ pub fn GeneratedCodeInfoType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for GeneratedCodeInfoType
 
 pub struct GeneratedCodeInfo_Annotation {
-  inner : @dynamic.Message
+  path : Array[Int32]
+  mut source_file : String
+  mut begin : Int32
+  mut end : Int32
+  mut semantic : GeneratedCodeInfo_Annotation_Semantic
+  mut unknown_fields : Bytes
 }
 pub fn GeneratedCodeInfo_Annotation::begin(Self) -> Int32
 pub fn GeneratedCodeInfo_Annotation::clear(Self, @reflect.FieldDescriptor) -> Unit
@@ -1705,7 +2028,6 @@ pub fn GeneratedCodeInfo_Annotation::get(Self, @reflect.FieldDescriptor) -> @ref
 pub fn GeneratedCodeInfo_Annotation::get_unknown(Self) -> @reflect.RawFields
 pub fn GeneratedCodeInfo_Annotation::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn GeneratedCodeInfo_Annotation::is_valid(Self) -> Bool
-pub fn GeneratedCodeInfo_Annotation::message(Self) -> @dynamic.Message
 pub fn GeneratedCodeInfo_Annotation::message_type(Self) -> &@reflect.MessageType
 pub fn GeneratedCodeInfo_Annotation::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn GeneratedCodeInfo_Annotation::new() -> Self
@@ -1735,8 +2057,18 @@ pub fn GeneratedCodeInfo_AnnotationType::new_message(Self) -> &@reflect.Message
 pub fn GeneratedCodeInfo_AnnotationType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for GeneratedCodeInfo_AnnotationType
 
+pub(all) enum GeneratedCodeInfo_Annotation_Semantic {
+  NONE
+  SET
+  ALIAS
+  Unknown(Int32)
+}
+pub fn GeneratedCodeInfo_Annotation_Semantic::code(Self) -> Int32
+pub fn GeneratedCodeInfo_Annotation_Semantic::of(Int32) -> Self
+
 pub struct Int32Value {
-  inner : @dynamic.Message
+  mut value : Int32
+  mut unknown_fields : Bytes
 }
 pub fn Int32Value::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn Int32Value::descriptor(Self) -> @reflect.MessageDescriptor
@@ -1746,7 +2078,6 @@ pub fn Int32Value::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Int32Value::get_unknown(Self) -> @reflect.RawFields
 pub fn Int32Value::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Int32Value::is_valid(Self) -> Bool
-pub fn Int32Value::message(Self) -> @dynamic.Message
 pub fn Int32Value::message_type(Self) -> &@reflect.MessageType
 pub fn Int32Value::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Int32Value::new() -> Self
@@ -1772,7 +2103,8 @@ pub fn Int32ValueType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for Int32ValueType
 
 pub struct Int64Value {
-  inner : @dynamic.Message
+  mut value : Int64
+  mut unknown_fields : Bytes
 }
 pub fn Int64Value::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn Int64Value::descriptor(Self) -> @reflect.MessageDescriptor
@@ -1782,7 +2114,6 @@ pub fn Int64Value::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Int64Value::get_unknown(Self) -> @reflect.RawFields
 pub fn Int64Value::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Int64Value::is_valid(Self) -> Bool
-pub fn Int64Value::message(Self) -> @dynamic.Message
 pub fn Int64Value::message_type(Self) -> &@reflect.MessageType
 pub fn Int64Value::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Int64Value::new() -> Self
@@ -1808,7 +2139,8 @@ pub fn Int64ValueType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for Int64ValueType
 
 pub struct ListValue {
-  inner : @dynamic.Message
+  values : Array[Value]
+  mut unknown_fields : Bytes
 }
 pub fn ListValue::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn ListValue::descriptor(Self) -> @reflect.MessageDescriptor
@@ -1818,7 +2150,6 @@ pub fn ListValue::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn ListValue::get_unknown(Self) -> @reflect.RawFields
 pub fn ListValue::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn ListValue::is_valid(Self) -> Bool
-pub fn ListValue::message(Self) -> @dynamic.Message
 pub fn ListValue::message_type(Self) -> &@reflect.MessageType
 pub fn ListValue::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn ListValue::new() -> Self
@@ -1827,7 +2158,6 @@ pub fn ListValue::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool
 pub fn ListValue::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn ListValue::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
 pub fn ListValue::set_unknown(Self, @reflect.RawFields) -> Unit
-pub fn ListValue::set_values(Self, @reflect.Value) -> Unit
 pub fn ListValue::to_json(Self) -> String raise @json.Refused
 pub fn ListValue::values(Self) -> &@reflect.ListField
 pub fn ListValue::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
@@ -1844,7 +2174,15 @@ pub fn ListValueType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for ListValueType
 
 pub struct MessageOptions {
-  inner : @dynamic.Message
+  mut message_set_wire_format : Bool
+  mut no_standard_descriptor_accessor : Bool
+  mut deprecated : Bool
+  mut map_entry : Bool
+  mut deprecated_legacy_json_field_conflicts : Bool
+  mut features : FeatureSet?
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 pub fn MessageOptions::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn MessageOptions::deprecated(Self) -> Bool
@@ -1858,7 +2196,6 @@ pub fn MessageOptions::get_unknown(Self) -> @reflect.RawFields
 pub fn MessageOptions::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn MessageOptions::is_valid(Self) -> Bool
 pub fn MessageOptions::map_entry(Self) -> Bool
-pub fn MessageOptions::message(Self) -> @dynamic.Message
 pub fn MessageOptions::message_set_wire_format(Self) -> Bool
 pub fn MessageOptions::message_type(Self) -> &@reflect.MessageType
 pub fn MessageOptions::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
@@ -1874,7 +2211,6 @@ pub fn MessageOptions::set_features(Self, @reflect.Value) -> Unit
 pub fn MessageOptions::set_map_entry(Self, Bool) -> Unit
 pub fn MessageOptions::set_message_set_wire_format(Self, Bool) -> Unit
 pub fn MessageOptions::set_no_standard_descriptor_accessor(Self, Bool) -> Unit
-pub fn MessageOptions::set_uninterpreted_option(Self, @reflect.Value) -> Unit
 pub fn MessageOptions::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn MessageOptions::to_json(Self) -> String raise @json.Refused
 pub fn MessageOptions::uninterpreted_option(Self) -> &@reflect.ListField
@@ -1892,7 +2228,15 @@ pub fn MessageOptionsType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for MessageOptionsType
 
 pub struct Method {
-  inner : @dynamic.Message
+  mut name : String
+  mut request_type_url : String
+  mut request_streaming : Bool
+  mut response_type_url : String
+  mut response_streaming : Bool
+  options : Array[Option_]
+  mut syntax : Syntax
+  mut edition : String
+  mut unknown_fields : Bytes
 }
 pub fn Method::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn Method::descriptor(Self) -> @reflect.MessageDescriptor
@@ -1903,7 +2247,6 @@ pub fn Method::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Method::get_unknown(Self) -> @reflect.RawFields
 pub fn Method::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Method::is_valid(Self) -> Bool
-pub fn Method::message(Self) -> @dynamic.Message
 pub fn Method::message_type(Self) -> &@reflect.MessageType
 pub fn Method::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Method::name(Self) -> String
@@ -1919,7 +2262,6 @@ pub fn Method::response_type_url(Self) -> String
 pub fn Method::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
 pub fn Method::set_edition(Self, String) -> Unit
 pub fn Method::set_name(Self, String) -> Unit
-pub fn Method::set_options(Self, @reflect.Value) -> Unit
 pub fn Method::set_request_streaming(Self, Bool) -> Unit
 pub fn Method::set_request_type_url(Self, String) -> Unit
 pub fn Method::set_response_streaming(Self, Bool) -> Unit
@@ -1933,7 +2275,13 @@ pub impl @reflect.Fresh for Method
 pub impl @reflect.Message for Method
 
 pub struct MethodDescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  mut input_type : String
+  mut output_type : String
+  mut options : MethodOptions?
+  mut client_streaming : Bool
+  mut server_streaming : Bool
+  mut unknown_fields : Bytes
 }
 pub fn MethodDescriptorProto::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn MethodDescriptorProto::client_streaming(Self) -> Bool
@@ -1945,7 +2293,6 @@ pub fn MethodDescriptorProto::get_unknown(Self) -> @reflect.RawFields
 pub fn MethodDescriptorProto::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn MethodDescriptorProto::input_type(Self) -> String
 pub fn MethodDescriptorProto::is_valid(Self) -> Bool
-pub fn MethodDescriptorProto::message(Self) -> @dynamic.Message
 pub fn MethodDescriptorProto::message_type(Self) -> &@reflect.MessageType
 pub fn MethodDescriptorProto::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn MethodDescriptorProto::name(Self) -> String
@@ -1979,7 +2326,12 @@ pub fn MethodDescriptorProtoType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for MethodDescriptorProtoType
 
 pub struct MethodOptions {
-  inner : @dynamic.Message
+  mut deprecated : Bool
+  mut idempotency_level : MethodOptions_IdempotencyLevel
+  mut features : FeatureSet?
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 pub fn MethodOptions::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn MethodOptions::deprecated(Self) -> Bool
@@ -1992,7 +2344,6 @@ pub fn MethodOptions::get_unknown(Self) -> @reflect.RawFields
 pub fn MethodOptions::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn MethodOptions::idempotency_level(Self) -> Int32
 pub fn MethodOptions::is_valid(Self) -> Bool
-pub fn MethodOptions::message(Self) -> @dynamic.Message
 pub fn MethodOptions::message_type(Self) -> &@reflect.MessageType
 pub fn MethodOptions::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn MethodOptions::new() -> Self
@@ -2003,7 +2354,6 @@ pub fn MethodOptions::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Uni
 pub fn MethodOptions::set_deprecated(Self, Bool) -> Unit
 pub fn MethodOptions::set_features(Self, @reflect.Value) -> Unit
 pub fn MethodOptions::set_idempotency_level(Self, Int32) -> Unit
-pub fn MethodOptions::set_uninterpreted_option(Self, @reflect.Value) -> Unit
 pub fn MethodOptions::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn MethodOptions::to_json(Self) -> String raise @json.Refused
 pub fn MethodOptions::uninterpreted_option(Self) -> &@reflect.ListField
@@ -2020,6 +2370,15 @@ pub fn MethodOptionsType::new_message(Self) -> &@reflect.Message
 pub fn MethodOptionsType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for MethodOptionsType
 
+pub(all) enum MethodOptions_IdempotencyLevel {
+  IDEMPOTENCY_UNKNOWN
+  NO_SIDE_EFFECTS
+  IDEMPOTENT
+  Unknown(Int32)
+}
+pub fn MethodOptions_IdempotencyLevel::code(Self) -> Int32
+pub fn MethodOptions_IdempotencyLevel::of(Int32) -> Self
+
 pub struct MethodType {
   marker : Unit
 }
@@ -2030,7 +2389,9 @@ pub fn MethodType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for MethodType
 
 pub struct Mixin {
-  inner : @dynamic.Message
+  mut name : String
+  mut root : String
+  mut unknown_fields : Bytes
 }
 pub fn Mixin::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn Mixin::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2040,7 +2401,6 @@ pub fn Mixin::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Mixin::get_unknown(Self) -> @reflect.RawFields
 pub fn Mixin::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Mixin::is_valid(Self) -> Bool
-pub fn Mixin::message(Self) -> @dynamic.Message
 pub fn Mixin::message_type(Self) -> &@reflect.MessageType
 pub fn Mixin::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Mixin::name(Self) -> String
@@ -2075,7 +2435,9 @@ pub fn NullValue::code(Self) -> Int32
 pub fn NullValue::of(Int32) -> Self
 
 pub struct OneofDescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  mut options : OneofOptions?
+  mut unknown_fields : Bytes
 }
 pub fn OneofDescriptorProto::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn OneofDescriptorProto::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2085,7 +2447,6 @@ pub fn OneofDescriptorProto::get(Self, @reflect.FieldDescriptor) -> @reflect.Val
 pub fn OneofDescriptorProto::get_unknown(Self) -> @reflect.RawFields
 pub fn OneofDescriptorProto::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn OneofDescriptorProto::is_valid(Self) -> Bool
-pub fn OneofDescriptorProto::message(Self) -> @dynamic.Message
 pub fn OneofDescriptorProto::message_type(Self) -> &@reflect.MessageType
 pub fn OneofDescriptorProto::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn OneofDescriptorProto::name(Self) -> String
@@ -2113,7 +2474,10 @@ pub fn OneofDescriptorProtoType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for OneofDescriptorProtoType
 
 pub struct OneofOptions {
-  inner : @dynamic.Message
+  mut features : FeatureSet?
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 pub fn OneofOptions::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn OneofOptions::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2124,7 +2488,6 @@ pub fn OneofOptions::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn OneofOptions::get_unknown(Self) -> @reflect.RawFields
 pub fn OneofOptions::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn OneofOptions::is_valid(Self) -> Bool
-pub fn OneofOptions::message(Self) -> @dynamic.Message
 pub fn OneofOptions::message_type(Self) -> &@reflect.MessageType
 pub fn OneofOptions::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn OneofOptions::new() -> Self
@@ -2133,7 +2496,6 @@ pub fn OneofOptions::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> B
 pub fn OneofOptions::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn OneofOptions::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
 pub fn OneofOptions::set_features(Self, @reflect.Value) -> Unit
-pub fn OneofOptions::set_uninterpreted_option(Self, @reflect.Value) -> Unit
 pub fn OneofOptions::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn OneofOptions::to_json(Self) -> String raise @json.Refused
 pub fn OneofOptions::uninterpreted_option(Self) -> &@reflect.ListField
@@ -2151,7 +2513,9 @@ pub fn OneofOptionsType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for OneofOptionsType
 
 pub struct Option_ {
-  inner : @dynamic.Message
+  mut name : String
+  mut value : Any?
+  mut unknown_fields : Bytes
 }
 pub fn Option_::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn Option_::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2161,7 +2525,6 @@ pub fn Option_::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Option_::get_unknown(Self) -> @reflect.RawFields
 pub fn Option_::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Option_::is_valid(Self) -> Bool
-pub fn Option_::message(Self) -> @dynamic.Message
 pub fn Option_::message_type(Self) -> &@reflect.MessageType
 pub fn Option_::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Option_::name(Self) -> String
@@ -2189,7 +2552,10 @@ pub fn Option_Type::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for Option_Type
 
 pub struct ServiceDescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  method_ : Array[MethodDescriptorProto]
+  mut options : ServiceOptions?
+  mut unknown_fields : Bytes
 }
 pub fn ServiceDescriptorProto::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn ServiceDescriptorProto::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2199,7 +2565,6 @@ pub fn ServiceDescriptorProto::get(Self, @reflect.FieldDescriptor) -> @reflect.V
 pub fn ServiceDescriptorProto::get_unknown(Self) -> @reflect.RawFields
 pub fn ServiceDescriptorProto::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn ServiceDescriptorProto::is_valid(Self) -> Bool
-pub fn ServiceDescriptorProto::message(Self) -> @dynamic.Message
 pub fn ServiceDescriptorProto::message_type(Self) -> &@reflect.MessageType
 pub fn ServiceDescriptorProto::method_(Self) -> &@reflect.ListField
 pub fn ServiceDescriptorProto::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
@@ -2210,7 +2575,6 @@ pub fn ServiceDescriptorProto::options(Self) -> @reflect.Value
 pub fn ServiceDescriptorProto::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn ServiceDescriptorProto::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn ServiceDescriptorProto::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
-pub fn ServiceDescriptorProto::set_method_(Self, @reflect.Value) -> Unit
 pub fn ServiceDescriptorProto::set_name(Self, String) -> Unit
 pub fn ServiceDescriptorProto::set_options(Self, @reflect.Value) -> Unit
 pub fn ServiceDescriptorProto::set_unknown(Self, @reflect.RawFields) -> Unit
@@ -2229,7 +2593,11 @@ pub fn ServiceDescriptorProtoType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for ServiceDescriptorProtoType
 
 pub struct ServiceOptions {
-  inner : @dynamic.Message
+  mut features : FeatureSet?
+  mut deprecated : Bool
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 pub fn ServiceOptions::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn ServiceOptions::deprecated(Self) -> Bool
@@ -2241,7 +2609,6 @@ pub fn ServiceOptions::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn ServiceOptions::get_unknown(Self) -> @reflect.RawFields
 pub fn ServiceOptions::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn ServiceOptions::is_valid(Self) -> Bool
-pub fn ServiceOptions::message(Self) -> @dynamic.Message
 pub fn ServiceOptions::message_type(Self) -> &@reflect.MessageType
 pub fn ServiceOptions::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn ServiceOptions::new() -> Self
@@ -2251,7 +2618,6 @@ pub fn ServiceOptions::range_extensions(Self, (@reflect.FieldDescriptor, @reflec
 pub fn ServiceOptions::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
 pub fn ServiceOptions::set_deprecated(Self, Bool) -> Unit
 pub fn ServiceOptions::set_features(Self, @reflect.Value) -> Unit
-pub fn ServiceOptions::set_uninterpreted_option(Self, @reflect.Value) -> Unit
 pub fn ServiceOptions::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn ServiceOptions::to_json(Self) -> String raise @json.Refused
 pub fn ServiceOptions::uninterpreted_option(Self) -> &@reflect.ListField
@@ -2269,7 +2635,9 @@ pub fn ServiceOptionsType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for ServiceOptionsType
 
 pub struct SourceCodeInfo {
-  inner : @dynamic.Message
+  location : Array[SourceCodeInfo_Location]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 pub fn SourceCodeInfo::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn SourceCodeInfo::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2280,7 +2648,6 @@ pub fn SourceCodeInfo::get_unknown(Self) -> @reflect.RawFields
 pub fn SourceCodeInfo::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn SourceCodeInfo::is_valid(Self) -> Bool
 pub fn SourceCodeInfo::location(Self) -> &@reflect.ListField
-pub fn SourceCodeInfo::message(Self) -> @dynamic.Message
 pub fn SourceCodeInfo::message_type(Self) -> &@reflect.MessageType
 pub fn SourceCodeInfo::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn SourceCodeInfo::new() -> Self
@@ -2288,7 +2655,6 @@ pub fn SourceCodeInfo::new_field(Self, @reflect.FieldDescriptor) -> @reflect.Val
 pub fn SourceCodeInfo::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn SourceCodeInfo::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn SourceCodeInfo::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
-pub fn SourceCodeInfo::set_location(Self, @reflect.Value) -> Unit
 pub fn SourceCodeInfo::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn SourceCodeInfo::to_json(Self) -> String raise @json.Refused
 pub fn SourceCodeInfo::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
@@ -2305,7 +2671,12 @@ pub fn SourceCodeInfoType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for SourceCodeInfoType
 
 pub struct SourceCodeInfo_Location {
-  inner : @dynamic.Message
+  path : Array[Int32]
+  span : Array[Int32]
+  mut leading_comments : String
+  mut trailing_comments : String
+  leading_detached_comments : Array[String]
+  mut unknown_fields : Bytes
 }
 pub fn SourceCodeInfo_Location::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn SourceCodeInfo_Location::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2317,7 +2688,6 @@ pub fn SourceCodeInfo_Location::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn SourceCodeInfo_Location::is_valid(Self) -> Bool
 pub fn SourceCodeInfo_Location::leading_comments(Self) -> String
 pub fn SourceCodeInfo_Location::leading_detached_comments(Self) -> &@reflect.ListField
-pub fn SourceCodeInfo_Location::message(Self) -> @dynamic.Message
 pub fn SourceCodeInfo_Location::message_type(Self) -> &@reflect.MessageType
 pub fn SourceCodeInfo_Location::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn SourceCodeInfo_Location::new() -> Self
@@ -2346,7 +2716,8 @@ pub fn SourceCodeInfo_LocationType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for SourceCodeInfo_LocationType
 
 pub struct SourceContext {
-  inner : @dynamic.Message
+  mut file_name : String
+  mut unknown_fields : Bytes
 }
 pub fn SourceContext::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn SourceContext::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2357,7 +2728,6 @@ pub fn SourceContext::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn SourceContext::get_unknown(Self) -> @reflect.RawFields
 pub fn SourceContext::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn SourceContext::is_valid(Self) -> Bool
-pub fn SourceContext::message(Self) -> @dynamic.Message
 pub fn SourceContext::message_type(Self) -> &@reflect.MessageType
 pub fn SourceContext::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn SourceContext::new() -> Self
@@ -2382,7 +2752,8 @@ pub fn SourceContextType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for SourceContextType
 
 pub struct StringValue {
-  inner : @dynamic.Message
+  mut value : String
+  mut unknown_fields : Bytes
 }
 pub fn StringValue::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn StringValue::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2392,7 +2763,6 @@ pub fn StringValue::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn StringValue::get_unknown(Self) -> @reflect.RawFields
 pub fn StringValue::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn StringValue::is_valid(Self) -> Bool
-pub fn StringValue::message(Self) -> @dynamic.Message
 pub fn StringValue::message_type(Self) -> &@reflect.MessageType
 pub fn StringValue::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn StringValue::new() -> Self
@@ -2418,7 +2788,8 @@ pub fn StringValueType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for StringValueType
 
 pub struct Struct {
-  inner : @dynamic.Message
+  fields : Map[String, Value]
+  mut unknown_fields : Bytes
 }
 pub fn Struct::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn Struct::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2429,7 +2800,6 @@ pub fn Struct::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Struct::get_unknown(Self) -> @reflect.RawFields
 pub fn Struct::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Struct::is_valid(Self) -> Bool
-pub fn Struct::message(Self) -> @dynamic.Message
 pub fn Struct::message_type(Self) -> &@reflect.MessageType
 pub fn Struct::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Struct::new() -> Self
@@ -2437,7 +2807,6 @@ pub fn Struct::new_field(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Struct::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn Struct::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn Struct::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
-pub fn Struct::set_fields(Self, @reflect.Value) -> Unit
 pub fn Struct::set_unknown(Self, @reflect.RawFields) -> Unit
 pub fn Struct::to_json(Self) -> String raise @json.Refused
 pub fn Struct::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
@@ -2452,44 +2821,6 @@ pub fn StructType::new() -> Self
 pub fn StructType::new_message(Self) -> &@reflect.Message
 pub fn StructType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for StructType
-
-pub struct Struct_FieldsEntry {
-  inner : @dynamic.Message
-}
-pub fn Struct_FieldsEntry::clear(Self, @reflect.FieldDescriptor) -> Unit
-pub fn Struct_FieldsEntry::descriptor(Self) -> @reflect.MessageDescriptor
-pub fn Struct_FieldsEntry::fresh(Self) -> Self
-pub fn Struct_FieldsEntry::from_json(String) -> Self raise @json.Refused
-pub fn Struct_FieldsEntry::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
-pub fn Struct_FieldsEntry::get_unknown(Self) -> @reflect.RawFields
-pub fn Struct_FieldsEntry::has(Self, @reflect.FieldDescriptor) -> Bool
-pub fn Struct_FieldsEntry::is_valid(Self) -> Bool
-pub fn Struct_FieldsEntry::key(Self) -> String
-pub fn Struct_FieldsEntry::message(Self) -> @dynamic.Message
-pub fn Struct_FieldsEntry::message_type(Self) -> &@reflect.MessageType
-pub fn Struct_FieldsEntry::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
-pub fn Struct_FieldsEntry::new() -> Self
-pub fn Struct_FieldsEntry::new_field(Self, @reflect.FieldDescriptor) -> @reflect.Value
-pub fn Struct_FieldsEntry::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
-pub fn Struct_FieldsEntry::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
-pub fn Struct_FieldsEntry::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
-pub fn Struct_FieldsEntry::set_key(Self, String) -> Unit
-pub fn Struct_FieldsEntry::set_unknown(Self, @reflect.RawFields) -> Unit
-pub fn Struct_FieldsEntry::set_value(Self, @reflect.Value) -> Unit
-pub fn Struct_FieldsEntry::to_json(Self) -> String raise @json.Refused
-pub fn Struct_FieldsEntry::value(Self) -> @reflect.Value
-pub fn Struct_FieldsEntry::which_oneof(Self, @reflect.OneofDescriptor) -> Int32?
-pub impl @reflect.Fresh for Struct_FieldsEntry
-pub impl @reflect.Message for Struct_FieldsEntry
-
-pub struct Struct_FieldsEntryType {
-  marker : Unit
-}
-pub fn Struct_FieldsEntryType::descriptor(Self) -> @reflect.MessageDescriptor
-pub fn Struct_FieldsEntryType::new() -> Self
-pub fn Struct_FieldsEntryType::new_message(Self) -> &@reflect.Message
-pub fn Struct_FieldsEntryType::zero(Self) -> &@reflect.Message
-pub impl @reflect.MessageType for Struct_FieldsEntryType
 
 pub(all) enum SymbolVisibility {
   VISIBILITY_UNSET
@@ -2510,7 +2841,9 @@ pub fn Syntax::code(Self) -> Int32
 pub fn Syntax::of(Int32) -> Self
 
 pub struct Timestamp {
-  inner : @dynamic.Message
+  mut seconds : Int64
+  mut nanos : Int32
+  mut unknown_fields : Bytes
 }
 pub fn Timestamp::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn Timestamp::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2520,7 +2853,6 @@ pub fn Timestamp::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Timestamp::get_unknown(Self) -> @reflect.RawFields
 pub fn Timestamp::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Timestamp::is_valid(Self) -> Bool
-pub fn Timestamp::message(Self) -> @dynamic.Message
 pub fn Timestamp::message_type(Self) -> &@reflect.MessageType
 pub fn Timestamp::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Timestamp::nanos(Self) -> Int32
@@ -2548,7 +2880,14 @@ pub fn TimestampType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for TimestampType
 
 pub struct Type {
-  inner : @dynamic.Message
+  mut name : String
+  fields : Array[Field]
+  oneofs : Array[String]
+  options : Array[Option_]
+  mut source_context : SourceContext?
+  mut syntax : Syntax
+  mut edition : String
+  mut unknown_fields : Bytes
 }
 pub fn Type::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn Type::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2560,7 +2899,6 @@ pub fn Type::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Type::get_unknown(Self) -> @reflect.RawFields
 pub fn Type::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Type::is_valid(Self) -> Bool
-pub fn Type::message(Self) -> @dynamic.Message
 pub fn Type::message_type(Self) -> &@reflect.MessageType
 pub fn Type::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Type::name(Self) -> String
@@ -2572,9 +2910,7 @@ pub fn Type::range(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> 
 pub fn Type::range_extensions(Self, (@reflect.FieldDescriptor, @reflect.Value) -> Bool) -> Unit
 pub fn Type::set(Self, @reflect.FieldDescriptor, @reflect.Value) -> Unit
 pub fn Type::set_edition(Self, String) -> Unit
-pub fn Type::set_fields(Self, @reflect.Value) -> Unit
 pub fn Type::set_name(Self, String) -> Unit
-pub fn Type::set_options(Self, @reflect.Value) -> Unit
 pub fn Type::set_source_context(Self, @reflect.Value) -> Unit
 pub fn Type::set_syntax(Self, Int32) -> Unit
 pub fn Type::set_unknown(Self, @reflect.RawFields) -> Unit
@@ -2595,7 +2931,8 @@ pub fn TypeType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for TypeType
 
 pub struct UInt32Value {
-  inner : @dynamic.Message
+  mut value : UInt32
+  mut unknown_fields : Bytes
 }
 pub fn UInt32Value::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn UInt32Value::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2605,7 +2942,6 @@ pub fn UInt32Value::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn UInt32Value::get_unknown(Self) -> @reflect.RawFields
 pub fn UInt32Value::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn UInt32Value::is_valid(Self) -> Bool
-pub fn UInt32Value::message(Self) -> @dynamic.Message
 pub fn UInt32Value::message_type(Self) -> &@reflect.MessageType
 pub fn UInt32Value::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn UInt32Value::new() -> Self
@@ -2631,7 +2967,8 @@ pub fn UInt32ValueType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for UInt32ValueType
 
 pub struct UInt64Value {
-  inner : @dynamic.Message
+  mut value : UInt64
+  mut unknown_fields : Bytes
 }
 pub fn UInt64Value::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn UInt64Value::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2641,7 +2978,6 @@ pub fn UInt64Value::get(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn UInt64Value::get_unknown(Self) -> @reflect.RawFields
 pub fn UInt64Value::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn UInt64Value::is_valid(Self) -> Bool
-pub fn UInt64Value::message(Self) -> @dynamic.Message
 pub fn UInt64Value::message_type(Self) -> &@reflect.MessageType
 pub fn UInt64Value::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn UInt64Value::new() -> Self
@@ -2667,7 +3003,14 @@ pub fn UInt64ValueType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for UInt64ValueType
 
 pub struct UninterpretedOption {
-  inner : @dynamic.Message
+  name : Array[UninterpretedOption_NamePart]
+  mut identifier_value : String
+  mut positive_int_value : UInt64
+  mut negative_int_value : Int64
+  mut double_value : Double
+  mut string_value : Bytes
+  mut aggregate_value : String
+  mut unknown_fields : Bytes
 }
 pub fn UninterpretedOption::aggregate_value(Self) -> String
 pub fn UninterpretedOption::clear(Self, @reflect.FieldDescriptor) -> Unit
@@ -2680,7 +3023,6 @@ pub fn UninterpretedOption::get_unknown(Self) -> @reflect.RawFields
 pub fn UninterpretedOption::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn UninterpretedOption::identifier_value(Self) -> String
 pub fn UninterpretedOption::is_valid(Self) -> Bool
-pub fn UninterpretedOption::message(Self) -> @dynamic.Message
 pub fn UninterpretedOption::message_type(Self) -> &@reflect.MessageType
 pub fn UninterpretedOption::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn UninterpretedOption::name(Self) -> &@reflect.ListField
@@ -2694,7 +3036,6 @@ pub fn UninterpretedOption::set(Self, @reflect.FieldDescriptor, @reflect.Value) 
 pub fn UninterpretedOption::set_aggregate_value(Self, String) -> Unit
 pub fn UninterpretedOption::set_double_value(Self, Double) -> Unit
 pub fn UninterpretedOption::set_identifier_value(Self, String) -> Unit
-pub fn UninterpretedOption::set_name(Self, @reflect.Value) -> Unit
 pub fn UninterpretedOption::set_negative_int_value(Self, Int64) -> Unit
 pub fn UninterpretedOption::set_positive_int_value(Self, UInt64) -> Unit
 pub fn UninterpretedOption::set_string_value(Self, Bytes) -> Unit
@@ -2715,7 +3056,9 @@ pub fn UninterpretedOptionType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for UninterpretedOptionType
 
 pub struct UninterpretedOption_NamePart {
-  inner : @dynamic.Message
+  mut name_part : String?
+  mut is_extension : Bool?
+  mut unknown_fields : Bytes
 }
 pub fn UninterpretedOption_NamePart::clear(Self, @reflect.FieldDescriptor) -> Unit
 pub fn UninterpretedOption_NamePart::descriptor(Self) -> @reflect.MessageDescriptor
@@ -2726,7 +3069,6 @@ pub fn UninterpretedOption_NamePart::get_unknown(Self) -> @reflect.RawFields
 pub fn UninterpretedOption_NamePart::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn UninterpretedOption_NamePart::is_extension(Self) -> Bool
 pub fn UninterpretedOption_NamePart::is_valid(Self) -> Bool
-pub fn UninterpretedOption_NamePart::message(Self) -> @dynamic.Message
 pub fn UninterpretedOption_NamePart::message_type(Self) -> &@reflect.MessageType
 pub fn UninterpretedOption_NamePart::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn UninterpretedOption_NamePart::name_part(Self) -> String
@@ -2753,7 +3095,8 @@ pub fn UninterpretedOption_NamePartType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for UninterpretedOption_NamePartType
 
 pub struct Value {
-  inner : @dynamic.Message
+  mut kind : Value_Kind
+  mut unknown_fields : Bytes
 }
 pub fn Value::bool_value(Self) -> Bool
 pub fn Value::clear(Self, @reflect.FieldDescriptor) -> Unit
@@ -2766,7 +3109,6 @@ pub fn Value::has(Self, @reflect.FieldDescriptor) -> Bool
 pub fn Value::is_valid(Self) -> Bool
 pub fn Value::kind(Self) -> Value_Kind
 pub fn Value::list_value(Self) -> @reflect.Value
-pub fn Value::message(Self) -> @dynamic.Message
 pub fn Value::message_type(Self) -> &@reflect.MessageType
 pub fn Value::mutable(Self, @reflect.FieldDescriptor) -> @reflect.Value
 pub fn Value::new() -> Self
@@ -2801,12 +3143,12 @@ pub fn ValueType::zero(Self) -> &@reflect.Message
 pub impl @reflect.MessageType for ValueType
 
 pub(all) enum Value_Kind {
-  Null_value(@reflect.Value)
+  Null_value(NullValue)
   Number_value(Double)
   String_value(String)
   Bool_value(Bool)
-  Struct_value(@reflect.Value)
-  List_value(@reflect.Value)
+  Struct_value(Struct)
+  List_value(ListValue)
   NoKind
 }
 

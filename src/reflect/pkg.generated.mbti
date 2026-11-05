@@ -2,13 +2,27 @@
 package "moonbitstack/moonproto/reflect"
 
 // Values
+pub fn[T] assign_list(Array[T], &ListField, Element[T]) -> Unit
+
+pub fn[K : Hash + Eq, V] assign_map(Map[K, V], &MapField, (MapKey) -> K, Element[V]) -> Unit
+
 pub fn default_for(FieldDescriptor) -> Value
+
+pub fn float_value(Double) -> Value
 
 pub let global_files : Files
 
 pub let global_types : Types
 
 pub let invalid : Value
+
+pub fn[T] is_set(T?) -> Bool
+
+pub fn[T] list_view(Array[T], Element[T]) -> &ListField
+
+pub fn[K : Hash + Eq, V] map_view(Map[K, V], (K) -> MapKey, (MapKey) -> K, Element[V]) -> &MapField
+
+pub fn[T] message_element((T) -> Value, () -> T, (T, &Message) -> Unit) -> Element[T]
 
 pub fn missing_required(&Message) -> String?
 
@@ -19,6 +33,8 @@ pub fn new_field_value(FieldDescriptor) -> Value
 pub fn parent_name(String) -> String
 
 pub fn qualify(String, String) -> String
+
+pub fn[T] scalar_element((T) -> Value, (Value) -> T, () -> T) -> Element[T]
 
 pub fn short_name(String) -> String
 
@@ -43,6 +59,15 @@ pub fn Cardinality::code(Self) -> Int32
 pub fn Cardinality::equal(Self, Self) -> Bool
 pub fn Cardinality::not_equal(Self, Self) -> Bool
 pub fn Cardinality::of(Int32) -> Self?
+
+pub(all) struct Element[T] {
+  to_value : (T) -> Value
+  from_value : (Value) -> T
+  make : () -> T
+  copy_into : (T, &Message) -> Unit
+  is_message : Bool
+}
+pub fn[T] Element::new((T) -> Value, (Value) -> T, () -> T, (T, &Message) -> Unit, Bool) -> Self[T]
 
 pub(all) struct EnumDescriptor {
   name : String
@@ -151,8 +176,12 @@ pub(all) enum MapKey {
   Uint64(UInt64)
   String(String)
 }
+pub fn MapKey::bool(Self) -> Bool
 pub fn MapKey::equal(Self, Self) -> Bool
+pub fn MapKey::int(Self) -> Int64
 pub fn MapKey::not_equal(Self, Self) -> Bool
+pub fn MapKey::string(Self) -> String
+pub fn MapKey::uint(Self) -> UInt64
 pub fn MapKey::value(Self) -> Value
 
 pub(all) struct MessageDescriptor {
@@ -216,6 +245,37 @@ pub fn Syntax::code(Self) -> Int32
 pub fn Syntax::equal(Self, Self) -> Bool
 pub fn Syntax::not_equal(Self, Self) -> Bool
 pub fn Syntax::of(Int32) -> Self?
+
+pub struct TypedList[T] {
+  items : Array[T]
+  element : Element[T]
+}
+pub fn[T] TypedList::append(Self[T], Value) -> Unit
+pub fn[T] TypedList::append_mutable(Self[T]) -> Value
+pub fn[T] TypedList::get(Self[T], Int32) -> Value
+pub fn[T] TypedList::is_valid(Self[T]) -> Bool
+pub fn[T] TypedList::length(Self[T]) -> Int32
+pub fn[T] TypedList::new_element(Self[T]) -> Value
+pub fn[T] TypedList::set(Self[T], Int32, Value) -> Unit
+pub fn[T] TypedList::truncate(Self[T], Int32) -> Unit
+pub impl[T] ListField for TypedList[T]
+
+pub struct TypedMap[K, V] {
+  entries : Map[K, V]
+  key_value : (K) -> MapKey
+  key_of : (MapKey) -> K
+  element : Element[V]
+}
+pub fn[K : Hash + Eq, V] TypedMap::clear(Self[K, V], MapKey) -> Unit
+pub fn[K : Hash + Eq, V] TypedMap::get(Self[K, V], MapKey) -> Value
+pub fn[K : Hash + Eq, V] TypedMap::has(Self[K, V], MapKey) -> Bool
+pub fn[K : Hash + Eq, V] TypedMap::is_valid(Self[K, V]) -> Bool
+pub fn[K : Hash + Eq, V] TypedMap::length(Self[K, V]) -> Int32
+pub fn[K : Hash + Eq, V] TypedMap::mutable(Self[K, V], MapKey) -> Value
+pub fn[K : Hash + Eq, V] TypedMap::new_value(Self[K, V]) -> Value
+pub fn[K : Hash + Eq, V] TypedMap::range(Self[K, V], (MapKey, Value) -> Bool) -> Unit
+pub fn[K : Hash + Eq, V] TypedMap::set(Self[K, V], MapKey, Value) -> Unit
+pub impl[K : Hash + Eq, V] MapField for TypedMap[K, V]
 
 pub struct Types {
   messages : Array[(String, &MessageType)]

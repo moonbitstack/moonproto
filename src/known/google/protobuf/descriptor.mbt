@@ -5358,17 +5358,6 @@ fn find_message_google_protobuf_descriptor_proto(
 }
 
 ///|
-fn field_of_google_protobuf_descriptor_proto(
-  message : @dynamic.Message,
-  number : Int32,
-) -> @reflect.FieldDescriptor {
-  match message.descriptor().field_by_number(number) {
-    Some(field) => field
-    None => abort("moonproto: missing field " + number.to_string())
-  }
-}
-
-///|
 pub(all) enum Edition {
   EDITION_UNKNOWN
   EDITION_LEGACY
@@ -5459,39 +5448,25 @@ pub fn SymbolVisibility::of(n : Int32) -> SymbolVisibility {
 
 ///|
 pub struct FileDescriptorSet {
-  inner : @dynamic.Message
+  file : Array[FileDescriptorProto]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 
 ///|
 pub fn FileDescriptorSet::new() -> FileDescriptorSet {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.FileDescriptorSet",
-      ),
-    ),
-  }
-}
-
-///|
-pub fn FileDescriptorSet::message(self : FileDescriptorSet) -> @dynamic.Message {
-  self.inner
+  { file: [], unknown_fields: b"", extension_values: [], }
 }
 
 ///|
 pub fn FileDescriptorSet::file(self : FileDescriptorSet) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn FileDescriptorSet::set_file(
-  self : FileDescriptorSet,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    value,
+  @reflect.list_view(
+    self.file,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => FileDescriptorProto::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -5512,8 +5487,43 @@ pub fn FileDescriptorSet::from_json(
 }
 
 ///|
+fn FileDescriptorSet::read_field(
+  self : FileDescriptorSet,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.file,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => FileDescriptorProto::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return pair.1
+        }
+      }
+      @reflect.default_for(field)
+    }
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_FileDescriptorSet : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.FileDescriptorSet",
+)
+
+///|
 pub impl @reflect.Message for FileDescriptorSet with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_FileDescriptorSet
 }
 
 ///|
@@ -5524,7 +5534,8 @@ pub impl @reflect.Message for FileDescriptorSet with fn message_type(self) -> &@
 
 ///|
 pub impl @reflect.Message for FileDescriptorSet with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -5532,7 +5543,14 @@ pub impl @reflect.Message for FileDescriptorSet with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_FileDescriptorSet.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -5540,7 +5558,11 @@ pub impl @reflect.Message for FileDescriptorSet with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  for pair in self.extension_values {
+    if !f(pair.0, pair.1) {
+      break
+    }
+  }
 }
 
 ///|
@@ -5548,7 +5570,18 @@ pub impl @reflect.Message for FileDescriptorSet with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.file.length() > 0
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return true
+        }
+      }
+      false
+    }
+  }
 }
 
 ///|
@@ -5556,7 +5589,19 @@ pub impl @reflect.Message for FileDescriptorSet with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.file.clear()
+    _ => {
+      let kept : Array[(@reflect.FieldDescriptor, @reflect.Value)] = []
+      for pair in self.extension_values {
+        if pair.0.number != field.number {
+          kept.push(pair)
+        }
+      }
+      self.extension_values = kept
+    }
+  }
 }
 
 ///|
@@ -5564,7 +5609,7 @@ pub impl @reflect.Message for FileDescriptorSet with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  FileDescriptorSet::read_field(self, field)
 }
 
 ///|
@@ -5573,7 +5618,32 @@ pub impl @reflect.Message for FileDescriptorSet with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 =>
+      @reflect.assign_list(
+        self.file,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => FileDescriptorProto::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    _ => {
+      let mut found = false
+      for i in 0..<self.extension_values.length() {
+        if self.extension_values[i].0.number == field.number {
+          self.extension_values[i] = (field, value)
+          found = true
+        }
+      }
+      if !found {
+        self.extension_values.push((field, value))
+      }
+    }
+  }
 }
 
 ///|
@@ -5581,7 +5651,10 @@ pub impl @reflect.Message for FileDescriptorSet with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => FileDescriptorSet::read_field(self, field)
+  }
 }
 
 ///|
@@ -5589,7 +5662,10 @@ pub impl @reflect.Message for FileDescriptorSet with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -5597,12 +5673,15 @@ pub impl @reflect.Message for FileDescriptorSet with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for FileDescriptorSet with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -5610,7 +5689,7 @@ pub impl @reflect.Message for FileDescriptorSet with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -5665,9 +5744,7 @@ pub impl @reflect.MessageType for FileDescriptorSetType with fn zero(_self) -> &
 pub impl @reflect.MessageType for FileDescriptorSetType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.FileDescriptorSet",
-  )
+  descriptor_google_protobuf_descriptor_proto_FileDescriptorSet
 }
 
 ///|
@@ -5683,35 +5760,47 @@ pub let fileDescriptorSet_type : &@reflect.MessageType = FileDescriptorSetType::
 
 ///|
 pub struct FileDescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  mut package_ : String
+  dependency : Array[String]
+  public_dependency : Array[Int32]
+  weak_dependency : Array[Int32]
+  option_dependency : Array[String]
+  message_type_field : Array[DescriptorProto]
+  enum_type : Array[EnumDescriptorProto]
+  service : Array[ServiceDescriptorProto]
+  extension : Array[FieldDescriptorProto]
+  mut options : FileOptions?
+  mut source_code_info : SourceCodeInfo?
+  mut syntax : String
+  mut edition : Edition
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn FileDescriptorProto::new() -> FileDescriptorProto {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.FileDescriptorProto",
-      ),
-    ),
+    name: "",
+    package_: "",
+    dependency: [],
+    public_dependency: [],
+    weak_dependency: [],
+    option_dependency: [],
+    message_type_field: [],
+    enum_type: [],
+    service: [],
+    extension: [],
+    options: None,
+    source_code_info: None,
+    syntax: "",
+    edition: Edition::of(0),
+    unknown_fields: b"",
   }
-}
-
-///|
-pub fn FileDescriptorProto::message(
-  self : FileDescriptorProto,
-) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn FileDescriptorProto::name(self : FileDescriptorProto) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.name
 }
 
 ///|
@@ -5719,20 +5808,12 @@ pub fn FileDescriptorProto::set_name(
   self : FileDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.name = value
 }
 
 ///|
 pub fn FileDescriptorProto::package_(self : FileDescriptorProto) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.package_
 }
 
 ///|
@@ -5740,60 +5821,64 @@ pub fn FileDescriptorProto::set_package_(
   self : FileDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.String(value),
-  )
+  self.package_ = value
 }
 
 ///|
 pub fn FileDescriptorProto::dependency(
   self : FileDescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  self.inner.mutable(f).list()
+  @reflect.list_view(
+    self.dependency,
+    @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => ""),
+  )
 }
 
 ///|
 pub fn FileDescriptorProto::public_dependency(
   self : FileDescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 10)
-  self.inner.mutable(f).list()
+  @reflect.list_view(
+    self.public_dependency,
+    @reflect.scalar_element(v => @reflect.Int32(v), v => v.int().to_int(), () => {
+      0
+    }),
+  )
 }
 
 ///|
 pub fn FileDescriptorProto::weak_dependency(
   self : FileDescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 11)
-  self.inner.mutable(f).list()
+  @reflect.list_view(
+    self.weak_dependency,
+    @reflect.scalar_element(v => @reflect.Int32(v), v => v.int().to_int(), () => {
+      0
+    }),
+  )
 }
 
 ///|
 pub fn FileDescriptorProto::option_dependency(
   self : FileDescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 15)
-  self.inner.mutable(f).list()
+  @reflect.list_view(
+    self.option_dependency,
+    @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => ""),
+  )
 }
 
 ///|
 pub fn FileDescriptorProto::message_type_field(
   self : FileDescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 4)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn FileDescriptorProto::set_message_type_field(
-  self : FileDescriptorProto,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 4),
-    value,
+  @reflect.list_view(
+    self.message_type_field,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => DescriptorProto::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -5801,18 +5886,13 @@ pub fn FileDescriptorProto::set_message_type_field(
 pub fn FileDescriptorProto::enum_type(
   self : FileDescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 5)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn FileDescriptorProto::set_enum_type(
-  self : FileDescriptorProto,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 5),
-    value,
+  @reflect.list_view(
+    self.enum_type,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => EnumDescriptorProto::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -5820,18 +5900,13 @@ pub fn FileDescriptorProto::set_enum_type(
 pub fn FileDescriptorProto::service(
   self : FileDescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 6)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn FileDescriptorProto::set_service(
-  self : FileDescriptorProto,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 6),
-    value,
+  @reflect.list_view(
+    self.service,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => ServiceDescriptorProto::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -5839,18 +5914,13 @@ pub fn FileDescriptorProto::set_service(
 pub fn FileDescriptorProto::extension(
   self : FileDescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 7)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn FileDescriptorProto::set_extension(
-  self : FileDescriptorProto,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 7),
-    value,
+  @reflect.list_view(
+    self.extension,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => FieldDescriptorProto::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -5858,11 +5928,9 @@ pub fn FileDescriptorProto::set_extension(
 pub fn FileDescriptorProto::options(
   self : FileDescriptorProto,
 ) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 8)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.options {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(FileOptions::new() as &@reflect.Message)
   }
 }
 
@@ -5871,21 +5939,19 @@ pub fn FileDescriptorProto::set_options(
   self : FileDescriptorProto,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 8),
-    value,
-  )
+  let source = value.message()
+  let target = FileOptions::new()
+  @proto.merge(target, source)
+  self.options = Some(target)
 }
 
 ///|
 pub fn FileDescriptorProto::source_code_info(
   self : FileDescriptorProto,
 ) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 9)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.source_code_info {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(SourceCodeInfo::new() as &@reflect.Message)
   }
 }
 
@@ -5894,20 +5960,15 @@ pub fn FileDescriptorProto::set_source_code_info(
   self : FileDescriptorProto,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 9),
-    value,
-  )
+  let source = value.message()
+  let target = SourceCodeInfo::new()
+  @proto.merge(target, source)
+  self.source_code_info = Some(target)
 }
 
 ///|
 pub fn FileDescriptorProto::syntax(self : FileDescriptorProto) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 12)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.syntax
 }
 
 ///|
@@ -5915,20 +5976,12 @@ pub fn FileDescriptorProto::set_syntax(
   self : FileDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 12),
-    @reflect.String(value),
-  )
+  self.syntax = value
 }
 
 ///|
 pub fn FileDescriptorProto::edition(self : FileDescriptorProto) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 14)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.edition.code()
 }
 
 ///|
@@ -5936,10 +5989,7 @@ pub fn FileDescriptorProto::set_edition(
   self : FileDescriptorProto,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 14),
-    @reflect.Enum(value),
-  )
+  self.edition = Edition::of(value)
 }
 
 ///|
@@ -5959,8 +6009,123 @@ pub fn FileDescriptorProto::from_json(
 }
 
 ///|
+fn FileDescriptorProto::read_field(
+  self : FileDescriptorProto,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.name)
+    2 => @reflect.String(self.package_)
+    3 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.dependency,
+          @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => {
+            ""
+          }),
+        ),
+      )
+    10 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.public_dependency,
+          @reflect.scalar_element(
+            v => @reflect.Int32(v),
+            v => v.int().to_int(),
+            () => 0,
+          ),
+        ),
+      )
+    11 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.weak_dependency,
+          @reflect.scalar_element(
+            v => @reflect.Int32(v),
+            v => v.int().to_int(),
+            () => 0,
+          ),
+        ),
+      )
+    15 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.option_dependency,
+          @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => {
+            ""
+          }),
+        ),
+      )
+    4 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.message_type_field,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => DescriptorProto::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    5 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.enum_type,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => EnumDescriptorProto::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    6 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.service,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => ServiceDescriptorProto::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    7 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.extension,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => FieldDescriptorProto::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    8 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(FileOptions::new() as &@reflect.Message)
+      }
+    9 =>
+      match self.source_code_info {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(SourceCodeInfo::new() as &@reflect.Message)
+      }
+    12 => @reflect.String(self.syntax)
+    14 => @reflect.Enum(self.edition.code())
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_FileDescriptorProto : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.FileDescriptorProto",
+)
+
+///|
 pub impl @reflect.Message for FileDescriptorProto with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_FileDescriptorProto
 }
 
 ///|
@@ -5971,7 +6136,8 @@ pub impl @reflect.Message for FileDescriptorProto with fn message_type(self) -> 
 
 ///|
 pub impl @reflect.Message for FileDescriptorProto with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -5979,7 +6145,14 @@ pub impl @reflect.Message for FileDescriptorProto with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_FileDescriptorProto.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -5987,7 +6160,8 @@ pub impl @reflect.Message for FileDescriptorProto with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -5995,7 +6169,24 @@ pub impl @reflect.Message for FileDescriptorProto with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.name.length() > 0
+    2 => self.package_.length() > 0
+    3 => self.dependency.length() > 0
+    10 => self.public_dependency.length() > 0
+    11 => self.weak_dependency.length() > 0
+    15 => self.option_dependency.length() > 0
+    4 => self.message_type_field.length() > 0
+    5 => self.enum_type.length() > 0
+    6 => self.service.length() > 0
+    7 => self.extension.length() > 0
+    8 => @reflect.is_set(self.options)
+    9 => @reflect.is_set(self.source_code_info)
+    12 => self.syntax.length() > 0
+    14 => self.edition.code() != 0
+    _ => false
+  }
 }
 
 ///|
@@ -6003,7 +6194,24 @@ pub impl @reflect.Message for FileDescriptorProto with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.name = ""
+    2 => self.package_ = ""
+    3 => self.dependency.clear()
+    10 => self.public_dependency.clear()
+    11 => self.weak_dependency.clear()
+    15 => self.option_dependency.clear()
+    4 => self.message_type_field.clear()
+    5 => self.enum_type.clear()
+    6 => self.service.clear()
+    7 => self.extension.clear()
+    8 => self.options = None
+    9 => self.source_code_info = None
+    12 => self.syntax = ""
+    14 => self.edition = Edition::of(0)
+    _ => ()
+  }
 }
 
 ///|
@@ -6011,7 +6219,7 @@ pub impl @reflect.Message for FileDescriptorProto with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  FileDescriptorProto::read_field(self, field)
 }
 
 ///|
@@ -6020,7 +6228,99 @@ pub impl @reflect.Message for FileDescriptorProto with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.name = value.string()
+    2 => self.package_ = value.string()
+    3 =>
+      @reflect.assign_list(
+        self.dependency,
+        value.list(),
+        @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => {
+          ""
+        }),
+      )
+    10 =>
+      @reflect.assign_list(
+        self.public_dependency,
+        value.list(),
+        @reflect.scalar_element(v => @reflect.Int32(v), v => v.int().to_int(), () => {
+          0
+        }),
+      )
+    11 =>
+      @reflect.assign_list(
+        self.weak_dependency,
+        value.list(),
+        @reflect.scalar_element(v => @reflect.Int32(v), v => v.int().to_int(), () => {
+          0
+        }),
+      )
+    15 =>
+      @reflect.assign_list(
+        self.option_dependency,
+        value.list(),
+        @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => {
+          ""
+        }),
+      )
+    4 =>
+      @reflect.assign_list(
+        self.message_type_field,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => DescriptorProto::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    5 =>
+      @reflect.assign_list(
+        self.enum_type,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => EnumDescriptorProto::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    6 =>
+      @reflect.assign_list(
+        self.service,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => ServiceDescriptorProto::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    7 =>
+      @reflect.assign_list(
+        self.extension,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => FieldDescriptorProto::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    8 => {
+      let source = value.message()
+      let target = FileOptions::new()
+      @proto.merge(target, source)
+      self.options = Some(target)
+    }
+    9 => {
+      let source = value.message()
+      let target = SourceCodeInfo::new()
+      @proto.merge(target, source)
+      self.source_code_info = Some(target)
+    }
+    12 => self.syntax = value.string()
+    14 => self.edition = Edition::of(value.enum_number())
+    _ => ()
+  }
 }
 
 ///|
@@ -6028,7 +6328,28 @@ pub impl @reflect.Message for FileDescriptorProto with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    8 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FileOptions::new()
+          self.options = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    9 =>
+      match self.source_code_info {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = SourceCodeInfo::new()
+          self.source_code_info = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => FileDescriptorProto::read_field(self, field)
+  }
 }
 
 ///|
@@ -6036,7 +6357,12 @@ pub impl @reflect.Message for FileDescriptorProto with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    8 => @reflect.Message(FileOptions::new() as &@reflect.Message)
+    9 => @reflect.Message(SourceCodeInfo::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -6044,12 +6370,15 @@ pub impl @reflect.Message for FileDescriptorProto with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for FileDescriptorProto with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -6057,7 +6386,7 @@ pub impl @reflect.Message for FileDescriptorProto with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -6112,9 +6441,7 @@ pub impl @reflect.MessageType for FileDescriptorProtoType with fn zero(_self) ->
 pub impl @reflect.MessageType for FileDescriptorProtoType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.FileDescriptorProto",
-  )
+  descriptor_google_protobuf_descriptor_proto_FileDescriptorProto
 }
 
 ///|
@@ -6130,33 +6457,41 @@ pub let fileDescriptorProto_type : &@reflect.MessageType = FileDescriptorProtoTy
 
 ///|
 pub struct DescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  field : Array[FieldDescriptorProto]
+  extension : Array[FieldDescriptorProto]
+  nested_type : Array[DescriptorProto]
+  enum_type : Array[EnumDescriptorProto]
+  extension_range : Array[DescriptorProto_ExtensionRange]
+  oneof_decl : Array[OneofDescriptorProto]
+  mut options : MessageOptions?
+  reserved_range : Array[DescriptorProto_ReservedRange]
+  reserved_name : Array[String]
+  mut visibility : SymbolVisibility
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn DescriptorProto::new() -> DescriptorProto {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.DescriptorProto",
-      ),
-    ),
+    name: "",
+    field: [],
+    extension: [],
+    nested_type: [],
+    enum_type: [],
+    extension_range: [],
+    oneof_decl: [],
+    options: None,
+    reserved_range: [],
+    reserved_name: [],
+    visibility: SymbolVisibility::of(0),
+    unknown_fields: b"",
   }
-}
-
-///|
-pub fn DescriptorProto::message(self : DescriptorProto) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn DescriptorProto::name(self : DescriptorProto) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.name
 }
 
 ///|
@@ -6164,26 +6499,18 @@ pub fn DescriptorProto::set_name(
   self : DescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.name = value
 }
 
 ///|
 pub fn DescriptorProto::field(self : DescriptorProto) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn DescriptorProto::set_field(
-  self : DescriptorProto,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    value,
+  @reflect.list_view(
+    self.field,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => FieldDescriptorProto::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -6191,18 +6518,13 @@ pub fn DescriptorProto::set_field(
 pub fn DescriptorProto::extension(
   self : DescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 6)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn DescriptorProto::set_extension(
-  self : DescriptorProto,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 6),
-    value,
+  @reflect.list_view(
+    self.extension,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => FieldDescriptorProto::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -6210,18 +6532,13 @@ pub fn DescriptorProto::set_extension(
 pub fn DescriptorProto::nested_type(
   self : DescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn DescriptorProto::set_nested_type(
-  self : DescriptorProto,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    value,
+  @reflect.list_view(
+    self.nested_type,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => DescriptorProto::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -6229,18 +6546,13 @@ pub fn DescriptorProto::set_nested_type(
 pub fn DescriptorProto::enum_type(
   self : DescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 4)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn DescriptorProto::set_enum_type(
-  self : DescriptorProto,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 4),
-    value,
+  @reflect.list_view(
+    self.enum_type,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => EnumDescriptorProto::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -6248,18 +6560,13 @@ pub fn DescriptorProto::set_enum_type(
 pub fn DescriptorProto::extension_range(
   self : DescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 5)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn DescriptorProto::set_extension_range(
-  self : DescriptorProto,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 5),
-    value,
+  @reflect.list_view(
+    self.extension_range,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => DescriptorProto_ExtensionRange::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -6267,28 +6574,21 @@ pub fn DescriptorProto::set_extension_range(
 pub fn DescriptorProto::oneof_decl(
   self : DescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 8)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn DescriptorProto::set_oneof_decl(
-  self : DescriptorProto,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 8),
-    value,
+  @reflect.list_view(
+    self.oneof_decl,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => OneofDescriptorProto::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
 ///|
 pub fn DescriptorProto::options(self : DescriptorProto) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 7)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.options {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(MessageOptions::new() as &@reflect.Message)
   }
 }
 
@@ -6297,28 +6597,23 @@ pub fn DescriptorProto::set_options(
   self : DescriptorProto,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 7),
-    value,
-  )
+  let source = value.message()
+  let target = MessageOptions::new()
+  @proto.merge(target, source)
+  self.options = Some(target)
 }
 
 ///|
 pub fn DescriptorProto::reserved_range(
   self : DescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 9)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn DescriptorProto::set_reserved_range(
-  self : DescriptorProto,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 9),
-    value,
+  @reflect.list_view(
+    self.reserved_range,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => DescriptorProto_ReservedRange::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -6326,18 +6621,15 @@ pub fn DescriptorProto::set_reserved_range(
 pub fn DescriptorProto::reserved_name(
   self : DescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 10)
-  self.inner.mutable(f).list()
+  @reflect.list_view(
+    self.reserved_name,
+    @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => ""),
+  )
 }
 
 ///|
 pub fn DescriptorProto::visibility(self : DescriptorProto) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 11)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.visibility.code()
 }
 
 ///|
@@ -6345,10 +6637,7 @@ pub fn DescriptorProto::set_visibility(
   self : DescriptorProto,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 11),
-    @reflect.Enum(value),
-  )
+  self.visibility = SymbolVisibility::of(value)
 }
 
 ///|
@@ -6368,8 +6657,118 @@ pub fn DescriptorProto::from_json(
 }
 
 ///|
+fn DescriptorProto::read_field(
+  self : DescriptorProto,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.name)
+    2 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.field,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => FieldDescriptorProto::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    6 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.extension,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => FieldDescriptorProto::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    3 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.nested_type,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => DescriptorProto::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    4 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.enum_type,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => EnumDescriptorProto::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    5 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.extension_range,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => DescriptorProto_ExtensionRange::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    8 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.oneof_decl,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => OneofDescriptorProto::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    7 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(MessageOptions::new() as &@reflect.Message)
+      }
+    9 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.reserved_range,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => DescriptorProto_ReservedRange::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    10 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.reserved_name,
+          @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => {
+            ""
+          }),
+        ),
+      )
+    11 => @reflect.Enum(self.visibility.code())
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_DescriptorProto : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.DescriptorProto",
+)
+
+///|
 pub impl @reflect.Message for DescriptorProto with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_DescriptorProto
 }
 
 ///|
@@ -6380,7 +6779,8 @@ pub impl @reflect.Message for DescriptorProto with fn message_type(self) -> &@re
 
 ///|
 pub impl @reflect.Message for DescriptorProto with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -6388,7 +6788,14 @@ pub impl @reflect.Message for DescriptorProto with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_DescriptorProto.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -6396,7 +6803,8 @@ pub impl @reflect.Message for DescriptorProto with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -6404,7 +6812,21 @@ pub impl @reflect.Message for DescriptorProto with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.name.length() > 0
+    2 => self.field.length() > 0
+    6 => self.extension.length() > 0
+    3 => self.nested_type.length() > 0
+    4 => self.enum_type.length() > 0
+    5 => self.extension_range.length() > 0
+    8 => self.oneof_decl.length() > 0
+    7 => @reflect.is_set(self.options)
+    9 => self.reserved_range.length() > 0
+    10 => self.reserved_name.length() > 0
+    11 => self.visibility.code() != 0
+    _ => false
+  }
 }
 
 ///|
@@ -6412,7 +6834,21 @@ pub impl @reflect.Message for DescriptorProto with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.name = ""
+    2 => self.field.clear()
+    6 => self.extension.clear()
+    3 => self.nested_type.clear()
+    4 => self.enum_type.clear()
+    5 => self.extension_range.clear()
+    8 => self.oneof_decl.clear()
+    7 => self.options = None
+    9 => self.reserved_range.clear()
+    10 => self.reserved_name.clear()
+    11 => self.visibility = SymbolVisibility::of(0)
+    _ => ()
+  }
 }
 
 ///|
@@ -6420,7 +6856,7 @@ pub impl @reflect.Message for DescriptorProto with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  DescriptorProto::read_field(self, field)
 }
 
 ///|
@@ -6429,7 +6865,97 @@ pub impl @reflect.Message for DescriptorProto with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.name = value.string()
+    2 =>
+      @reflect.assign_list(
+        self.field,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => FieldDescriptorProto::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    6 =>
+      @reflect.assign_list(
+        self.extension,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => FieldDescriptorProto::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    3 =>
+      @reflect.assign_list(
+        self.nested_type,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => DescriptorProto::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    4 =>
+      @reflect.assign_list(
+        self.enum_type,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => EnumDescriptorProto::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    5 =>
+      @reflect.assign_list(
+        self.extension_range,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => DescriptorProto_ExtensionRange::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    8 =>
+      @reflect.assign_list(
+        self.oneof_decl,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => OneofDescriptorProto::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    7 => {
+      let source = value.message()
+      let target = MessageOptions::new()
+      @proto.merge(target, source)
+      self.options = Some(target)
+    }
+    9 =>
+      @reflect.assign_list(
+        self.reserved_range,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => DescriptorProto_ReservedRange::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    10 =>
+      @reflect.assign_list(
+        self.reserved_name,
+        value.list(),
+        @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => {
+          ""
+        }),
+      )
+    11 => self.visibility = SymbolVisibility::of(value.enum_number())
+    _ => ()
+  }
 }
 
 ///|
@@ -6437,7 +6963,19 @@ pub impl @reflect.Message for DescriptorProto with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    7 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = MessageOptions::new()
+          self.options = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => DescriptorProto::read_field(self, field)
+  }
 }
 
 ///|
@@ -6445,7 +6983,11 @@ pub impl @reflect.Message for DescriptorProto with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    7 => @reflect.Message(MessageOptions::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -6453,12 +6995,15 @@ pub impl @reflect.Message for DescriptorProto with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for DescriptorProto with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -6466,7 +7011,7 @@ pub impl @reflect.Message for DescriptorProto with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -6517,9 +7062,7 @@ pub impl @reflect.MessageType for DescriptorProtoType with fn zero(_self) -> &@r
 
 ///|
 pub impl @reflect.MessageType for DescriptorProtoType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.DescriptorProto",
-  )
+  descriptor_google_protobuf_descriptor_proto_DescriptorProto
 }
 
 ///|
@@ -6535,37 +7078,22 @@ pub let descriptorProto_type : &@reflect.MessageType = DescriptorProtoType::new(
 
 ///|
 pub struct DescriptorProto_ExtensionRange {
-  inner : @dynamic.Message
+  mut start : Int32
+  mut end : Int32
+  mut options : ExtensionRangeOptions?
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn DescriptorProto_ExtensionRange::new() -> DescriptorProto_ExtensionRange {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.DescriptorProto.ExtensionRange",
-      ),
-    ),
-  }
-}
-
-///|
-pub fn DescriptorProto_ExtensionRange::message(
-  self : DescriptorProto_ExtensionRange,
-) -> @dynamic.Message {
-  self.inner
+  { start: 0, end: 0, options: None, unknown_fields: b"", }
 }
 
 ///|
 pub fn DescriptorProto_ExtensionRange::start(
   self : DescriptorProto_ExtensionRange,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.start
 }
 
 ///|
@@ -6573,22 +7101,14 @@ pub fn DescriptorProto_ExtensionRange::set_start(
   self : DescriptorProto_ExtensionRange,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.Int32(value),
-  )
+  self.start = value
 }
 
 ///|
 pub fn DescriptorProto_ExtensionRange::end(
   self : DescriptorProto_ExtensionRange,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.end
 }
 
 ///|
@@ -6596,21 +7116,16 @@ pub fn DescriptorProto_ExtensionRange::set_end(
   self : DescriptorProto_ExtensionRange,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.Int32(value),
-  )
+  self.end = value
 }
 
 ///|
 pub fn DescriptorProto_ExtensionRange::options(
   self : DescriptorProto_ExtensionRange,
 ) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.options {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(ExtensionRangeOptions::new() as &@reflect.Message)
   }
 }
 
@@ -6619,10 +7134,10 @@ pub fn DescriptorProto_ExtensionRange::set_options(
   self : DescriptorProto_ExtensionRange,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    value,
-  )
+  let source = value.message()
+  let target = ExtensionRangeOptions::new()
+  @proto.merge(target, source)
+  self.options = Some(target)
 }
 
 ///|
@@ -6642,10 +7157,35 @@ pub fn DescriptorProto_ExtensionRange::from_json(
 }
 
 ///|
+fn DescriptorProto_ExtensionRange::read_field(
+  self : DescriptorProto_ExtensionRange,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Int32(self.start)
+    2 => @reflect.Int32(self.end)
+    3 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None =>
+          @reflect.Message(ExtensionRangeOptions::new() as &@reflect.Message)
+      }
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_DescriptorProto_ExtensionRange : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.DescriptorProto.ExtensionRange",
+)
+
+///|
 pub impl @reflect.Message for DescriptorProto_ExtensionRange with fn descriptor(
   self,
 ) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_DescriptorProto_ExtensionRange
 }
 
 ///|
@@ -6660,7 +7200,8 @@ pub impl @reflect.Message for DescriptorProto_ExtensionRange with fn message_typ
 pub impl @reflect.Message for DescriptorProto_ExtensionRange with fn is_valid(
   self,
 ) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -6668,7 +7209,14 @@ pub impl @reflect.Message for DescriptorProto_ExtensionRange with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_DescriptorProto_ExtensionRange.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -6676,7 +7224,8 @@ pub impl @reflect.Message for DescriptorProto_ExtensionRange with fn range_exten
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -6684,7 +7233,13 @@ pub impl @reflect.Message for DescriptorProto_ExtensionRange with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.start != 0
+    2 => self.end != 0
+    3 => @reflect.is_set(self.options)
+    _ => false
+  }
 }
 
 ///|
@@ -6692,7 +7247,13 @@ pub impl @reflect.Message for DescriptorProto_ExtensionRange with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.start = 0
+    2 => self.end = 0
+    3 => self.options = None
+    _ => ()
+  }
 }
 
 ///|
@@ -6700,7 +7261,7 @@ pub impl @reflect.Message for DescriptorProto_ExtensionRange with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  DescriptorProto_ExtensionRange::read_field(self, field)
 }
 
 ///|
@@ -6709,7 +7270,19 @@ pub impl @reflect.Message for DescriptorProto_ExtensionRange with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.start = value.int().to_int()
+    2 => self.end = value.int().to_int()
+    3 => {
+      let source = value.message()
+      let target = ExtensionRangeOptions::new()
+      @proto.merge(target, source)
+      self.options = Some(target)
+    }
+    _ => ()
+  }
 }
 
 ///|
@@ -6717,7 +7290,19 @@ pub impl @reflect.Message for DescriptorProto_ExtensionRange with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    3 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = ExtensionRangeOptions::new()
+          self.options = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => DescriptorProto_ExtensionRange::read_field(self, field)
+  }
 }
 
 ///|
@@ -6725,7 +7310,11 @@ pub impl @reflect.Message for DescriptorProto_ExtensionRange with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    3 => @reflect.Message(ExtensionRangeOptions::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -6733,14 +7322,17 @@ pub impl @reflect.Message for DescriptorProto_ExtensionRange with fn which_oneof
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for DescriptorProto_ExtensionRange with fn get_unknown(
   self,
 ) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -6748,7 +7340,7 @@ pub impl @reflect.Message for DescriptorProto_ExtensionRange with fn set_unknown
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -6805,9 +7397,7 @@ pub impl @reflect.MessageType for DescriptorProto_ExtensionRangeType with fn zer
 pub impl @reflect.MessageType for DescriptorProto_ExtensionRangeType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.DescriptorProto.ExtensionRange",
-  )
+  descriptor_google_protobuf_descriptor_proto_DescriptorProto_ExtensionRange
 }
 
 ///|
@@ -6823,37 +7413,21 @@ pub let descriptorProto_ExtensionRange_type : &@reflect.MessageType = Descriptor
 
 ///|
 pub struct DescriptorProto_ReservedRange {
-  inner : @dynamic.Message
+  mut start : Int32
+  mut end : Int32
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn DescriptorProto_ReservedRange::new() -> DescriptorProto_ReservedRange {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.DescriptorProto.ReservedRange",
-      ),
-    ),
-  }
-}
-
-///|
-pub fn DescriptorProto_ReservedRange::message(
-  self : DescriptorProto_ReservedRange,
-) -> @dynamic.Message {
-  self.inner
+  { start: 0, end: 0, unknown_fields: b"", }
 }
 
 ///|
 pub fn DescriptorProto_ReservedRange::start(
   self : DescriptorProto_ReservedRange,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.start
 }
 
 ///|
@@ -6861,22 +7435,14 @@ pub fn DescriptorProto_ReservedRange::set_start(
   self : DescriptorProto_ReservedRange,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.Int32(value),
-  )
+  self.start = value
 }
 
 ///|
 pub fn DescriptorProto_ReservedRange::end(
   self : DescriptorProto_ReservedRange,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.end
 }
 
 ///|
@@ -6884,10 +7450,7 @@ pub fn DescriptorProto_ReservedRange::set_end(
   self : DescriptorProto_ReservedRange,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.Int32(value),
-  )
+  self.end = value
 }
 
 ///|
@@ -6907,10 +7470,29 @@ pub fn DescriptorProto_ReservedRange::from_json(
 }
 
 ///|
+fn DescriptorProto_ReservedRange::read_field(
+  self : DescriptorProto_ReservedRange,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Int32(self.start)
+    2 => @reflect.Int32(self.end)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_DescriptorProto_ReservedRange : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.DescriptorProto.ReservedRange",
+)
+
+///|
 pub impl @reflect.Message for DescriptorProto_ReservedRange with fn descriptor(
   self,
 ) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_DescriptorProto_ReservedRange
 }
 
 ///|
@@ -6925,7 +7507,8 @@ pub impl @reflect.Message for DescriptorProto_ReservedRange with fn message_type
 pub impl @reflect.Message for DescriptorProto_ReservedRange with fn is_valid(
   self,
 ) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -6933,7 +7516,14 @@ pub impl @reflect.Message for DescriptorProto_ReservedRange with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_DescriptorProto_ReservedRange.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -6941,7 +7531,8 @@ pub impl @reflect.Message for DescriptorProto_ReservedRange with fn range_extens
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -6949,7 +7540,12 @@ pub impl @reflect.Message for DescriptorProto_ReservedRange with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.start != 0
+    2 => self.end != 0
+    _ => false
+  }
 }
 
 ///|
@@ -6957,7 +7553,12 @@ pub impl @reflect.Message for DescriptorProto_ReservedRange with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.start = 0
+    2 => self.end = 0
+    _ => ()
+  }
 }
 
 ///|
@@ -6965,7 +7566,7 @@ pub impl @reflect.Message for DescriptorProto_ReservedRange with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  DescriptorProto_ReservedRange::read_field(self, field)
 }
 
 ///|
@@ -6974,7 +7575,13 @@ pub impl @reflect.Message for DescriptorProto_ReservedRange with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.start = value.int().to_int()
+    2 => self.end = value.int().to_int()
+    _ => ()
+  }
 }
 
 ///|
@@ -6982,7 +7589,10 @@ pub impl @reflect.Message for DescriptorProto_ReservedRange with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => DescriptorProto_ReservedRange::read_field(self, field)
+  }
 }
 
 ///|
@@ -6990,7 +7600,10 @@ pub impl @reflect.Message for DescriptorProto_ReservedRange with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -6998,14 +7611,17 @@ pub impl @reflect.Message for DescriptorProto_ReservedRange with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for DescriptorProto_ReservedRange with fn get_unknown(
   self,
 ) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -7013,7 +7629,7 @@ pub impl @reflect.Message for DescriptorProto_ReservedRange with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -7070,9 +7686,7 @@ pub impl @reflect.MessageType for DescriptorProto_ReservedRangeType with fn zero
 pub impl @reflect.MessageType for DescriptorProto_ReservedRangeType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.DescriptorProto.ReservedRange",
-  )
+  descriptor_google_protobuf_descriptor_proto_DescriptorProto_ReservedRange
 }
 
 ///|
@@ -7088,43 +7702,37 @@ pub let descriptorProto_ReservedRange_type : &@reflect.MessageType = DescriptorP
 
 ///|
 pub struct ExtensionRangeOptions {
-  inner : @dynamic.Message
+  uninterpreted_option : Array[UninterpretedOption]
+  declaration : Array[ExtensionRangeOptions_Declaration]
+  mut features : FeatureSet?
+  mut verification : ExtensionRangeOptions_VerificationState
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 
 ///|
 pub fn ExtensionRangeOptions::new() -> ExtensionRangeOptions {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.ExtensionRangeOptions",
-      ),
-    ),
+    uninterpreted_option: [],
+    declaration: [],
+    features: None,
+    verification: ExtensionRangeOptions_VerificationState::of(0),
+    unknown_fields: b"",
+    extension_values: [],
   }
-}
-
-///|
-pub fn ExtensionRangeOptions::message(
-  self : ExtensionRangeOptions,
-) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn ExtensionRangeOptions::uninterpreted_option(
   self : ExtensionRangeOptions,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 999)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn ExtensionRangeOptions::set_uninterpreted_option(
-  self : ExtensionRangeOptions,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 999),
-    value,
+  @reflect.list_view(
+    self.uninterpreted_option,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => UninterpretedOption::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -7132,18 +7740,13 @@ pub fn ExtensionRangeOptions::set_uninterpreted_option(
 pub fn ExtensionRangeOptions::declaration(
   self : ExtensionRangeOptions,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn ExtensionRangeOptions::set_declaration(
-  self : ExtensionRangeOptions,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    value,
+  @reflect.list_view(
+    self.declaration,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => ExtensionRangeOptions_Declaration::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -7151,11 +7754,9 @@ pub fn ExtensionRangeOptions::set_declaration(
 pub fn ExtensionRangeOptions::features(
   self : ExtensionRangeOptions,
 ) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 50)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.features {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
   }
 }
 
@@ -7164,22 +7765,17 @@ pub fn ExtensionRangeOptions::set_features(
   self : ExtensionRangeOptions,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 50),
-    value,
-  )
+  let source = value.message()
+  let target = FeatureSet::new()
+  @proto.merge(target, source)
+  self.features = Some(target)
 }
 
 ///|
 pub fn ExtensionRangeOptions::verification(
   self : ExtensionRangeOptions,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.verification.code()
 }
 
 ///|
@@ -7187,10 +7783,7 @@ pub fn ExtensionRangeOptions::set_verification(
   self : ExtensionRangeOptions,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.Enum(value),
-  )
+  self.verification = ExtensionRangeOptions_VerificationState::of(value)
 }
 
 ///|
@@ -7210,8 +7803,60 @@ pub fn ExtensionRangeOptions::from_json(
 }
 
 ///|
+fn ExtensionRangeOptions::read_field(
+  self : ExtensionRangeOptions,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    999 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.uninterpreted_option,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => UninterpretedOption::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    2 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.declaration,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => ExtensionRangeOptions_Declaration::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    50 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+      }
+    3 => @reflect.Enum(self.verification.code())
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return pair.1
+        }
+      }
+      @reflect.default_for(field)
+    }
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_ExtensionRangeOptions : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.ExtensionRangeOptions",
+)
+
+///|
 pub impl @reflect.Message for ExtensionRangeOptions with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_ExtensionRangeOptions
 }
 
 ///|
@@ -7222,7 +7867,8 @@ pub impl @reflect.Message for ExtensionRangeOptions with fn message_type(self) -
 
 ///|
 pub impl @reflect.Message for ExtensionRangeOptions with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -7230,7 +7876,14 @@ pub impl @reflect.Message for ExtensionRangeOptions with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_ExtensionRangeOptions.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -7238,7 +7891,11 @@ pub impl @reflect.Message for ExtensionRangeOptions with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  for pair in self.extension_values {
+    if !f(pair.0, pair.1) {
+      break
+    }
+  }
 }
 
 ///|
@@ -7246,7 +7903,21 @@ pub impl @reflect.Message for ExtensionRangeOptions with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    999 => self.uninterpreted_option.length() > 0
+    2 => self.declaration.length() > 0
+    50 => @reflect.is_set(self.features)
+    3 => self.verification.code() != 0
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return true
+        }
+      }
+      false
+    }
+  }
 }
 
 ///|
@@ -7254,7 +7925,22 @@ pub impl @reflect.Message for ExtensionRangeOptions with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    999 => self.uninterpreted_option.clear()
+    2 => self.declaration.clear()
+    50 => self.features = None
+    3 => self.verification = ExtensionRangeOptions_VerificationState::of(0)
+    _ => {
+      let kept : Array[(@reflect.FieldDescriptor, @reflect.Value)] = []
+      for pair in self.extension_values {
+        if pair.0.number != field.number {
+          kept.push(pair)
+        }
+      }
+      self.extension_values = kept
+    }
+  }
 }
 
 ///|
@@ -7262,7 +7948,7 @@ pub impl @reflect.Message for ExtensionRangeOptions with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  ExtensionRangeOptions::read_field(self, field)
 }
 
 ///|
@@ -7271,7 +7957,52 @@ pub impl @reflect.Message for ExtensionRangeOptions with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    999 =>
+      @reflect.assign_list(
+        self.uninterpreted_option,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => UninterpretedOption::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    2 =>
+      @reflect.assign_list(
+        self.declaration,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => ExtensionRangeOptions_Declaration::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    50 => {
+      let source = value.message()
+      let target = FeatureSet::new()
+      @proto.merge(target, source)
+      self.features = Some(target)
+    }
+    3 =>
+      self.verification = ExtensionRangeOptions_VerificationState::of(
+        value.enum_number(),
+      )
+    _ => {
+      let mut found = false
+      for i in 0..<self.extension_values.length() {
+        if self.extension_values[i].0.number == field.number {
+          self.extension_values[i] = (field, value)
+          found = true
+        }
+      }
+      if !found {
+        self.extension_values.push((field, value))
+      }
+    }
+  }
 }
 
 ///|
@@ -7279,7 +8010,19 @@ pub impl @reflect.Message for ExtensionRangeOptions with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    50 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FeatureSet::new()
+          self.features = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => ExtensionRangeOptions::read_field(self, field)
+  }
 }
 
 ///|
@@ -7287,7 +8030,11 @@ pub impl @reflect.Message for ExtensionRangeOptions with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    50 => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -7295,12 +8042,15 @@ pub impl @reflect.Message for ExtensionRangeOptions with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for ExtensionRangeOptions with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -7308,7 +8058,7 @@ pub impl @reflect.Message for ExtensionRangeOptions with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -7363,9 +8113,7 @@ pub impl @reflect.MessageType for ExtensionRangeOptionsType with fn zero(_self) 
 pub impl @reflect.MessageType for ExtensionRangeOptionsType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.ExtensionRangeOptions",
-  )
+  descriptor_google_protobuf_descriptor_proto_ExtensionRangeOptions
 }
 
 ///|
@@ -7380,38 +8128,61 @@ pub let extensionRangeOptions_type : &@reflect.MessageType = ExtensionRangeOptio
   as &@reflect.MessageType
 
 ///|
+pub(all) enum ExtensionRangeOptions_VerificationState {
+  DECLARATION
+  UNVERIFIED
+  Unknown(Int32)
+}
+
+///|
+pub fn ExtensionRangeOptions_VerificationState::code(
+  self : ExtensionRangeOptions_VerificationState,
+) -> Int32 {
+  match self {
+    DECLARATION => 0
+    UNVERIFIED => 1
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn ExtensionRangeOptions_VerificationState::of(
+  n : Int32,
+) -> ExtensionRangeOptions_VerificationState {
+  match n {
+    0 => DECLARATION
+    1 => UNVERIFIED
+    _ => Unknown(n)
+  }
+}
+
+///|
 pub struct ExtensionRangeOptions_Declaration {
-  inner : @dynamic.Message
+  mut number : Int32
+  mut full_name : String
+  mut type_ : String
+  mut reserved : Bool
+  mut repeated : Bool
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn ExtensionRangeOptions_Declaration::new() -> ExtensionRangeOptions_Declaration {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.ExtensionRangeOptions.Declaration",
-      ),
-    ),
+    number: 0,
+    full_name: "",
+    type_: "",
+    reserved: false,
+    repeated: false,
+    unknown_fields: b"",
   }
-}
-
-///|
-pub fn ExtensionRangeOptions_Declaration::message(
-  self : ExtensionRangeOptions_Declaration,
-) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn ExtensionRangeOptions_Declaration::number(
   self : ExtensionRangeOptions_Declaration,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.number
 }
 
 ///|
@@ -7419,22 +8190,14 @@ pub fn ExtensionRangeOptions_Declaration::set_number(
   self : ExtensionRangeOptions_Declaration,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.Int32(value),
-  )
+  self.number = value
 }
 
 ///|
 pub fn ExtensionRangeOptions_Declaration::full_name(
   self : ExtensionRangeOptions_Declaration,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.full_name
 }
 
 ///|
@@ -7442,22 +8205,14 @@ pub fn ExtensionRangeOptions_Declaration::set_full_name(
   self : ExtensionRangeOptions_Declaration,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.String(value),
-  )
+  self.full_name = value
 }
 
 ///|
 pub fn ExtensionRangeOptions_Declaration::type_(
   self : ExtensionRangeOptions_Declaration,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.type_
 }
 
 ///|
@@ -7465,22 +8220,14 @@ pub fn ExtensionRangeOptions_Declaration::set_type_(
   self : ExtensionRangeOptions_Declaration,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.String(value),
-  )
+  self.type_ = value
 }
 
 ///|
 pub fn ExtensionRangeOptions_Declaration::reserved(
   self : ExtensionRangeOptions_Declaration,
 ) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 5)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.reserved
 }
 
 ///|
@@ -7488,22 +8235,14 @@ pub fn ExtensionRangeOptions_Declaration::set_reserved(
   self : ExtensionRangeOptions_Declaration,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 5),
-    @reflect.Bool(value),
-  )
+  self.reserved = value
 }
 
 ///|
 pub fn ExtensionRangeOptions_Declaration::repeated(
   self : ExtensionRangeOptions_Declaration,
 ) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 6)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.repeated
 }
 
 ///|
@@ -7511,10 +8250,7 @@ pub fn ExtensionRangeOptions_Declaration::set_repeated(
   self : ExtensionRangeOptions_Declaration,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 6),
-    @reflect.Bool(value),
-  )
+  self.repeated = value
 }
 
 ///|
@@ -7534,10 +8270,32 @@ pub fn ExtensionRangeOptions_Declaration::from_json(
 }
 
 ///|
+fn ExtensionRangeOptions_Declaration::read_field(
+  self : ExtensionRangeOptions_Declaration,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Int32(self.number)
+    2 => @reflect.String(self.full_name)
+    3 => @reflect.String(self.type_)
+    5 => @reflect.Bool(self.reserved)
+    6 => @reflect.Bool(self.repeated)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_ExtensionRangeOptions_Declaration : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.ExtensionRangeOptions.Declaration",
+)
+
+///|
 pub impl @reflect.Message for ExtensionRangeOptions_Declaration with fn descriptor(
   self,
 ) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_ExtensionRangeOptions_Declaration
 }
 
 ///|
@@ -7552,7 +8310,8 @@ pub impl @reflect.Message for ExtensionRangeOptions_Declaration with fn message_
 pub impl @reflect.Message for ExtensionRangeOptions_Declaration with fn is_valid(
   self,
 ) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -7560,7 +8319,14 @@ pub impl @reflect.Message for ExtensionRangeOptions_Declaration with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_ExtensionRangeOptions_Declaration.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -7568,7 +8334,8 @@ pub impl @reflect.Message for ExtensionRangeOptions_Declaration with fn range_ex
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -7576,7 +8343,15 @@ pub impl @reflect.Message for ExtensionRangeOptions_Declaration with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.number != 0
+    2 => self.full_name.length() > 0
+    3 => self.type_.length() > 0
+    5 => self.reserved
+    6 => self.repeated
+    _ => false
+  }
 }
 
 ///|
@@ -7584,7 +8359,15 @@ pub impl @reflect.Message for ExtensionRangeOptions_Declaration with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.number = 0
+    2 => self.full_name = ""
+    3 => self.type_ = ""
+    5 => self.reserved = false
+    6 => self.repeated = false
+    _ => ()
+  }
 }
 
 ///|
@@ -7592,7 +8375,7 @@ pub impl @reflect.Message for ExtensionRangeOptions_Declaration with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  ExtensionRangeOptions_Declaration::read_field(self, field)
 }
 
 ///|
@@ -7601,7 +8384,16 @@ pub impl @reflect.Message for ExtensionRangeOptions_Declaration with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.number = value.int().to_int()
+    2 => self.full_name = value.string()
+    3 => self.type_ = value.string()
+    5 => self.reserved = value.bool()
+    6 => self.repeated = value.bool()
+    _ => ()
+  }
 }
 
 ///|
@@ -7609,7 +8401,10 @@ pub impl @reflect.Message for ExtensionRangeOptions_Declaration with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => ExtensionRangeOptions_Declaration::read_field(self, field)
+  }
 }
 
 ///|
@@ -7617,7 +8412,10 @@ pub impl @reflect.Message for ExtensionRangeOptions_Declaration with fn new_fiel
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -7625,14 +8423,17 @@ pub impl @reflect.Message for ExtensionRangeOptions_Declaration with fn which_on
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for ExtensionRangeOptions_Declaration with fn get_unknown(
   self,
 ) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -7640,7 +8441,7 @@ pub impl @reflect.Message for ExtensionRangeOptions_Declaration with fn set_unkn
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -7699,9 +8500,7 @@ pub impl @reflect.MessageType for ExtensionRangeOptions_DeclarationType with fn 
 pub impl @reflect.MessageType for ExtensionRangeOptions_DeclarationType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.ExtensionRangeOptions.Declaration",
-  )
+  descriptor_google_protobuf_descriptor_proto_ExtensionRangeOptions_Declaration
 }
 
 ///|
@@ -7717,35 +8516,41 @@ pub let extensionRangeOptions_Declaration_type : &@reflect.MessageType = Extensi
 
 ///|
 pub struct FieldDescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  mut number : Int32
+  mut label : FieldDescriptorProto_Label
+  mut type_ : FieldDescriptorProto_Type
+  mut type_name : String
+  mut extendee : String
+  mut default_value : String
+  mut oneof_index : Int32
+  mut json_name : String
+  mut options : FieldOptions?
+  mut proto3_optional : Bool
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn FieldDescriptorProto::new() -> FieldDescriptorProto {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.FieldDescriptorProto",
-      ),
-    ),
+    name: "",
+    number: 0,
+    label: FieldDescriptorProto_Label::of(0),
+    type_: FieldDescriptorProto_Type::of(0),
+    type_name: "",
+    extendee: "",
+    default_value: "",
+    oneof_index: 0,
+    json_name: "",
+    options: None,
+    proto3_optional: false,
+    unknown_fields: b"",
   }
-}
-
-///|
-pub fn FieldDescriptorProto::message(
-  self : FieldDescriptorProto,
-) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn FieldDescriptorProto::name(self : FieldDescriptorProto) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.name
 }
 
 ///|
@@ -7753,20 +8558,12 @@ pub fn FieldDescriptorProto::set_name(
   self : FieldDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.name = value
 }
 
 ///|
 pub fn FieldDescriptorProto::number(self : FieldDescriptorProto) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.number
 }
 
 ///|
@@ -7774,20 +8571,12 @@ pub fn FieldDescriptorProto::set_number(
   self : FieldDescriptorProto,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.Int32(value),
-  )
+  self.number = value
 }
 
 ///|
 pub fn FieldDescriptorProto::label(self : FieldDescriptorProto) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 4)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.label.code()
 }
 
 ///|
@@ -7795,20 +8584,12 @@ pub fn FieldDescriptorProto::set_label(
   self : FieldDescriptorProto,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 4),
-    @reflect.Enum(value),
-  )
+  self.label = FieldDescriptorProto_Label::of(value)
 }
 
 ///|
 pub fn FieldDescriptorProto::type_(self : FieldDescriptorProto) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 5)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.type_.code()
 }
 
 ///|
@@ -7816,20 +8597,12 @@ pub fn FieldDescriptorProto::set_type_(
   self : FieldDescriptorProto,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 5),
-    @reflect.Enum(value),
-  )
+  self.type_ = FieldDescriptorProto_Type::of(value)
 }
 
 ///|
 pub fn FieldDescriptorProto::type_name(self : FieldDescriptorProto) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 6)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.type_name
 }
 
 ///|
@@ -7837,20 +8610,12 @@ pub fn FieldDescriptorProto::set_type_name(
   self : FieldDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 6),
-    @reflect.String(value),
-  )
+  self.type_name = value
 }
 
 ///|
 pub fn FieldDescriptorProto::extendee(self : FieldDescriptorProto) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.extendee
 }
 
 ///|
@@ -7858,22 +8623,14 @@ pub fn FieldDescriptorProto::set_extendee(
   self : FieldDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.String(value),
-  )
+  self.extendee = value
 }
 
 ///|
 pub fn FieldDescriptorProto::default_value(
   self : FieldDescriptorProto,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 7)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.default_value
 }
 
 ///|
@@ -7881,20 +8638,12 @@ pub fn FieldDescriptorProto::set_default_value(
   self : FieldDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 7),
-    @reflect.String(value),
-  )
+  self.default_value = value
 }
 
 ///|
 pub fn FieldDescriptorProto::oneof_index(self : FieldDescriptorProto) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 9)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.oneof_index
 }
 
 ///|
@@ -7902,20 +8651,12 @@ pub fn FieldDescriptorProto::set_oneof_index(
   self : FieldDescriptorProto,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 9),
-    @reflect.Int32(value),
-  )
+  self.oneof_index = value
 }
 
 ///|
 pub fn FieldDescriptorProto::json_name(self : FieldDescriptorProto) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 10)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.json_name
 }
 
 ///|
@@ -7923,21 +8664,16 @@ pub fn FieldDescriptorProto::set_json_name(
   self : FieldDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 10),
-    @reflect.String(value),
-  )
+  self.json_name = value
 }
 
 ///|
 pub fn FieldDescriptorProto::options(
   self : FieldDescriptorProto,
 ) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 8)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.options {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(FieldOptions::new() as &@reflect.Message)
   }
 }
 
@@ -7946,22 +8682,17 @@ pub fn FieldDescriptorProto::set_options(
   self : FieldDescriptorProto,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 8),
-    value,
-  )
+  let source = value.message()
+  let target = FieldOptions::new()
+  @proto.merge(target, source)
+  self.options = Some(target)
 }
 
 ///|
 pub fn FieldDescriptorProto::proto3_optional(
   self : FieldDescriptorProto,
 ) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 17)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.proto3_optional
 }
 
 ///|
@@ -7969,10 +8700,7 @@ pub fn FieldDescriptorProto::set_proto3_optional(
   self : FieldDescriptorProto,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 17),
-    @reflect.Bool(value),
-  )
+  self.proto3_optional = value
 }
 
 ///|
@@ -7992,8 +8720,40 @@ pub fn FieldDescriptorProto::from_json(
 }
 
 ///|
+fn FieldDescriptorProto::read_field(
+  self : FieldDescriptorProto,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.name)
+    3 => @reflect.Int32(self.number)
+    4 => @reflect.Enum(self.label.code())
+    5 => @reflect.Enum(self.type_.code())
+    6 => @reflect.String(self.type_name)
+    2 => @reflect.String(self.extendee)
+    7 => @reflect.String(self.default_value)
+    9 => @reflect.Int32(self.oneof_index)
+    10 => @reflect.String(self.json_name)
+    8 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(FieldOptions::new() as &@reflect.Message)
+      }
+    17 => @reflect.Bool(self.proto3_optional)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_FieldDescriptorProto : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.FieldDescriptorProto",
+)
+
+///|
 pub impl @reflect.Message for FieldDescriptorProto with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_FieldDescriptorProto
 }
 
 ///|
@@ -8004,7 +8764,8 @@ pub impl @reflect.Message for FieldDescriptorProto with fn message_type(self) ->
 
 ///|
 pub impl @reflect.Message for FieldDescriptorProto with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -8012,7 +8773,14 @@ pub impl @reflect.Message for FieldDescriptorProto with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_FieldDescriptorProto.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -8020,7 +8788,8 @@ pub impl @reflect.Message for FieldDescriptorProto with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -8028,7 +8797,21 @@ pub impl @reflect.Message for FieldDescriptorProto with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.name.length() > 0
+    3 => self.number != 0
+    4 => self.label.code() != 0
+    5 => self.type_.code() != 0
+    6 => self.type_name.length() > 0
+    2 => self.extendee.length() > 0
+    7 => self.default_value.length() > 0
+    9 => self.oneof_index != 0
+    10 => self.json_name.length() > 0
+    8 => @reflect.is_set(self.options)
+    17 => self.proto3_optional
+    _ => false
+  }
 }
 
 ///|
@@ -8036,7 +8819,21 @@ pub impl @reflect.Message for FieldDescriptorProto with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.name = ""
+    3 => self.number = 0
+    4 => self.label = FieldDescriptorProto_Label::of(0)
+    5 => self.type_ = FieldDescriptorProto_Type::of(0)
+    6 => self.type_name = ""
+    2 => self.extendee = ""
+    7 => self.default_value = ""
+    9 => self.oneof_index = 0
+    10 => self.json_name = ""
+    8 => self.options = None
+    17 => self.proto3_optional = false
+    _ => ()
+  }
 }
 
 ///|
@@ -8044,7 +8841,7 @@ pub impl @reflect.Message for FieldDescriptorProto with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  FieldDescriptorProto::read_field(self, field)
 }
 
 ///|
@@ -8053,7 +8850,27 @@ pub impl @reflect.Message for FieldDescriptorProto with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.name = value.string()
+    3 => self.number = value.int().to_int()
+    4 => self.label = FieldDescriptorProto_Label::of(value.enum_number())
+    5 => self.type_ = FieldDescriptorProto_Type::of(value.enum_number())
+    6 => self.type_name = value.string()
+    2 => self.extendee = value.string()
+    7 => self.default_value = value.string()
+    9 => self.oneof_index = value.int().to_int()
+    10 => self.json_name = value.string()
+    8 => {
+      let source = value.message()
+      let target = FieldOptions::new()
+      @proto.merge(target, source)
+      self.options = Some(target)
+    }
+    17 => self.proto3_optional = value.bool()
+    _ => ()
+  }
 }
 
 ///|
@@ -8061,7 +8878,19 @@ pub impl @reflect.Message for FieldDescriptorProto with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    8 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FieldOptions::new()
+          self.options = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => FieldDescriptorProto::read_field(self, field)
+  }
 }
 
 ///|
@@ -8069,7 +8898,11 @@ pub impl @reflect.Message for FieldDescriptorProto with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    8 => @reflect.Message(FieldOptions::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -8077,12 +8910,15 @@ pub impl @reflect.Message for FieldDescriptorProto with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for FieldDescriptorProto with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -8090,7 +8926,7 @@ pub impl @reflect.Message for FieldDescriptorProto with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -8145,9 +8981,7 @@ pub impl @reflect.MessageType for FieldDescriptorProtoType with fn zero(_self) -
 pub impl @reflect.MessageType for FieldDescriptorProtoType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.FieldDescriptorProto",
-  )
+  descriptor_google_protobuf_descriptor_proto_FieldDescriptorProto
 }
 
 ///|
@@ -8162,36 +8996,125 @@ pub let fieldDescriptorProto_type : &@reflect.MessageType = FieldDescriptorProto
   as &@reflect.MessageType
 
 ///|
+pub(all) enum FieldDescriptorProto_Type {
+  TYPE_DOUBLE
+  TYPE_FLOAT
+  TYPE_INT64
+  TYPE_UINT64
+  TYPE_INT32
+  TYPE_FIXED64
+  TYPE_FIXED32
+  TYPE_BOOL
+  TYPE_STRING
+  TYPE_GROUP
+  TYPE_MESSAGE
+  TYPE_BYTES
+  TYPE_UINT32
+  TYPE_ENUM
+  TYPE_SFIXED32
+  TYPE_SFIXED64
+  TYPE_SINT32
+  TYPE_SINT64
+  Unknown(Int32)
+}
+
+///|
+pub fn FieldDescriptorProto_Type::code(
+  self : FieldDescriptorProto_Type,
+) -> Int32 {
+  match self {
+    TYPE_DOUBLE => 1
+    TYPE_FLOAT => 2
+    TYPE_INT64 => 3
+    TYPE_UINT64 => 4
+    TYPE_INT32 => 5
+    TYPE_FIXED64 => 6
+    TYPE_FIXED32 => 7
+    TYPE_BOOL => 8
+    TYPE_STRING => 9
+    TYPE_GROUP => 10
+    TYPE_MESSAGE => 11
+    TYPE_BYTES => 12
+    TYPE_UINT32 => 13
+    TYPE_ENUM => 14
+    TYPE_SFIXED32 => 15
+    TYPE_SFIXED64 => 16
+    TYPE_SINT32 => 17
+    TYPE_SINT64 => 18
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn FieldDescriptorProto_Type::of(n : Int32) -> FieldDescriptorProto_Type {
+  match n {
+    1 => TYPE_DOUBLE
+    2 => TYPE_FLOAT
+    3 => TYPE_INT64
+    4 => TYPE_UINT64
+    5 => TYPE_INT32
+    6 => TYPE_FIXED64
+    7 => TYPE_FIXED32
+    8 => TYPE_BOOL
+    9 => TYPE_STRING
+    10 => TYPE_GROUP
+    11 => TYPE_MESSAGE
+    12 => TYPE_BYTES
+    13 => TYPE_UINT32
+    14 => TYPE_ENUM
+    15 => TYPE_SFIXED32
+    16 => TYPE_SFIXED64
+    17 => TYPE_SINT32
+    18 => TYPE_SINT64
+    _ => Unknown(n)
+  }
+}
+
+///|
+pub(all) enum FieldDescriptorProto_Label {
+  LABEL_OPTIONAL
+  LABEL_REPEATED
+  LABEL_REQUIRED
+  Unknown(Int32)
+}
+
+///|
+pub fn FieldDescriptorProto_Label::code(
+  self : FieldDescriptorProto_Label,
+) -> Int32 {
+  match self {
+    LABEL_OPTIONAL => 1
+    LABEL_REPEATED => 3
+    LABEL_REQUIRED => 2
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn FieldDescriptorProto_Label::of(n : Int32) -> FieldDescriptorProto_Label {
+  match n {
+    1 => LABEL_OPTIONAL
+    3 => LABEL_REPEATED
+    2 => LABEL_REQUIRED
+    _ => Unknown(n)
+  }
+}
+
+///|
 pub struct OneofDescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  mut options : OneofOptions?
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn OneofDescriptorProto::new() -> OneofDescriptorProto {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.OneofDescriptorProto",
-      ),
-    ),
-  }
-}
-
-///|
-pub fn OneofDescriptorProto::message(
-  self : OneofDescriptorProto,
-) -> @dynamic.Message {
-  self.inner
+  { name: "", options: None, unknown_fields: b"", }
 }
 
 ///|
 pub fn OneofDescriptorProto::name(self : OneofDescriptorProto) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.name
 }
 
 ///|
@@ -8199,21 +9122,16 @@ pub fn OneofDescriptorProto::set_name(
   self : OneofDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.name = value
 }
 
 ///|
 pub fn OneofDescriptorProto::options(
   self : OneofDescriptorProto,
 ) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.options {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(OneofOptions::new() as &@reflect.Message)
   }
 }
 
@@ -8222,10 +9140,10 @@ pub fn OneofDescriptorProto::set_options(
   self : OneofDescriptorProto,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    value,
-  )
+  let source = value.message()
+  let target = OneofOptions::new()
+  @proto.merge(target, source)
+  self.options = Some(target)
 }
 
 ///|
@@ -8245,8 +9163,31 @@ pub fn OneofDescriptorProto::from_json(
 }
 
 ///|
+fn OneofDescriptorProto::read_field(
+  self : OneofDescriptorProto,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.name)
+    2 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(OneofOptions::new() as &@reflect.Message)
+      }
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_OneofDescriptorProto : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.OneofDescriptorProto",
+)
+
+///|
 pub impl @reflect.Message for OneofDescriptorProto with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_OneofDescriptorProto
 }
 
 ///|
@@ -8257,7 +9198,8 @@ pub impl @reflect.Message for OneofDescriptorProto with fn message_type(self) ->
 
 ///|
 pub impl @reflect.Message for OneofDescriptorProto with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -8265,7 +9207,14 @@ pub impl @reflect.Message for OneofDescriptorProto with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_OneofDescriptorProto.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -8273,7 +9222,8 @@ pub impl @reflect.Message for OneofDescriptorProto with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -8281,7 +9231,12 @@ pub impl @reflect.Message for OneofDescriptorProto with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.name.length() > 0
+    2 => @reflect.is_set(self.options)
+    _ => false
+  }
 }
 
 ///|
@@ -8289,7 +9244,12 @@ pub impl @reflect.Message for OneofDescriptorProto with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.name = ""
+    2 => self.options = None
+    _ => ()
+  }
 }
 
 ///|
@@ -8297,7 +9257,7 @@ pub impl @reflect.Message for OneofDescriptorProto with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  OneofDescriptorProto::read_field(self, field)
 }
 
 ///|
@@ -8306,7 +9266,18 @@ pub impl @reflect.Message for OneofDescriptorProto with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.name = value.string()
+    2 => {
+      let source = value.message()
+      let target = OneofOptions::new()
+      @proto.merge(target, source)
+      self.options = Some(target)
+    }
+    _ => ()
+  }
 }
 
 ///|
@@ -8314,7 +9285,19 @@ pub impl @reflect.Message for OneofDescriptorProto with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    2 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = OneofOptions::new()
+          self.options = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => OneofDescriptorProto::read_field(self, field)
+  }
 }
 
 ///|
@@ -8322,7 +9305,11 @@ pub impl @reflect.Message for OneofDescriptorProto with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    2 => @reflect.Message(OneofOptions::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -8330,12 +9317,15 @@ pub impl @reflect.Message for OneofDescriptorProto with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for OneofDescriptorProto with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -8343,7 +9333,7 @@ pub impl @reflect.Message for OneofDescriptorProto with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -8398,9 +9388,7 @@ pub impl @reflect.MessageType for OneofDescriptorProtoType with fn zero(_self) -
 pub impl @reflect.MessageType for OneofDescriptorProtoType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.OneofDescriptorProto",
-  )
+  descriptor_google_protobuf_descriptor_proto_OneofDescriptorProto
 }
 
 ///|
@@ -8416,35 +9404,31 @@ pub let oneofDescriptorProto_type : &@reflect.MessageType = OneofDescriptorProto
 
 ///|
 pub struct EnumDescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  value : Array[EnumValueDescriptorProto]
+  mut options : EnumOptions?
+  reserved_range : Array[EnumDescriptorProto_EnumReservedRange]
+  reserved_name : Array[String]
+  mut visibility : SymbolVisibility
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn EnumDescriptorProto::new() -> EnumDescriptorProto {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.EnumDescriptorProto",
-      ),
-    ),
+    name: "",
+    value: [],
+    options: None,
+    reserved_range: [],
+    reserved_name: [],
+    visibility: SymbolVisibility::of(0),
+    unknown_fields: b"",
   }
-}
-
-///|
-pub fn EnumDescriptorProto::message(
-  self : EnumDescriptorProto,
-) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn EnumDescriptorProto::name(self : EnumDescriptorProto) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.name
 }
 
 ///|
@@ -8452,28 +9436,20 @@ pub fn EnumDescriptorProto::set_name(
   self : EnumDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.name = value
 }
 
 ///|
 pub fn EnumDescriptorProto::value(
   self : EnumDescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn EnumDescriptorProto::set_value(
-  self : EnumDescriptorProto,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    value,
+  @reflect.list_view(
+    self.value,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => EnumValueDescriptorProto::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -8481,11 +9457,9 @@ pub fn EnumDescriptorProto::set_value(
 pub fn EnumDescriptorProto::options(
   self : EnumDescriptorProto,
 ) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.options {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(EnumOptions::new() as &@reflect.Message)
   }
 }
 
@@ -8494,28 +9468,23 @@ pub fn EnumDescriptorProto::set_options(
   self : EnumDescriptorProto,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    value,
-  )
+  let source = value.message()
+  let target = EnumOptions::new()
+  @proto.merge(target, source)
+  self.options = Some(target)
 }
 
 ///|
 pub fn EnumDescriptorProto::reserved_range(
   self : EnumDescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 4)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn EnumDescriptorProto::set_reserved_range(
-  self : EnumDescriptorProto,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 4),
-    value,
+  @reflect.list_view(
+    self.reserved_range,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => EnumDescriptorProto_EnumReservedRange::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -8523,18 +9492,15 @@ pub fn EnumDescriptorProto::set_reserved_range(
 pub fn EnumDescriptorProto::reserved_name(
   self : EnumDescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 5)
-  self.inner.mutable(f).list()
+  @reflect.list_view(
+    self.reserved_name,
+    @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => ""),
+  )
 }
 
 ///|
 pub fn EnumDescriptorProto::visibility(self : EnumDescriptorProto) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 6)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.visibility.code()
 }
 
 ///|
@@ -8542,10 +9508,7 @@ pub fn EnumDescriptorProto::set_visibility(
   self : EnumDescriptorProto,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 6),
-    @reflect.Enum(value),
-  )
+  self.visibility = SymbolVisibility::of(value)
 }
 
 ///|
@@ -8565,8 +9528,63 @@ pub fn EnumDescriptorProto::from_json(
 }
 
 ///|
+fn EnumDescriptorProto::read_field(
+  self : EnumDescriptorProto,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.name)
+    2 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.value,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => EnumValueDescriptorProto::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    3 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(EnumOptions::new() as &@reflect.Message)
+      }
+    4 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.reserved_range,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => EnumDescriptorProto_EnumReservedRange::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    5 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.reserved_name,
+          @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => {
+            ""
+          }),
+        ),
+      )
+    6 => @reflect.Enum(self.visibility.code())
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_EnumDescriptorProto : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.EnumDescriptorProto",
+)
+
+///|
 pub impl @reflect.Message for EnumDescriptorProto with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_EnumDescriptorProto
 }
 
 ///|
@@ -8577,7 +9595,8 @@ pub impl @reflect.Message for EnumDescriptorProto with fn message_type(self) -> 
 
 ///|
 pub impl @reflect.Message for EnumDescriptorProto with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -8585,7 +9604,14 @@ pub impl @reflect.Message for EnumDescriptorProto with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_EnumDescriptorProto.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -8593,7 +9619,8 @@ pub impl @reflect.Message for EnumDescriptorProto with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -8601,7 +9628,16 @@ pub impl @reflect.Message for EnumDescriptorProto with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.name.length() > 0
+    2 => self.value.length() > 0
+    3 => @reflect.is_set(self.options)
+    4 => self.reserved_range.length() > 0
+    5 => self.reserved_name.length() > 0
+    6 => self.visibility.code() != 0
+    _ => false
+  }
 }
 
 ///|
@@ -8609,7 +9645,16 @@ pub impl @reflect.Message for EnumDescriptorProto with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.name = ""
+    2 => self.value.clear()
+    3 => self.options = None
+    4 => self.reserved_range.clear()
+    5 => self.reserved_name.clear()
+    6 => self.visibility = SymbolVisibility::of(0)
+    _ => ()
+  }
 }
 
 ///|
@@ -8617,7 +9662,7 @@ pub impl @reflect.Message for EnumDescriptorProto with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  EnumDescriptorProto::read_field(self, field)
 }
 
 ///|
@@ -8626,7 +9671,47 @@ pub impl @reflect.Message for EnumDescriptorProto with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.name = value.string()
+    2 =>
+      @reflect.assign_list(
+        self.value,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => EnumValueDescriptorProto::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    3 => {
+      let source = value.message()
+      let target = EnumOptions::new()
+      @proto.merge(target, source)
+      self.options = Some(target)
+    }
+    4 =>
+      @reflect.assign_list(
+        self.reserved_range,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => EnumDescriptorProto_EnumReservedRange::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    5 =>
+      @reflect.assign_list(
+        self.reserved_name,
+        value.list(),
+        @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => {
+          ""
+        }),
+      )
+    6 => self.visibility = SymbolVisibility::of(value.enum_number())
+    _ => ()
+  }
 }
 
 ///|
@@ -8634,7 +9719,19 @@ pub impl @reflect.Message for EnumDescriptorProto with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    3 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = EnumOptions::new()
+          self.options = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => EnumDescriptorProto::read_field(self, field)
+  }
 }
 
 ///|
@@ -8642,7 +9739,11 @@ pub impl @reflect.Message for EnumDescriptorProto with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    3 => @reflect.Message(EnumOptions::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -8650,12 +9751,15 @@ pub impl @reflect.Message for EnumDescriptorProto with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for EnumDescriptorProto with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -8663,7 +9767,7 @@ pub impl @reflect.Message for EnumDescriptorProto with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -8718,9 +9822,7 @@ pub impl @reflect.MessageType for EnumDescriptorProtoType with fn zero(_self) ->
 pub impl @reflect.MessageType for EnumDescriptorProtoType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.EnumDescriptorProto",
-  )
+  descriptor_google_protobuf_descriptor_proto_EnumDescriptorProto
 }
 
 ///|
@@ -8736,37 +9838,21 @@ pub let enumDescriptorProto_type : &@reflect.MessageType = EnumDescriptorProtoTy
 
 ///|
 pub struct EnumDescriptorProto_EnumReservedRange {
-  inner : @dynamic.Message
+  mut start : Int32
+  mut end : Int32
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn EnumDescriptorProto_EnumReservedRange::new() -> EnumDescriptorProto_EnumReservedRange {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.EnumDescriptorProto.EnumReservedRange",
-      ),
-    ),
-  }
-}
-
-///|
-pub fn EnumDescriptorProto_EnumReservedRange::message(
-  self : EnumDescriptorProto_EnumReservedRange,
-) -> @dynamic.Message {
-  self.inner
+  { start: 0, end: 0, unknown_fields: b"", }
 }
 
 ///|
 pub fn EnumDescriptorProto_EnumReservedRange::start(
   self : EnumDescriptorProto_EnumReservedRange,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.start
 }
 
 ///|
@@ -8774,22 +9860,14 @@ pub fn EnumDescriptorProto_EnumReservedRange::set_start(
   self : EnumDescriptorProto_EnumReservedRange,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.Int32(value),
-  )
+  self.start = value
 }
 
 ///|
 pub fn EnumDescriptorProto_EnumReservedRange::end(
   self : EnumDescriptorProto_EnumReservedRange,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.end
 }
 
 ///|
@@ -8797,10 +9875,7 @@ pub fn EnumDescriptorProto_EnumReservedRange::set_end(
   self : EnumDescriptorProto_EnumReservedRange,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.Int32(value),
-  )
+  self.end = value
 }
 
 ///|
@@ -8820,10 +9895,29 @@ pub fn EnumDescriptorProto_EnumReservedRange::from_json(
 }
 
 ///|
+fn EnumDescriptorProto_EnumReservedRange::read_field(
+  self : EnumDescriptorProto_EnumReservedRange,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Int32(self.start)
+    2 => @reflect.Int32(self.end)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_EnumDescriptorProto_EnumReservedRange : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.EnumDescriptorProto.EnumReservedRange",
+)
+
+///|
 pub impl @reflect.Message for EnumDescriptorProto_EnumReservedRange with fn descriptor(
   self,
 ) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_EnumDescriptorProto_EnumReservedRange
 }
 
 ///|
@@ -8838,7 +9932,8 @@ pub impl @reflect.Message for EnumDescriptorProto_EnumReservedRange with fn mess
 pub impl @reflect.Message for EnumDescriptorProto_EnumReservedRange with fn is_valid(
   self,
 ) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -8846,7 +9941,14 @@ pub impl @reflect.Message for EnumDescriptorProto_EnumReservedRange with fn rang
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_EnumDescriptorProto_EnumReservedRange.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -8854,7 +9956,8 @@ pub impl @reflect.Message for EnumDescriptorProto_EnumReservedRange with fn rang
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -8862,7 +9965,12 @@ pub impl @reflect.Message for EnumDescriptorProto_EnumReservedRange with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.start != 0
+    2 => self.end != 0
+    _ => false
+  }
 }
 
 ///|
@@ -8870,7 +9978,12 @@ pub impl @reflect.Message for EnumDescriptorProto_EnumReservedRange with fn clea
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.start = 0
+    2 => self.end = 0
+    _ => ()
+  }
 }
 
 ///|
@@ -8878,7 +9991,7 @@ pub impl @reflect.Message for EnumDescriptorProto_EnumReservedRange with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  EnumDescriptorProto_EnumReservedRange::read_field(self, field)
 }
 
 ///|
@@ -8887,7 +10000,13 @@ pub impl @reflect.Message for EnumDescriptorProto_EnumReservedRange with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.start = value.int().to_int()
+    2 => self.end = value.int().to_int()
+    _ => ()
+  }
 }
 
 ///|
@@ -8895,7 +10014,10 @@ pub impl @reflect.Message for EnumDescriptorProto_EnumReservedRange with fn muta
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => EnumDescriptorProto_EnumReservedRange::read_field(self, field)
+  }
 }
 
 ///|
@@ -8903,7 +10025,10 @@ pub impl @reflect.Message for EnumDescriptorProto_EnumReservedRange with fn new_
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -8911,14 +10036,17 @@ pub impl @reflect.Message for EnumDescriptorProto_EnumReservedRange with fn whic
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for EnumDescriptorProto_EnumReservedRange with fn get_unknown(
   self,
 ) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -8926,7 +10054,7 @@ pub impl @reflect.Message for EnumDescriptorProto_EnumReservedRange with fn set_
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -8985,9 +10113,7 @@ pub impl @reflect.MessageType for EnumDescriptorProto_EnumReservedRangeType with
 pub impl @reflect.MessageType for EnumDescriptorProto_EnumReservedRangeType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.EnumDescriptorProto.EnumReservedRange",
-  )
+  descriptor_google_protobuf_descriptor_proto_EnumDescriptorProto_EnumReservedRange
 }
 
 ///|
@@ -9003,37 +10129,22 @@ pub let enumDescriptorProto_EnumReservedRange_type : &@reflect.MessageType = Enu
 
 ///|
 pub struct EnumValueDescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  mut number : Int32
+  mut options : EnumValueOptions?
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn EnumValueDescriptorProto::new() -> EnumValueDescriptorProto {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.EnumValueDescriptorProto",
-      ),
-    ),
-  }
-}
-
-///|
-pub fn EnumValueDescriptorProto::message(
-  self : EnumValueDescriptorProto,
-) -> @dynamic.Message {
-  self.inner
+  { name: "", number: 0, options: None, unknown_fields: b"", }
 }
 
 ///|
 pub fn EnumValueDescriptorProto::name(
   self : EnumValueDescriptorProto,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.name
 }
 
 ///|
@@ -9041,22 +10152,14 @@ pub fn EnumValueDescriptorProto::set_name(
   self : EnumValueDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.name = value
 }
 
 ///|
 pub fn EnumValueDescriptorProto::number(
   self : EnumValueDescriptorProto,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.number
 }
 
 ///|
@@ -9064,21 +10167,16 @@ pub fn EnumValueDescriptorProto::set_number(
   self : EnumValueDescriptorProto,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.Int32(value),
-  )
+  self.number = value
 }
 
 ///|
 pub fn EnumValueDescriptorProto::options(
   self : EnumValueDescriptorProto,
 ) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.options {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(EnumValueOptions::new() as &@reflect.Message)
   }
 }
 
@@ -9087,10 +10185,10 @@ pub fn EnumValueDescriptorProto::set_options(
   self : EnumValueDescriptorProto,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    value,
-  )
+  let source = value.message()
+  let target = EnumValueOptions::new()
+  @proto.merge(target, source)
+  self.options = Some(target)
 }
 
 ///|
@@ -9110,8 +10208,32 @@ pub fn EnumValueDescriptorProto::from_json(
 }
 
 ///|
+fn EnumValueDescriptorProto::read_field(
+  self : EnumValueDescriptorProto,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.name)
+    2 => @reflect.Int32(self.number)
+    3 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(EnumValueOptions::new() as &@reflect.Message)
+      }
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_EnumValueDescriptorProto : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.EnumValueDescriptorProto",
+)
+
+///|
 pub impl @reflect.Message for EnumValueDescriptorProto with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_EnumValueDescriptorProto
 }
 
 ///|
@@ -9124,7 +10246,8 @@ pub impl @reflect.Message for EnumValueDescriptorProto with fn message_type(
 
 ///|
 pub impl @reflect.Message for EnumValueDescriptorProto with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -9132,7 +10255,14 @@ pub impl @reflect.Message for EnumValueDescriptorProto with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_EnumValueDescriptorProto.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -9140,7 +10270,8 @@ pub impl @reflect.Message for EnumValueDescriptorProto with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -9148,7 +10279,13 @@ pub impl @reflect.Message for EnumValueDescriptorProto with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.name.length() > 0
+    2 => self.number != 0
+    3 => @reflect.is_set(self.options)
+    _ => false
+  }
 }
 
 ///|
@@ -9156,7 +10293,13 @@ pub impl @reflect.Message for EnumValueDescriptorProto with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.name = ""
+    2 => self.number = 0
+    3 => self.options = None
+    _ => ()
+  }
 }
 
 ///|
@@ -9164,7 +10307,7 @@ pub impl @reflect.Message for EnumValueDescriptorProto with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  EnumValueDescriptorProto::read_field(self, field)
 }
 
 ///|
@@ -9173,7 +10316,19 @@ pub impl @reflect.Message for EnumValueDescriptorProto with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.name = value.string()
+    2 => self.number = value.int().to_int()
+    3 => {
+      let source = value.message()
+      let target = EnumValueOptions::new()
+      @proto.merge(target, source)
+      self.options = Some(target)
+    }
+    _ => ()
+  }
 }
 
 ///|
@@ -9181,7 +10336,19 @@ pub impl @reflect.Message for EnumValueDescriptorProto with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    3 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = EnumValueOptions::new()
+          self.options = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => EnumValueDescriptorProto::read_field(self, field)
+  }
 }
 
 ///|
@@ -9189,7 +10356,11 @@ pub impl @reflect.Message for EnumValueDescriptorProto with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    3 => @reflect.Message(EnumValueOptions::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -9197,12 +10368,15 @@ pub impl @reflect.Message for EnumValueDescriptorProto with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for EnumValueDescriptorProto with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -9210,7 +10384,7 @@ pub impl @reflect.Message for EnumValueDescriptorProto with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -9267,9 +10441,7 @@ pub impl @reflect.MessageType for EnumValueDescriptorProtoType with fn zero(
 pub impl @reflect.MessageType for EnumValueDescriptorProtoType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.EnumValueDescriptorProto",
-  )
+  descriptor_google_protobuf_descriptor_proto_EnumValueDescriptorProto
 }
 
 ///|
@@ -9285,35 +10457,20 @@ pub let enumValueDescriptorProto_type : &@reflect.MessageType = EnumValueDescrip
 
 ///|
 pub struct ServiceDescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  method_ : Array[MethodDescriptorProto]
+  mut options : ServiceOptions?
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn ServiceDescriptorProto::new() -> ServiceDescriptorProto {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.ServiceDescriptorProto",
-      ),
-    ),
-  }
-}
-
-///|
-pub fn ServiceDescriptorProto::message(
-  self : ServiceDescriptorProto,
-) -> @dynamic.Message {
-  self.inner
+  { name: "", method_: [], options: None, unknown_fields: b"", }
 }
 
 ///|
 pub fn ServiceDescriptorProto::name(self : ServiceDescriptorProto) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.name
 }
 
 ///|
@@ -9321,28 +10478,20 @@ pub fn ServiceDescriptorProto::set_name(
   self : ServiceDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.name = value
 }
 
 ///|
 pub fn ServiceDescriptorProto::method_(
   self : ServiceDescriptorProto,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn ServiceDescriptorProto::set_method_(
-  self : ServiceDescriptorProto,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    value,
+  @reflect.list_view(
+    self.method_,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => MethodDescriptorProto::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -9350,11 +10499,9 @@ pub fn ServiceDescriptorProto::set_method_(
 pub fn ServiceDescriptorProto::options(
   self : ServiceDescriptorProto,
 ) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.options {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(ServiceOptions::new() as &@reflect.Message)
   }
 }
 
@@ -9363,10 +10510,10 @@ pub fn ServiceDescriptorProto::set_options(
   self : ServiceDescriptorProto,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    value,
-  )
+  let source = value.message()
+  let target = ServiceOptions::new()
+  @proto.merge(target, source)
+  self.options = Some(target)
 }
 
 ///|
@@ -9386,8 +10533,42 @@ pub fn ServiceDescriptorProto::from_json(
 }
 
 ///|
+fn ServiceDescriptorProto::read_field(
+  self : ServiceDescriptorProto,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.name)
+    2 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.method_,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => MethodDescriptorProto::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    3 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(ServiceOptions::new() as &@reflect.Message)
+      }
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_ServiceDescriptorProto : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.ServiceDescriptorProto",
+)
+
+///|
 pub impl @reflect.Message for ServiceDescriptorProto with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_ServiceDescriptorProto
 }
 
 ///|
@@ -9398,7 +10579,8 @@ pub impl @reflect.Message for ServiceDescriptorProto with fn message_type(self) 
 
 ///|
 pub impl @reflect.Message for ServiceDescriptorProto with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -9406,7 +10588,14 @@ pub impl @reflect.Message for ServiceDescriptorProto with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_ServiceDescriptorProto.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -9414,7 +10603,8 @@ pub impl @reflect.Message for ServiceDescriptorProto with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -9422,7 +10612,13 @@ pub impl @reflect.Message for ServiceDescriptorProto with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.name.length() > 0
+    2 => self.method_.length() > 0
+    3 => @reflect.is_set(self.options)
+    _ => false
+  }
 }
 
 ///|
@@ -9430,7 +10626,13 @@ pub impl @reflect.Message for ServiceDescriptorProto with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.name = ""
+    2 => self.method_.clear()
+    3 => self.options = None
+    _ => ()
+  }
 }
 
 ///|
@@ -9438,7 +10640,7 @@ pub impl @reflect.Message for ServiceDescriptorProto with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  ServiceDescriptorProto::read_field(self, field)
 }
 
 ///|
@@ -9447,7 +10649,28 @@ pub impl @reflect.Message for ServiceDescriptorProto with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.name = value.string()
+    2 =>
+      @reflect.assign_list(
+        self.method_,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => MethodDescriptorProto::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    3 => {
+      let source = value.message()
+      let target = ServiceOptions::new()
+      @proto.merge(target, source)
+      self.options = Some(target)
+    }
+    _ => ()
+  }
 }
 
 ///|
@@ -9455,7 +10678,19 @@ pub impl @reflect.Message for ServiceDescriptorProto with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    3 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = ServiceOptions::new()
+          self.options = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => ServiceDescriptorProto::read_field(self, field)
+  }
 }
 
 ///|
@@ -9463,7 +10698,11 @@ pub impl @reflect.Message for ServiceDescriptorProto with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    3 => @reflect.Message(ServiceOptions::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -9471,12 +10710,15 @@ pub impl @reflect.Message for ServiceDescriptorProto with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for ServiceDescriptorProto with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -9484,7 +10726,7 @@ pub impl @reflect.Message for ServiceDescriptorProto with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -9539,9 +10781,7 @@ pub impl @reflect.MessageType for ServiceDescriptorProtoType with fn zero(_self)
 pub impl @reflect.MessageType for ServiceDescriptorProtoType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.ServiceDescriptorProto",
-  )
+  descriptor_google_protobuf_descriptor_proto_ServiceDescriptorProto
 }
 
 ///|
@@ -9557,35 +10797,31 @@ pub let serviceDescriptorProto_type : &@reflect.MessageType = ServiceDescriptorP
 
 ///|
 pub struct MethodDescriptorProto {
-  inner : @dynamic.Message
+  mut name : String
+  mut input_type : String
+  mut output_type : String
+  mut options : MethodOptions?
+  mut client_streaming : Bool
+  mut server_streaming : Bool
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn MethodDescriptorProto::new() -> MethodDescriptorProto {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.MethodDescriptorProto",
-      ),
-    ),
+    name: "",
+    input_type: "",
+    output_type: "",
+    options: None,
+    client_streaming: false,
+    server_streaming: false,
+    unknown_fields: b"",
   }
-}
-
-///|
-pub fn MethodDescriptorProto::message(
-  self : MethodDescriptorProto,
-) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn MethodDescriptorProto::name(self : MethodDescriptorProto) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.name
 }
 
 ///|
@@ -9593,22 +10829,14 @@ pub fn MethodDescriptorProto::set_name(
   self : MethodDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.name = value
 }
 
 ///|
 pub fn MethodDescriptorProto::input_type(
   self : MethodDescriptorProto,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.input_type
 }
 
 ///|
@@ -9616,22 +10844,14 @@ pub fn MethodDescriptorProto::set_input_type(
   self : MethodDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.String(value),
-  )
+  self.input_type = value
 }
 
 ///|
 pub fn MethodDescriptorProto::output_type(
   self : MethodDescriptorProto,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.output_type
 }
 
 ///|
@@ -9639,21 +10859,16 @@ pub fn MethodDescriptorProto::set_output_type(
   self : MethodDescriptorProto,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.String(value),
-  )
+  self.output_type = value
 }
 
 ///|
 pub fn MethodDescriptorProto::options(
   self : MethodDescriptorProto,
 ) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 4)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.options {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(MethodOptions::new() as &@reflect.Message)
   }
 }
 
@@ -9662,22 +10877,17 @@ pub fn MethodDescriptorProto::set_options(
   self : MethodDescriptorProto,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 4),
-    value,
-  )
+  let source = value.message()
+  let target = MethodOptions::new()
+  @proto.merge(target, source)
+  self.options = Some(target)
 }
 
 ///|
 pub fn MethodDescriptorProto::client_streaming(
   self : MethodDescriptorProto,
 ) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 5)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.client_streaming
 }
 
 ///|
@@ -9685,22 +10895,14 @@ pub fn MethodDescriptorProto::set_client_streaming(
   self : MethodDescriptorProto,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 5),
-    @reflect.Bool(value),
-  )
+  self.client_streaming = value
 }
 
 ///|
 pub fn MethodDescriptorProto::server_streaming(
   self : MethodDescriptorProto,
 ) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 6)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.server_streaming
 }
 
 ///|
@@ -9708,10 +10910,7 @@ pub fn MethodDescriptorProto::set_server_streaming(
   self : MethodDescriptorProto,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 6),
-    @reflect.Bool(value),
-  )
+  self.server_streaming = value
 }
 
 ///|
@@ -9731,8 +10930,35 @@ pub fn MethodDescriptorProto::from_json(
 }
 
 ///|
+fn MethodDescriptorProto::read_field(
+  self : MethodDescriptorProto,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.name)
+    2 => @reflect.String(self.input_type)
+    3 => @reflect.String(self.output_type)
+    4 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(MethodOptions::new() as &@reflect.Message)
+      }
+    5 => @reflect.Bool(self.client_streaming)
+    6 => @reflect.Bool(self.server_streaming)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_MethodDescriptorProto : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.MethodDescriptorProto",
+)
+
+///|
 pub impl @reflect.Message for MethodDescriptorProto with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_MethodDescriptorProto
 }
 
 ///|
@@ -9743,7 +10969,8 @@ pub impl @reflect.Message for MethodDescriptorProto with fn message_type(self) -
 
 ///|
 pub impl @reflect.Message for MethodDescriptorProto with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -9751,7 +10978,14 @@ pub impl @reflect.Message for MethodDescriptorProto with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_MethodDescriptorProto.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -9759,7 +10993,8 @@ pub impl @reflect.Message for MethodDescriptorProto with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -9767,7 +11002,16 @@ pub impl @reflect.Message for MethodDescriptorProto with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.name.length() > 0
+    2 => self.input_type.length() > 0
+    3 => self.output_type.length() > 0
+    4 => @reflect.is_set(self.options)
+    5 => self.client_streaming
+    6 => self.server_streaming
+    _ => false
+  }
 }
 
 ///|
@@ -9775,7 +11019,16 @@ pub impl @reflect.Message for MethodDescriptorProto with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.name = ""
+    2 => self.input_type = ""
+    3 => self.output_type = ""
+    4 => self.options = None
+    5 => self.client_streaming = false
+    6 => self.server_streaming = false
+    _ => ()
+  }
 }
 
 ///|
@@ -9783,7 +11036,7 @@ pub impl @reflect.Message for MethodDescriptorProto with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  MethodDescriptorProto::read_field(self, field)
 }
 
 ///|
@@ -9792,7 +11045,22 @@ pub impl @reflect.Message for MethodDescriptorProto with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.name = value.string()
+    2 => self.input_type = value.string()
+    3 => self.output_type = value.string()
+    4 => {
+      let source = value.message()
+      let target = MethodOptions::new()
+      @proto.merge(target, source)
+      self.options = Some(target)
+    }
+    5 => self.client_streaming = value.bool()
+    6 => self.server_streaming = value.bool()
+    _ => ()
+  }
 }
 
 ///|
@@ -9800,7 +11068,19 @@ pub impl @reflect.Message for MethodDescriptorProto with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    4 =>
+      match self.options {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = MethodOptions::new()
+          self.options = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => MethodDescriptorProto::read_field(self, field)
+  }
 }
 
 ///|
@@ -9808,7 +11088,11 @@ pub impl @reflect.Message for MethodDescriptorProto with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    4 => @reflect.Message(MethodOptions::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -9816,12 +11100,15 @@ pub impl @reflect.Message for MethodDescriptorProto with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for MethodDescriptorProto with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -9829,7 +11116,7 @@ pub impl @reflect.Message for MethodDescriptorProto with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -9884,9 +11171,7 @@ pub impl @reflect.MessageType for MethodDescriptorProtoType with fn zero(_self) 
 pub impl @reflect.MessageType for MethodDescriptorProtoType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.MethodDescriptorProto",
-  )
+  descriptor_google_protobuf_descriptor_proto_MethodDescriptorProto
 }
 
 ///|
@@ -9902,33 +11187,63 @@ pub let methodDescriptorProto_type : &@reflect.MessageType = MethodDescriptorPro
 
 ///|
 pub struct FileOptions {
-  inner : @dynamic.Message
+  mut java_package : String
+  mut java_outer_classname : String
+  mut java_multiple_files : Bool
+  mut java_generate_equals_and_hash : Bool
+  mut java_string_check_utf8 : Bool
+  mut optimize_for : FileOptions_OptimizeMode
+  mut go_package : String
+  mut cc_generic_services : Bool
+  mut java_generic_services : Bool
+  mut py_generic_services : Bool
+  mut deprecated : Bool
+  mut cc_enable_arenas : Bool
+  mut objc_class_prefix : String
+  mut csharp_namespace : String
+  mut swift_prefix : String
+  mut php_class_prefix : String
+  mut php_namespace : String
+  mut php_metadata_namespace : String
+  mut ruby_package : String
+  mut features : FeatureSet?
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 
 ///|
 pub fn FileOptions::new() -> FileOptions {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.FileOptions",
-      ),
-    ),
+    java_package: "",
+    java_outer_classname: "",
+    java_multiple_files: false,
+    java_generate_equals_and_hash: false,
+    java_string_check_utf8: false,
+    optimize_for: FileOptions_OptimizeMode::of(0),
+    go_package: "",
+    cc_generic_services: false,
+    java_generic_services: false,
+    py_generic_services: false,
+    deprecated: false,
+    cc_enable_arenas: false,
+    objc_class_prefix: "",
+    csharp_namespace: "",
+    swift_prefix: "",
+    php_class_prefix: "",
+    php_namespace: "",
+    php_metadata_namespace: "",
+    ruby_package: "",
+    features: None,
+    uninterpreted_option: [],
+    unknown_fields: b"",
+    extension_values: [],
   }
-}
-
-///|
-pub fn FileOptions::message(self : FileOptions) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn FileOptions::java_package(self : FileOptions) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.java_package
 }
 
 ///|
@@ -9936,20 +11251,12 @@ pub fn FileOptions::set_java_package(
   self : FileOptions,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.java_package = value
 }
 
 ///|
 pub fn FileOptions::java_outer_classname(self : FileOptions) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 8)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.java_outer_classname
 }
 
 ///|
@@ -9957,20 +11264,12 @@ pub fn FileOptions::set_java_outer_classname(
   self : FileOptions,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 8),
-    @reflect.String(value),
-  )
+  self.java_outer_classname = value
 }
 
 ///|
 pub fn FileOptions::java_multiple_files(self : FileOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 10)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.java_multiple_files
 }
 
 ///|
@@ -9978,20 +11277,12 @@ pub fn FileOptions::set_java_multiple_files(
   self : FileOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 10),
-    @reflect.Bool(value),
-  )
+  self.java_multiple_files = value
 }
 
 ///|
 pub fn FileOptions::java_generate_equals_and_hash(self : FileOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 20)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.java_generate_equals_and_hash
 }
 
 ///|
@@ -9999,20 +11290,12 @@ pub fn FileOptions::set_java_generate_equals_and_hash(
   self : FileOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 20),
-    @reflect.Bool(value),
-  )
+  self.java_generate_equals_and_hash = value
 }
 
 ///|
 pub fn FileOptions::java_string_check_utf8(self : FileOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 27)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.java_string_check_utf8
 }
 
 ///|
@@ -10020,56 +11303,32 @@ pub fn FileOptions::set_java_string_check_utf8(
   self : FileOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 27),
-    @reflect.Bool(value),
-  )
+  self.java_string_check_utf8 = value
 }
 
 ///|
 pub fn FileOptions::optimize_for(self : FileOptions) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 9)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.optimize_for.code()
 }
 
 ///|
 pub fn FileOptions::set_optimize_for(self : FileOptions, value : Int32) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 9),
-    @reflect.Enum(value),
-  )
+  self.optimize_for = FileOptions_OptimizeMode::of(value)
 }
 
 ///|
 pub fn FileOptions::go_package(self : FileOptions) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 11)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.go_package
 }
 
 ///|
 pub fn FileOptions::set_go_package(self : FileOptions, value : String) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 11),
-    @reflect.String(value),
-  )
+  self.go_package = value
 }
 
 ///|
 pub fn FileOptions::cc_generic_services(self : FileOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 16)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.cc_generic_services
 }
 
 ///|
@@ -10077,20 +11336,12 @@ pub fn FileOptions::set_cc_generic_services(
   self : FileOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 16),
-    @reflect.Bool(value),
-  )
+  self.cc_generic_services = value
 }
 
 ///|
 pub fn FileOptions::java_generic_services(self : FileOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 17)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.java_generic_services
 }
 
 ///|
@@ -10098,20 +11349,12 @@ pub fn FileOptions::set_java_generic_services(
   self : FileOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 17),
-    @reflect.Bool(value),
-  )
+  self.java_generic_services = value
 }
 
 ///|
 pub fn FileOptions::py_generic_services(self : FileOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 18)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.py_generic_services
 }
 
 ///|
@@ -10119,38 +11362,22 @@ pub fn FileOptions::set_py_generic_services(
   self : FileOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 18),
-    @reflect.Bool(value),
-  )
+  self.py_generic_services = value
 }
 
 ///|
 pub fn FileOptions::deprecated(self : FileOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 23)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.deprecated
 }
 
 ///|
 pub fn FileOptions::set_deprecated(self : FileOptions, value : Bool) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 23),
-    @reflect.Bool(value),
-  )
+  self.deprecated = value
 }
 
 ///|
 pub fn FileOptions::cc_enable_arenas(self : FileOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 31)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.cc_enable_arenas
 }
 
 ///|
@@ -10158,20 +11385,12 @@ pub fn FileOptions::set_cc_enable_arenas(
   self : FileOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 31),
-    @reflect.Bool(value),
-  )
+  self.cc_enable_arenas = value
 }
 
 ///|
 pub fn FileOptions::objc_class_prefix(self : FileOptions) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 36)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.objc_class_prefix
 }
 
 ///|
@@ -10179,20 +11398,12 @@ pub fn FileOptions::set_objc_class_prefix(
   self : FileOptions,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 36),
-    @reflect.String(value),
-  )
+  self.objc_class_prefix = value
 }
 
 ///|
 pub fn FileOptions::csharp_namespace(self : FileOptions) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 37)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.csharp_namespace
 }
 
 ///|
@@ -10200,20 +11411,12 @@ pub fn FileOptions::set_csharp_namespace(
   self : FileOptions,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 37),
-    @reflect.String(value),
-  )
+  self.csharp_namespace = value
 }
 
 ///|
 pub fn FileOptions::swift_prefix(self : FileOptions) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 39)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.swift_prefix
 }
 
 ///|
@@ -10221,20 +11424,12 @@ pub fn FileOptions::set_swift_prefix(
   self : FileOptions,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 39),
-    @reflect.String(value),
-  )
+  self.swift_prefix = value
 }
 
 ///|
 pub fn FileOptions::php_class_prefix(self : FileOptions) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 40)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.php_class_prefix
 }
 
 ///|
@@ -10242,20 +11437,12 @@ pub fn FileOptions::set_php_class_prefix(
   self : FileOptions,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 40),
-    @reflect.String(value),
-  )
+  self.php_class_prefix = value
 }
 
 ///|
 pub fn FileOptions::php_namespace(self : FileOptions) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 41)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.php_namespace
 }
 
 ///|
@@ -10263,20 +11450,12 @@ pub fn FileOptions::set_php_namespace(
   self : FileOptions,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 41),
-    @reflect.String(value),
-  )
+  self.php_namespace = value
 }
 
 ///|
 pub fn FileOptions::php_metadata_namespace(self : FileOptions) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 44)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.php_metadata_namespace
 }
 
 ///|
@@ -10284,20 +11463,12 @@ pub fn FileOptions::set_php_metadata_namespace(
   self : FileOptions,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 44),
-    @reflect.String(value),
-  )
+  self.php_metadata_namespace = value
 }
 
 ///|
 pub fn FileOptions::ruby_package(self : FileOptions) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 45)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.ruby_package
 }
 
 ///|
@@ -10305,19 +11476,14 @@ pub fn FileOptions::set_ruby_package(
   self : FileOptions,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 45),
-    @reflect.String(value),
-  )
+  self.ruby_package = value
 }
 
 ///|
 pub fn FileOptions::features(self : FileOptions) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 50)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.features {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
   }
 }
 
@@ -10326,28 +11492,23 @@ pub fn FileOptions::set_features(
   self : FileOptions,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 50),
-    value,
-  )
+  let source = value.message()
+  let target = FeatureSet::new()
+  @proto.merge(target, source)
+  self.features = Some(target)
 }
 
 ///|
 pub fn FileOptions::uninterpreted_option(
   self : FileOptions,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 999)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn FileOptions::set_uninterpreted_option(
-  self : FileOptions,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 999),
-    value,
+  @reflect.list_view(
+    self.uninterpreted_option,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => UninterpretedOption::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -10364,8 +11525,67 @@ pub fn FileOptions::from_json(text : String) -> FileOptions raise @json.Refused 
 }
 
 ///|
+fn FileOptions::read_field(
+  self : FileOptions,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.java_package)
+    8 => @reflect.String(self.java_outer_classname)
+    10 => @reflect.Bool(self.java_multiple_files)
+    20 => @reflect.Bool(self.java_generate_equals_and_hash)
+    27 => @reflect.Bool(self.java_string_check_utf8)
+    9 => @reflect.Enum(self.optimize_for.code())
+    11 => @reflect.String(self.go_package)
+    16 => @reflect.Bool(self.cc_generic_services)
+    17 => @reflect.Bool(self.java_generic_services)
+    18 => @reflect.Bool(self.py_generic_services)
+    23 => @reflect.Bool(self.deprecated)
+    31 => @reflect.Bool(self.cc_enable_arenas)
+    36 => @reflect.String(self.objc_class_prefix)
+    37 => @reflect.String(self.csharp_namespace)
+    39 => @reflect.String(self.swift_prefix)
+    40 => @reflect.String(self.php_class_prefix)
+    41 => @reflect.String(self.php_namespace)
+    44 => @reflect.String(self.php_metadata_namespace)
+    45 => @reflect.String(self.ruby_package)
+    50 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+      }
+    999 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.uninterpreted_option,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => UninterpretedOption::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return pair.1
+        }
+      }
+      @reflect.default_for(field)
+    }
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_FileOptions : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.FileOptions",
+)
+
+///|
 pub impl @reflect.Message for FileOptions with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_FileOptions
 }
 
 ///|
@@ -10376,7 +11596,8 @@ pub impl @reflect.Message for FileOptions with fn message_type(self) -> &@reflec
 
 ///|
 pub impl @reflect.Message for FileOptions with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -10384,7 +11605,13 @@ pub impl @reflect.Message for FileOptions with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_descriptor_proto_FileOptions.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -10392,7 +11619,11 @@ pub impl @reflect.Message for FileOptions with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  for pair in self.extension_values {
+    if !f(pair.0, pair.1) {
+      break
+    }
+  }
 }
 
 ///|
@@ -10400,7 +11631,38 @@ pub impl @reflect.Message for FileOptions with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.java_package.length() > 0
+    8 => self.java_outer_classname.length() > 0
+    10 => self.java_multiple_files
+    20 => self.java_generate_equals_and_hash
+    27 => self.java_string_check_utf8
+    9 => self.optimize_for.code() != 0
+    11 => self.go_package.length() > 0
+    16 => self.cc_generic_services
+    17 => self.java_generic_services
+    18 => self.py_generic_services
+    23 => self.deprecated
+    31 => self.cc_enable_arenas
+    36 => self.objc_class_prefix.length() > 0
+    37 => self.csharp_namespace.length() > 0
+    39 => self.swift_prefix.length() > 0
+    40 => self.php_class_prefix.length() > 0
+    41 => self.php_namespace.length() > 0
+    44 => self.php_metadata_namespace.length() > 0
+    45 => self.ruby_package.length() > 0
+    50 => @reflect.is_set(self.features)
+    999 => self.uninterpreted_option.length() > 0
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return true
+        }
+      }
+      false
+    }
+  }
 }
 
 ///|
@@ -10408,7 +11670,39 @@ pub impl @reflect.Message for FileOptions with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.java_package = ""
+    8 => self.java_outer_classname = ""
+    10 => self.java_multiple_files = false
+    20 => self.java_generate_equals_and_hash = false
+    27 => self.java_string_check_utf8 = false
+    9 => self.optimize_for = FileOptions_OptimizeMode::of(0)
+    11 => self.go_package = ""
+    16 => self.cc_generic_services = false
+    17 => self.java_generic_services = false
+    18 => self.py_generic_services = false
+    23 => self.deprecated = false
+    31 => self.cc_enable_arenas = false
+    36 => self.objc_class_prefix = ""
+    37 => self.csharp_namespace = ""
+    39 => self.swift_prefix = ""
+    40 => self.php_class_prefix = ""
+    41 => self.php_namespace = ""
+    44 => self.php_metadata_namespace = ""
+    45 => self.ruby_package = ""
+    50 => self.features = None
+    999 => self.uninterpreted_option.clear()
+    _ => {
+      let kept : Array[(@reflect.FieldDescriptor, @reflect.Value)] = []
+      for pair in self.extension_values {
+        if pair.0.number != field.number {
+          kept.push(pair)
+        }
+      }
+      self.extension_values = kept
+    }
+  }
 }
 
 ///|
@@ -10416,7 +11710,7 @@ pub impl @reflect.Message for FileOptions with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  FileOptions::read_field(self, field)
 }
 
 ///|
@@ -10425,7 +11719,57 @@ pub impl @reflect.Message for FileOptions with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.java_package = value.string()
+    8 => self.java_outer_classname = value.string()
+    10 => self.java_multiple_files = value.bool()
+    20 => self.java_generate_equals_and_hash = value.bool()
+    27 => self.java_string_check_utf8 = value.bool()
+    9 => self.optimize_for = FileOptions_OptimizeMode::of(value.enum_number())
+    11 => self.go_package = value.string()
+    16 => self.cc_generic_services = value.bool()
+    17 => self.java_generic_services = value.bool()
+    18 => self.py_generic_services = value.bool()
+    23 => self.deprecated = value.bool()
+    31 => self.cc_enable_arenas = value.bool()
+    36 => self.objc_class_prefix = value.string()
+    37 => self.csharp_namespace = value.string()
+    39 => self.swift_prefix = value.string()
+    40 => self.php_class_prefix = value.string()
+    41 => self.php_namespace = value.string()
+    44 => self.php_metadata_namespace = value.string()
+    45 => self.ruby_package = value.string()
+    50 => {
+      let source = value.message()
+      let target = FeatureSet::new()
+      @proto.merge(target, source)
+      self.features = Some(target)
+    }
+    999 =>
+      @reflect.assign_list(
+        self.uninterpreted_option,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => UninterpretedOption::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    _ => {
+      let mut found = false
+      for i in 0..<self.extension_values.length() {
+        if self.extension_values[i].0.number == field.number {
+          self.extension_values[i] = (field, value)
+          found = true
+        }
+      }
+      if !found {
+        self.extension_values.push((field, value))
+      }
+    }
+  }
 }
 
 ///|
@@ -10433,7 +11777,19 @@ pub impl @reflect.Message for FileOptions with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    50 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FeatureSet::new()
+          self.features = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => FileOptions::read_field(self, field)
+  }
 }
 
 ///|
@@ -10441,7 +11797,11 @@ pub impl @reflect.Message for FileOptions with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    50 => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -10449,12 +11809,15 @@ pub impl @reflect.Message for FileOptions with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for FileOptions with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -10462,7 +11825,7 @@ pub impl @reflect.Message for FileOptions with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -10513,7 +11876,7 @@ pub impl @reflect.MessageType for FileOptionsType with fn zero(_self) -> &@refle
 
 ///|
 pub impl @reflect.MessageType for FileOptionsType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto("google.protobuf.FileOptions")
+  descriptor_google_protobuf_descriptor_proto_FileOptions
 }
 
 ///|
@@ -10528,34 +11891,64 @@ pub let fileOptions_type : &@reflect.MessageType = FileOptionsType::new()
   as &@reflect.MessageType
 
 ///|
+pub(all) enum FileOptions_OptimizeMode {
+  SPEED
+  CODE_SIZE
+  LITE_RUNTIME
+  Unknown(Int32)
+}
+
+///|
+pub fn FileOptions_OptimizeMode::code(self : FileOptions_OptimizeMode) -> Int32 {
+  match self {
+    SPEED => 1
+    CODE_SIZE => 2
+    LITE_RUNTIME => 3
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn FileOptions_OptimizeMode::of(n : Int32) -> FileOptions_OptimizeMode {
+  match n {
+    1 => SPEED
+    2 => CODE_SIZE
+    3 => LITE_RUNTIME
+    _ => Unknown(n)
+  }
+}
+
+///|
 pub struct MessageOptions {
-  inner : @dynamic.Message
+  mut message_set_wire_format : Bool
+  mut no_standard_descriptor_accessor : Bool
+  mut deprecated : Bool
+  mut map_entry : Bool
+  mut deprecated_legacy_json_field_conflicts : Bool
+  mut features : FeatureSet?
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 
 ///|
 pub fn MessageOptions::new() -> MessageOptions {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.MessageOptions",
-      ),
-    ),
+    message_set_wire_format: false,
+    no_standard_descriptor_accessor: false,
+    deprecated: false,
+    map_entry: false,
+    deprecated_legacy_json_field_conflicts: false,
+    features: None,
+    uninterpreted_option: [],
+    unknown_fields: b"",
+    extension_values: [],
   }
-}
-
-///|
-pub fn MessageOptions::message(self : MessageOptions) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn MessageOptions::message_set_wire_format(self : MessageOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.message_set_wire_format
 }
 
 ///|
@@ -10563,22 +11956,14 @@ pub fn MessageOptions::set_message_set_wire_format(
   self : MessageOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.Bool(value),
-  )
+  self.message_set_wire_format = value
 }
 
 ///|
 pub fn MessageOptions::no_standard_descriptor_accessor(
   self : MessageOptions,
 ) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.no_standard_descriptor_accessor
 }
 
 ///|
@@ -10586,20 +11971,12 @@ pub fn MessageOptions::set_no_standard_descriptor_accessor(
   self : MessageOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.Bool(value),
-  )
+  self.no_standard_descriptor_accessor = value
 }
 
 ///|
 pub fn MessageOptions::deprecated(self : MessageOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.deprecated
 }
 
 ///|
@@ -10607,20 +11984,12 @@ pub fn MessageOptions::set_deprecated(
   self : MessageOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.Bool(value),
-  )
+  self.deprecated = value
 }
 
 ///|
 pub fn MessageOptions::map_entry(self : MessageOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 7)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.map_entry
 }
 
 ///|
@@ -10628,22 +11997,14 @@ pub fn MessageOptions::set_map_entry(
   self : MessageOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 7),
-    @reflect.Bool(value),
-  )
+  self.map_entry = value
 }
 
 ///|
 pub fn MessageOptions::deprecated_legacy_json_field_conflicts(
   self : MessageOptions,
 ) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 11)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.deprecated_legacy_json_field_conflicts
 }
 
 ///|
@@ -10651,19 +12012,14 @@ pub fn MessageOptions::set_deprecated_legacy_json_field_conflicts(
   self : MessageOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 11),
-    @reflect.Bool(value),
-  )
+  self.deprecated_legacy_json_field_conflicts = value
 }
 
 ///|
 pub fn MessageOptions::features(self : MessageOptions) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 12)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.features {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
   }
 }
 
@@ -10672,28 +12028,23 @@ pub fn MessageOptions::set_features(
   self : MessageOptions,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 12),
-    value,
-  )
+  let source = value.message()
+  let target = FeatureSet::new()
+  @proto.merge(target, source)
+  self.features = Some(target)
 }
 
 ///|
 pub fn MessageOptions::uninterpreted_option(
   self : MessageOptions,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 999)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn MessageOptions::set_uninterpreted_option(
-  self : MessageOptions,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 999),
-    value,
+  @reflect.list_view(
+    self.uninterpreted_option,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => UninterpretedOption::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -10714,8 +12065,53 @@ pub fn MessageOptions::from_json(
 }
 
 ///|
+fn MessageOptions::read_field(
+  self : MessageOptions,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Bool(self.message_set_wire_format)
+    2 => @reflect.Bool(self.no_standard_descriptor_accessor)
+    3 => @reflect.Bool(self.deprecated)
+    7 => @reflect.Bool(self.map_entry)
+    11 => @reflect.Bool(self.deprecated_legacy_json_field_conflicts)
+    12 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+      }
+    999 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.uninterpreted_option,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => UninterpretedOption::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return pair.1
+        }
+      }
+      @reflect.default_for(field)
+    }
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_MessageOptions : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.MessageOptions",
+)
+
+///|
 pub impl @reflect.Message for MessageOptions with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_MessageOptions
 }
 
 ///|
@@ -10726,7 +12122,8 @@ pub impl @reflect.Message for MessageOptions with fn message_type(self) -> &@ref
 
 ///|
 pub impl @reflect.Message for MessageOptions with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -10734,7 +12131,13 @@ pub impl @reflect.Message for MessageOptions with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_descriptor_proto_MessageOptions.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -10742,7 +12145,11 @@ pub impl @reflect.Message for MessageOptions with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  for pair in self.extension_values {
+    if !f(pair.0, pair.1) {
+      break
+    }
+  }
 }
 
 ///|
@@ -10750,7 +12157,24 @@ pub impl @reflect.Message for MessageOptions with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.message_set_wire_format
+    2 => self.no_standard_descriptor_accessor
+    3 => self.deprecated
+    7 => self.map_entry
+    11 => self.deprecated_legacy_json_field_conflicts
+    12 => @reflect.is_set(self.features)
+    999 => self.uninterpreted_option.length() > 0
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return true
+        }
+      }
+      false
+    }
+  }
 }
 
 ///|
@@ -10758,7 +12182,25 @@ pub impl @reflect.Message for MessageOptions with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.message_set_wire_format = false
+    2 => self.no_standard_descriptor_accessor = false
+    3 => self.deprecated = false
+    7 => self.map_entry = false
+    11 => self.deprecated_legacy_json_field_conflicts = false
+    12 => self.features = None
+    999 => self.uninterpreted_option.clear()
+    _ => {
+      let kept : Array[(@reflect.FieldDescriptor, @reflect.Value)] = []
+      for pair in self.extension_values {
+        if pair.0.number != field.number {
+          kept.push(pair)
+        }
+      }
+      self.extension_values = kept
+    }
+  }
 }
 
 ///|
@@ -10766,7 +12208,7 @@ pub impl @reflect.Message for MessageOptions with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  MessageOptions::read_field(self, field)
 }
 
 ///|
@@ -10775,7 +12217,43 @@ pub impl @reflect.Message for MessageOptions with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.message_set_wire_format = value.bool()
+    2 => self.no_standard_descriptor_accessor = value.bool()
+    3 => self.deprecated = value.bool()
+    7 => self.map_entry = value.bool()
+    11 => self.deprecated_legacy_json_field_conflicts = value.bool()
+    12 => {
+      let source = value.message()
+      let target = FeatureSet::new()
+      @proto.merge(target, source)
+      self.features = Some(target)
+    }
+    999 =>
+      @reflect.assign_list(
+        self.uninterpreted_option,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => UninterpretedOption::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    _ => {
+      let mut found = false
+      for i in 0..<self.extension_values.length() {
+        if self.extension_values[i].0.number == field.number {
+          self.extension_values[i] = (field, value)
+          found = true
+        }
+      }
+      if !found {
+        self.extension_values.push((field, value))
+      }
+    }
+  }
 }
 
 ///|
@@ -10783,7 +12261,19 @@ pub impl @reflect.Message for MessageOptions with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    12 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FeatureSet::new()
+          self.features = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => MessageOptions::read_field(self, field)
+  }
 }
 
 ///|
@@ -10791,7 +12281,11 @@ pub impl @reflect.Message for MessageOptions with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    12 => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -10799,12 +12293,15 @@ pub impl @reflect.Message for MessageOptions with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for MessageOptions with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -10812,7 +12309,7 @@ pub impl @reflect.Message for MessageOptions with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -10863,9 +12360,7 @@ pub impl @reflect.MessageType for MessageOptionsType with fn zero(_self) -> &@re
 
 ///|
 pub impl @reflect.MessageType for MessageOptionsType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.MessageOptions",
-  )
+  descriptor_google_protobuf_descriptor_proto_MessageOptions
 }
 
 ///|
@@ -10881,105 +12376,89 @@ pub let messageOptions_type : &@reflect.MessageType = MessageOptionsType::new()
 
 ///|
 pub struct FieldOptions {
-  inner : @dynamic.Message
+  mut ctype : FieldOptions_CType
+  mut packed : Bool
+  mut jstype : FieldOptions_JSType
+  mut lazy_ : Bool
+  mut unverified_lazy : Bool
+  mut deprecated : Bool
+  mut weak : Bool
+  mut debug_redact : Bool
+  mut retention : FieldOptions_OptionRetention
+  targets : Array[FieldOptions_OptionTargetType]
+  edition_defaults : Array[FieldOptions_EditionDefault]
+  mut features : FeatureSet?
+  mut feature_support : FieldOptions_FeatureSupport?
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 
 ///|
 pub fn FieldOptions::new() -> FieldOptions {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.FieldOptions",
-      ),
-    ),
+    ctype: FieldOptions_CType::of(0),
+    packed: false,
+    jstype: FieldOptions_JSType::of(0),
+    lazy_: false,
+    unverified_lazy: false,
+    deprecated: false,
+    weak: false,
+    debug_redact: false,
+    retention: FieldOptions_OptionRetention::of(0),
+    targets: [],
+    edition_defaults: [],
+    features: None,
+    feature_support: None,
+    uninterpreted_option: [],
+    unknown_fields: b"",
+    extension_values: [],
   }
-}
-
-///|
-pub fn FieldOptions::message(self : FieldOptions) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn FieldOptions::ctype(self : FieldOptions) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.ctype.code()
 }
 
 ///|
 pub fn FieldOptions::set_ctype(self : FieldOptions, value : Int32) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.Enum(value),
-  )
+  self.ctype = FieldOptions_CType::of(value)
 }
 
 ///|
 pub fn FieldOptions::packed(self : FieldOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.packed
 }
 
 ///|
 pub fn FieldOptions::set_packed(self : FieldOptions, value : Bool) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.Bool(value),
-  )
+  self.packed = value
 }
 
 ///|
 pub fn FieldOptions::jstype(self : FieldOptions) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 6)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.jstype.code()
 }
 
 ///|
 pub fn FieldOptions::set_jstype(self : FieldOptions, value : Int32) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 6),
-    @reflect.Enum(value),
-  )
+  self.jstype = FieldOptions_JSType::of(value)
 }
 
 ///|
 pub fn FieldOptions::lazy_(self : FieldOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 5)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.lazy_
 }
 
 ///|
 pub fn FieldOptions::set_lazy_(self : FieldOptions, value : Bool) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 5),
-    @reflect.Bool(value),
-  )
+  self.lazy_ = value
 }
 
 ///|
 pub fn FieldOptions::unverified_lazy(self : FieldOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 15)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.unverified_lazy
 }
 
 ///|
@@ -10987,56 +12466,32 @@ pub fn FieldOptions::set_unverified_lazy(
   self : FieldOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 15),
-    @reflect.Bool(value),
-  )
+  self.unverified_lazy = value
 }
 
 ///|
 pub fn FieldOptions::deprecated(self : FieldOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.deprecated
 }
 
 ///|
 pub fn FieldOptions::set_deprecated(self : FieldOptions, value : Bool) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.Bool(value),
-  )
+  self.deprecated = value
 }
 
 ///|
 pub fn FieldOptions::weak(self : FieldOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 10)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.weak
 }
 
 ///|
 pub fn FieldOptions::set_weak(self : FieldOptions, value : Bool) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 10),
-    @reflect.Bool(value),
-  )
+  self.weak = value
 }
 
 ///|
 pub fn FieldOptions::debug_redact(self : FieldOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 16)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.debug_redact
 }
 
 ///|
@@ -11044,62 +12499,50 @@ pub fn FieldOptions::set_debug_redact(
   self : FieldOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 16),
-    @reflect.Bool(value),
-  )
+  self.debug_redact = value
 }
 
 ///|
 pub fn FieldOptions::retention(self : FieldOptions) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 17)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.retention.code()
 }
 
 ///|
 pub fn FieldOptions::set_retention(self : FieldOptions, value : Int32) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 17),
-    @reflect.Enum(value),
-  )
+  self.retention = FieldOptions_OptionRetention::of(value)
 }
 
 ///|
 pub fn FieldOptions::targets(self : FieldOptions) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 19)
-  self.inner.mutable(f).list()
+  @reflect.list_view(
+    self.targets,
+    @reflect.scalar_element(
+      v => @reflect.Enum(v.code()),
+      v => FieldOptions_OptionTargetType::of(v.enum_number()),
+      () => FieldOptions_OptionTargetType::of(0),
+    ),
+  )
 }
 
 ///|
 pub fn FieldOptions::edition_defaults(
   self : FieldOptions,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 20)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn FieldOptions::set_edition_defaults(
-  self : FieldOptions,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 20),
-    value,
+  @reflect.list_view(
+    self.edition_defaults,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => FieldOptions_EditionDefault::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
 ///|
 pub fn FieldOptions::features(self : FieldOptions) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 21)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.features {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
   }
 }
 
@@ -11108,19 +12551,18 @@ pub fn FieldOptions::set_features(
   self : FieldOptions,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 21),
-    value,
-  )
+  let source = value.message()
+  let target = FeatureSet::new()
+  @proto.merge(target, source)
+  self.features = Some(target)
 }
 
 ///|
 pub fn FieldOptions::feature_support(self : FieldOptions) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 22)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.feature_support {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None =>
+      @reflect.Message(FieldOptions_FeatureSupport::new() as &@reflect.Message)
   }
 }
 
@@ -11129,28 +12571,23 @@ pub fn FieldOptions::set_feature_support(
   self : FieldOptions,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 22),
-    value,
-  )
+  let source = value.message()
+  let target = FieldOptions_FeatureSupport::new()
+  @proto.merge(target, source)
+  self.feature_support = Some(target)
 }
 
 ///|
 pub fn FieldOptions::uninterpreted_option(
   self : FieldOptions,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 999)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn FieldOptions::set_uninterpreted_option(
-  self : FieldOptions,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 999),
-    value,
+  @reflect.list_view(
+    self.uninterpreted_option,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => UninterpretedOption::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -11169,8 +12606,87 @@ pub fn FieldOptions::from_json(
 }
 
 ///|
+fn FieldOptions::read_field(
+  self : FieldOptions,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Enum(self.ctype.code())
+    2 => @reflect.Bool(self.packed)
+    6 => @reflect.Enum(self.jstype.code())
+    5 => @reflect.Bool(self.lazy_)
+    15 => @reflect.Bool(self.unverified_lazy)
+    3 => @reflect.Bool(self.deprecated)
+    10 => @reflect.Bool(self.weak)
+    16 => @reflect.Bool(self.debug_redact)
+    17 => @reflect.Enum(self.retention.code())
+    19 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.targets,
+          @reflect.scalar_element(
+            v => @reflect.Enum(v.code()),
+            v => FieldOptions_OptionTargetType::of(v.enum_number()),
+            () => FieldOptions_OptionTargetType::of(0),
+          ),
+        ),
+      )
+    20 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.edition_defaults,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => FieldOptions_EditionDefault::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    21 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+      }
+    22 =>
+      match self.feature_support {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None =>
+          @reflect.Message(
+            FieldOptions_FeatureSupport::new() as &@reflect.Message,
+          )
+      }
+    999 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.uninterpreted_option,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => UninterpretedOption::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return pair.1
+        }
+      }
+      @reflect.default_for(field)
+    }
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_FieldOptions : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.FieldOptions",
+)
+
+///|
 pub impl @reflect.Message for FieldOptions with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_FieldOptions
 }
 
 ///|
@@ -11181,7 +12697,8 @@ pub impl @reflect.Message for FieldOptions with fn message_type(self) -> &@refle
 
 ///|
 pub impl @reflect.Message for FieldOptions with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -11189,7 +12706,13 @@ pub impl @reflect.Message for FieldOptions with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_descriptor_proto_FieldOptions.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -11197,7 +12720,11 @@ pub impl @reflect.Message for FieldOptions with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  for pair in self.extension_values {
+    if !f(pair.0, pair.1) {
+      break
+    }
+  }
 }
 
 ///|
@@ -11205,7 +12732,31 @@ pub impl @reflect.Message for FieldOptions with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.ctype.code() != 0
+    2 => self.packed
+    6 => self.jstype.code() != 0
+    5 => self.lazy_
+    15 => self.unverified_lazy
+    3 => self.deprecated
+    10 => self.weak
+    16 => self.debug_redact
+    17 => self.retention.code() != 0
+    19 => self.targets.length() > 0
+    20 => self.edition_defaults.length() > 0
+    21 => @reflect.is_set(self.features)
+    22 => @reflect.is_set(self.feature_support)
+    999 => self.uninterpreted_option.length() > 0
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return true
+        }
+      }
+      false
+    }
+  }
 }
 
 ///|
@@ -11213,7 +12764,32 @@ pub impl @reflect.Message for FieldOptions with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.ctype = FieldOptions_CType::of(0)
+    2 => self.packed = false
+    6 => self.jstype = FieldOptions_JSType::of(0)
+    5 => self.lazy_ = false
+    15 => self.unverified_lazy = false
+    3 => self.deprecated = false
+    10 => self.weak = false
+    16 => self.debug_redact = false
+    17 => self.retention = FieldOptions_OptionRetention::of(0)
+    19 => self.targets.clear()
+    20 => self.edition_defaults.clear()
+    21 => self.features = None
+    22 => self.feature_support = None
+    999 => self.uninterpreted_option.clear()
+    _ => {
+      let kept : Array[(@reflect.FieldDescriptor, @reflect.Value)] = []
+      for pair in self.extension_values {
+        if pair.0.number != field.number {
+          kept.push(pair)
+        }
+      }
+      self.extension_values = kept
+    }
+  }
 }
 
 ///|
@@ -11221,7 +12797,7 @@ pub impl @reflect.Message for FieldOptions with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  FieldOptions::read_field(self, field)
 }
 
 ///|
@@ -11230,7 +12806,73 @@ pub impl @reflect.Message for FieldOptions with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.ctype = FieldOptions_CType::of(value.enum_number())
+    2 => self.packed = value.bool()
+    6 => self.jstype = FieldOptions_JSType::of(value.enum_number())
+    5 => self.lazy_ = value.bool()
+    15 => self.unverified_lazy = value.bool()
+    3 => self.deprecated = value.bool()
+    10 => self.weak = value.bool()
+    16 => self.debug_redact = value.bool()
+    17 => self.retention = FieldOptions_OptionRetention::of(value.enum_number())
+    19 =>
+      @reflect.assign_list(
+        self.targets,
+        value.list(),
+        @reflect.scalar_element(
+          v => @reflect.Enum(v.code()),
+          v => FieldOptions_OptionTargetType::of(v.enum_number()),
+          () => FieldOptions_OptionTargetType::of(0),
+        ),
+      )
+    20 =>
+      @reflect.assign_list(
+        self.edition_defaults,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => FieldOptions_EditionDefault::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    21 => {
+      let source = value.message()
+      let target = FeatureSet::new()
+      @proto.merge(target, source)
+      self.features = Some(target)
+    }
+    22 => {
+      let source = value.message()
+      let target = FieldOptions_FeatureSupport::new()
+      @proto.merge(target, source)
+      self.feature_support = Some(target)
+    }
+    999 =>
+      @reflect.assign_list(
+        self.uninterpreted_option,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => UninterpretedOption::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    _ => {
+      let mut found = false
+      for i in 0..<self.extension_values.length() {
+        if self.extension_values[i].0.number == field.number {
+          self.extension_values[i] = (field, value)
+          found = true
+        }
+      }
+      if !found {
+        self.extension_values.push((field, value))
+      }
+    }
+  }
 }
 
 ///|
@@ -11238,7 +12880,28 @@ pub impl @reflect.Message for FieldOptions with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    21 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FeatureSet::new()
+          self.features = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    22 =>
+      match self.feature_support {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FieldOptions_FeatureSupport::new()
+          self.feature_support = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => FieldOptions::read_field(self, field)
+  }
 }
 
 ///|
@@ -11246,7 +12909,13 @@ pub impl @reflect.Message for FieldOptions with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    21 => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+    22 =>
+      @reflect.Message(FieldOptions_FeatureSupport::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -11254,12 +12923,15 @@ pub impl @reflect.Message for FieldOptions with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for FieldOptions with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -11267,7 +12939,7 @@ pub impl @reflect.Message for FieldOptions with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -11318,7 +12990,7 @@ pub impl @reflect.MessageType for FieldOptionsType with fn zero(_self) -> &@refl
 
 ///|
 pub impl @reflect.MessageType for FieldOptionsType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto("google.protobuf.FieldOptions")
+  descriptor_google_protobuf_descriptor_proto_FieldOptions
 }
 
 ///|
@@ -11333,38 +13005,163 @@ pub let fieldOptions_type : &@reflect.MessageType = FieldOptionsType::new()
   as &@reflect.MessageType
 
 ///|
-pub struct FieldOptions_EditionDefault {
-  inner : @dynamic.Message
+pub(all) enum FieldOptions_CType {
+  STRING
+  CORD
+  STRING_PIECE
+  Unknown(Int32)
 }
 
 ///|
-pub fn FieldOptions_EditionDefault::new() -> FieldOptions_EditionDefault {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.FieldOptions.EditionDefault",
-      ),
-    ),
+pub fn FieldOptions_CType::code(self : FieldOptions_CType) -> Int32 {
+  match self {
+    STRING => 0
+    CORD => 1
+    STRING_PIECE => 2
+    Unknown(n) => n
   }
 }
 
 ///|
-pub fn FieldOptions_EditionDefault::message(
-  self : FieldOptions_EditionDefault,
-) -> @dynamic.Message {
-  self.inner
+pub fn FieldOptions_CType::of(n : Int32) -> FieldOptions_CType {
+  match n {
+    0 => STRING
+    1 => CORD
+    2 => STRING_PIECE
+    _ => Unknown(n)
+  }
+}
+
+///|
+pub(all) enum FieldOptions_JSType {
+  JS_NORMAL
+  JS_STRING
+  JS_NUMBER
+  Unknown(Int32)
+}
+
+///|
+pub fn FieldOptions_JSType::code(self : FieldOptions_JSType) -> Int32 {
+  match self {
+    JS_NORMAL => 0
+    JS_STRING => 1
+    JS_NUMBER => 2
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn FieldOptions_JSType::of(n : Int32) -> FieldOptions_JSType {
+  match n {
+    0 => JS_NORMAL
+    1 => JS_STRING
+    2 => JS_NUMBER
+    _ => Unknown(n)
+  }
+}
+
+///|
+pub(all) enum FieldOptions_OptionRetention {
+  RETENTION_UNKNOWN
+  RETENTION_RUNTIME
+  RETENTION_SOURCE
+  Unknown(Int32)
+}
+
+///|
+pub fn FieldOptions_OptionRetention::code(
+  self : FieldOptions_OptionRetention,
+) -> Int32 {
+  match self {
+    RETENTION_UNKNOWN => 0
+    RETENTION_RUNTIME => 1
+    RETENTION_SOURCE => 2
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn FieldOptions_OptionRetention::of(
+  n : Int32,
+) -> FieldOptions_OptionRetention {
+  match n {
+    0 => RETENTION_UNKNOWN
+    1 => RETENTION_RUNTIME
+    2 => RETENTION_SOURCE
+    _ => Unknown(n)
+  }
+}
+
+///|
+pub(all) enum FieldOptions_OptionTargetType {
+  TARGET_TYPE_UNKNOWN
+  TARGET_TYPE_FILE
+  TARGET_TYPE_EXTENSION_RANGE
+  TARGET_TYPE_MESSAGE
+  TARGET_TYPE_FIELD
+  TARGET_TYPE_ONEOF
+  TARGET_TYPE_ENUM
+  TARGET_TYPE_ENUM_ENTRY
+  TARGET_TYPE_SERVICE
+  TARGET_TYPE_METHOD
+  Unknown(Int32)
+}
+
+///|
+pub fn FieldOptions_OptionTargetType::code(
+  self : FieldOptions_OptionTargetType,
+) -> Int32 {
+  match self {
+    TARGET_TYPE_UNKNOWN => 0
+    TARGET_TYPE_FILE => 1
+    TARGET_TYPE_EXTENSION_RANGE => 2
+    TARGET_TYPE_MESSAGE => 3
+    TARGET_TYPE_FIELD => 4
+    TARGET_TYPE_ONEOF => 5
+    TARGET_TYPE_ENUM => 6
+    TARGET_TYPE_ENUM_ENTRY => 7
+    TARGET_TYPE_SERVICE => 8
+    TARGET_TYPE_METHOD => 9
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn FieldOptions_OptionTargetType::of(
+  n : Int32,
+) -> FieldOptions_OptionTargetType {
+  match n {
+    0 => TARGET_TYPE_UNKNOWN
+    1 => TARGET_TYPE_FILE
+    2 => TARGET_TYPE_EXTENSION_RANGE
+    3 => TARGET_TYPE_MESSAGE
+    4 => TARGET_TYPE_FIELD
+    5 => TARGET_TYPE_ONEOF
+    6 => TARGET_TYPE_ENUM
+    7 => TARGET_TYPE_ENUM_ENTRY
+    8 => TARGET_TYPE_SERVICE
+    9 => TARGET_TYPE_METHOD
+    _ => Unknown(n)
+  }
+}
+
+///|
+pub struct FieldOptions_EditionDefault {
+  mut edition : Edition
+  mut value : String
+  mut unknown_fields : Bytes
+}
+
+///|
+pub fn FieldOptions_EditionDefault::new() -> FieldOptions_EditionDefault {
+  { edition: Edition::of(0), value: "", unknown_fields: b"", }
 }
 
 ///|
 pub fn FieldOptions_EditionDefault::edition(
   self : FieldOptions_EditionDefault,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.edition.code()
 }
 
 ///|
@@ -11372,22 +13169,14 @@ pub fn FieldOptions_EditionDefault::set_edition(
   self : FieldOptions_EditionDefault,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.Enum(value),
-  )
+  self.edition = Edition::of(value)
 }
 
 ///|
 pub fn FieldOptions_EditionDefault::value(
   self : FieldOptions_EditionDefault,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.value
 }
 
 ///|
@@ -11395,10 +13184,7 @@ pub fn FieldOptions_EditionDefault::set_value(
   self : FieldOptions_EditionDefault,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.String(value),
-  )
+  self.value = value
 }
 
 ///|
@@ -11418,10 +13204,29 @@ pub fn FieldOptions_EditionDefault::from_json(
 }
 
 ///|
+fn FieldOptions_EditionDefault::read_field(
+  self : FieldOptions_EditionDefault,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    3 => @reflect.Enum(self.edition.code())
+    2 => @reflect.String(self.value)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_FieldOptions_EditionDefault : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.FieldOptions.EditionDefault",
+)
+
+///|
 pub impl @reflect.Message for FieldOptions_EditionDefault with fn descriptor(
   self,
 ) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_FieldOptions_EditionDefault
 }
 
 ///|
@@ -11434,7 +13239,8 @@ pub impl @reflect.Message for FieldOptions_EditionDefault with fn message_type(
 
 ///|
 pub impl @reflect.Message for FieldOptions_EditionDefault with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -11442,7 +13248,14 @@ pub impl @reflect.Message for FieldOptions_EditionDefault with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_FieldOptions_EditionDefault.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -11450,7 +13263,8 @@ pub impl @reflect.Message for FieldOptions_EditionDefault with fn range_extensio
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -11458,7 +13272,12 @@ pub impl @reflect.Message for FieldOptions_EditionDefault with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    3 => self.edition.code() != 0
+    2 => self.value.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -11466,7 +13285,12 @@ pub impl @reflect.Message for FieldOptions_EditionDefault with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    3 => self.edition = Edition::of(0)
+    2 => self.value = ""
+    _ => ()
+  }
 }
 
 ///|
@@ -11474,7 +13298,7 @@ pub impl @reflect.Message for FieldOptions_EditionDefault with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  FieldOptions_EditionDefault::read_field(self, field)
 }
 
 ///|
@@ -11483,7 +13307,13 @@ pub impl @reflect.Message for FieldOptions_EditionDefault with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    3 => self.edition = Edition::of(value.enum_number())
+    2 => self.value = value.string()
+    _ => ()
+  }
 }
 
 ///|
@@ -11491,7 +13321,10 @@ pub impl @reflect.Message for FieldOptions_EditionDefault with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => FieldOptions_EditionDefault::read_field(self, field)
+  }
 }
 
 ///|
@@ -11499,7 +13332,10 @@ pub impl @reflect.Message for FieldOptions_EditionDefault with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -11507,14 +13343,17 @@ pub impl @reflect.Message for FieldOptions_EditionDefault with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for FieldOptions_EditionDefault with fn get_unknown(
   self,
 ) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -11522,7 +13361,7 @@ pub impl @reflect.Message for FieldOptions_EditionDefault with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -11579,9 +13418,7 @@ pub impl @reflect.MessageType for FieldOptions_EditionDefaultType with fn zero(
 pub impl @reflect.MessageType for FieldOptions_EditionDefaultType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.FieldOptions.EditionDefault",
-  )
+  descriptor_google_protobuf_descriptor_proto_FieldOptions_EditionDefault
 }
 
 ///|
@@ -11597,37 +13434,31 @@ pub let fieldOptions_EditionDefault_type : &@reflect.MessageType = FieldOptions_
 
 ///|
 pub struct FieldOptions_FeatureSupport {
-  inner : @dynamic.Message
+  mut edition_introduced : Edition
+  mut edition_deprecated : Edition
+  mut deprecation_warning : String
+  mut edition_removed : Edition
+  mut removal_error : String
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn FieldOptions_FeatureSupport::new() -> FieldOptions_FeatureSupport {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.FieldOptions.FeatureSupport",
-      ),
-    ),
+    edition_introduced: Edition::of(0),
+    edition_deprecated: Edition::of(0),
+    deprecation_warning: "",
+    edition_removed: Edition::of(0),
+    removal_error: "",
+    unknown_fields: b"",
   }
-}
-
-///|
-pub fn FieldOptions_FeatureSupport::message(
-  self : FieldOptions_FeatureSupport,
-) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn FieldOptions_FeatureSupport::edition_introduced(
   self : FieldOptions_FeatureSupport,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.edition_introduced.code()
 }
 
 ///|
@@ -11635,22 +13466,14 @@ pub fn FieldOptions_FeatureSupport::set_edition_introduced(
   self : FieldOptions_FeatureSupport,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.Enum(value),
-  )
+  self.edition_introduced = Edition::of(value)
 }
 
 ///|
 pub fn FieldOptions_FeatureSupport::edition_deprecated(
   self : FieldOptions_FeatureSupport,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.edition_deprecated.code()
 }
 
 ///|
@@ -11658,22 +13481,14 @@ pub fn FieldOptions_FeatureSupport::set_edition_deprecated(
   self : FieldOptions_FeatureSupport,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.Enum(value),
-  )
+  self.edition_deprecated = Edition::of(value)
 }
 
 ///|
 pub fn FieldOptions_FeatureSupport::deprecation_warning(
   self : FieldOptions_FeatureSupport,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.deprecation_warning
 }
 
 ///|
@@ -11681,22 +13496,14 @@ pub fn FieldOptions_FeatureSupport::set_deprecation_warning(
   self : FieldOptions_FeatureSupport,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.String(value),
-  )
+  self.deprecation_warning = value
 }
 
 ///|
 pub fn FieldOptions_FeatureSupport::edition_removed(
   self : FieldOptions_FeatureSupport,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 4)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.edition_removed.code()
 }
 
 ///|
@@ -11704,22 +13511,14 @@ pub fn FieldOptions_FeatureSupport::set_edition_removed(
   self : FieldOptions_FeatureSupport,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 4),
-    @reflect.Enum(value),
-  )
+  self.edition_removed = Edition::of(value)
 }
 
 ///|
 pub fn FieldOptions_FeatureSupport::removal_error(
   self : FieldOptions_FeatureSupport,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 5)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.removal_error
 }
 
 ///|
@@ -11727,10 +13526,7 @@ pub fn FieldOptions_FeatureSupport::set_removal_error(
   self : FieldOptions_FeatureSupport,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 5),
-    @reflect.String(value),
-  )
+  self.removal_error = value
 }
 
 ///|
@@ -11750,10 +13546,32 @@ pub fn FieldOptions_FeatureSupport::from_json(
 }
 
 ///|
+fn FieldOptions_FeatureSupport::read_field(
+  self : FieldOptions_FeatureSupport,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Enum(self.edition_introduced.code())
+    2 => @reflect.Enum(self.edition_deprecated.code())
+    3 => @reflect.String(self.deprecation_warning)
+    4 => @reflect.Enum(self.edition_removed.code())
+    5 => @reflect.String(self.removal_error)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_FieldOptions_FeatureSupport : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.FieldOptions.FeatureSupport",
+)
+
+///|
 pub impl @reflect.Message for FieldOptions_FeatureSupport with fn descriptor(
   self,
 ) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_FieldOptions_FeatureSupport
 }
 
 ///|
@@ -11766,7 +13584,8 @@ pub impl @reflect.Message for FieldOptions_FeatureSupport with fn message_type(
 
 ///|
 pub impl @reflect.Message for FieldOptions_FeatureSupport with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -11774,7 +13593,14 @@ pub impl @reflect.Message for FieldOptions_FeatureSupport with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_FieldOptions_FeatureSupport.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -11782,7 +13608,8 @@ pub impl @reflect.Message for FieldOptions_FeatureSupport with fn range_extensio
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -11790,7 +13617,15 @@ pub impl @reflect.Message for FieldOptions_FeatureSupport with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.edition_introduced.code() != 0
+    2 => self.edition_deprecated.code() != 0
+    3 => self.deprecation_warning.length() > 0
+    4 => self.edition_removed.code() != 0
+    5 => self.removal_error.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -11798,7 +13633,15 @@ pub impl @reflect.Message for FieldOptions_FeatureSupport with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.edition_introduced = Edition::of(0)
+    2 => self.edition_deprecated = Edition::of(0)
+    3 => self.deprecation_warning = ""
+    4 => self.edition_removed = Edition::of(0)
+    5 => self.removal_error = ""
+    _ => ()
+  }
 }
 
 ///|
@@ -11806,7 +13649,7 @@ pub impl @reflect.Message for FieldOptions_FeatureSupport with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  FieldOptions_FeatureSupport::read_field(self, field)
 }
 
 ///|
@@ -11815,7 +13658,16 @@ pub impl @reflect.Message for FieldOptions_FeatureSupport with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.edition_introduced = Edition::of(value.enum_number())
+    2 => self.edition_deprecated = Edition::of(value.enum_number())
+    3 => self.deprecation_warning = value.string()
+    4 => self.edition_removed = Edition::of(value.enum_number())
+    5 => self.removal_error = value.string()
+    _ => ()
+  }
 }
 
 ///|
@@ -11823,7 +13675,10 @@ pub impl @reflect.Message for FieldOptions_FeatureSupport with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => FieldOptions_FeatureSupport::read_field(self, field)
+  }
 }
 
 ///|
@@ -11831,7 +13686,10 @@ pub impl @reflect.Message for FieldOptions_FeatureSupport with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -11839,14 +13697,17 @@ pub impl @reflect.Message for FieldOptions_FeatureSupport with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for FieldOptions_FeatureSupport with fn get_unknown(
   self,
 ) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -11854,7 +13715,7 @@ pub impl @reflect.Message for FieldOptions_FeatureSupport with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -11911,9 +13772,7 @@ pub impl @reflect.MessageType for FieldOptions_FeatureSupportType with fn zero(
 pub impl @reflect.MessageType for FieldOptions_FeatureSupportType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.FieldOptions.FeatureSupport",
-  )
+  descriptor_google_protobuf_descriptor_proto_FieldOptions_FeatureSupport
 }
 
 ///|
@@ -11929,32 +13788,27 @@ pub let fieldOptions_FeatureSupport_type : &@reflect.MessageType = FieldOptions_
 
 ///|
 pub struct OneofOptions {
-  inner : @dynamic.Message
+  mut features : FeatureSet?
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 
 ///|
 pub fn OneofOptions::new() -> OneofOptions {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.OneofOptions",
-      ),
-    ),
+    features: None,
+    uninterpreted_option: [],
+    unknown_fields: b"",
+    extension_values: [],
   }
 }
 
 ///|
-pub fn OneofOptions::message(self : OneofOptions) -> @dynamic.Message {
-  self.inner
-}
-
-///|
 pub fn OneofOptions::features(self : OneofOptions) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.features {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
   }
 }
 
@@ -11963,28 +13817,23 @@ pub fn OneofOptions::set_features(
   self : OneofOptions,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    value,
-  )
+  let source = value.message()
+  let target = FeatureSet::new()
+  @proto.merge(target, source)
+  self.features = Some(target)
 }
 
 ///|
 pub fn OneofOptions::uninterpreted_option(
   self : OneofOptions,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 999)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn OneofOptions::set_uninterpreted_option(
-  self : OneofOptions,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 999),
-    value,
+  @reflect.list_view(
+    self.uninterpreted_option,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => UninterpretedOption::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -12003,8 +13852,48 @@ pub fn OneofOptions::from_json(
 }
 
 ///|
+fn OneofOptions::read_field(
+  self : OneofOptions,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+      }
+    999 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.uninterpreted_option,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => UninterpretedOption::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return pair.1
+        }
+      }
+      @reflect.default_for(field)
+    }
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_OneofOptions : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.OneofOptions",
+)
+
+///|
 pub impl @reflect.Message for OneofOptions with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_OneofOptions
 }
 
 ///|
@@ -12015,7 +13904,8 @@ pub impl @reflect.Message for OneofOptions with fn message_type(self) -> &@refle
 
 ///|
 pub impl @reflect.Message for OneofOptions with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -12023,7 +13913,13 @@ pub impl @reflect.Message for OneofOptions with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_descriptor_proto_OneofOptions.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -12031,7 +13927,11 @@ pub impl @reflect.Message for OneofOptions with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  for pair in self.extension_values {
+    if !f(pair.0, pair.1) {
+      break
+    }
+  }
 }
 
 ///|
@@ -12039,7 +13939,19 @@ pub impl @reflect.Message for OneofOptions with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => @reflect.is_set(self.features)
+    999 => self.uninterpreted_option.length() > 0
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return true
+        }
+      }
+      false
+    }
+  }
 }
 
 ///|
@@ -12047,7 +13959,20 @@ pub impl @reflect.Message for OneofOptions with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.features = None
+    999 => self.uninterpreted_option.clear()
+    _ => {
+      let kept : Array[(@reflect.FieldDescriptor, @reflect.Value)] = []
+      for pair in self.extension_values {
+        if pair.0.number != field.number {
+          kept.push(pair)
+        }
+      }
+      self.extension_values = kept
+    }
+  }
 }
 
 ///|
@@ -12055,7 +13980,7 @@ pub impl @reflect.Message for OneofOptions with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  OneofOptions::read_field(self, field)
 }
 
 ///|
@@ -12064,7 +13989,38 @@ pub impl @reflect.Message for OneofOptions with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => {
+      let source = value.message()
+      let target = FeatureSet::new()
+      @proto.merge(target, source)
+      self.features = Some(target)
+    }
+    999 =>
+      @reflect.assign_list(
+        self.uninterpreted_option,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => UninterpretedOption::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    _ => {
+      let mut found = false
+      for i in 0..<self.extension_values.length() {
+        if self.extension_values[i].0.number == field.number {
+          self.extension_values[i] = (field, value)
+          found = true
+        }
+      }
+      if !found {
+        self.extension_values.push((field, value))
+      }
+    }
+  }
 }
 
 ///|
@@ -12072,7 +14028,19 @@ pub impl @reflect.Message for OneofOptions with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    1 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FeatureSet::new()
+          self.features = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => OneofOptions::read_field(self, field)
+  }
 }
 
 ///|
@@ -12080,7 +14048,11 @@ pub impl @reflect.Message for OneofOptions with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    1 => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -12088,12 +14060,15 @@ pub impl @reflect.Message for OneofOptions with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for OneofOptions with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -12101,7 +14076,7 @@ pub impl @reflect.Message for OneofOptions with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -12152,7 +14127,7 @@ pub impl @reflect.MessageType for OneofOptionsType with fn zero(_self) -> &@refl
 
 ///|
 pub impl @reflect.MessageType for OneofOptionsType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto("google.protobuf.OneofOptions")
+  descriptor_google_protobuf_descriptor_proto_OneofOptions
 }
 
 ///|
@@ -12168,71 +14143,53 @@ pub let oneofOptions_type : &@reflect.MessageType = OneofOptionsType::new()
 
 ///|
 pub struct EnumOptions {
-  inner : @dynamic.Message
+  mut allow_alias : Bool
+  mut deprecated : Bool
+  mut deprecated_legacy_json_field_conflicts : Bool
+  mut features : FeatureSet?
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 
 ///|
 pub fn EnumOptions::new() -> EnumOptions {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.EnumOptions",
-      ),
-    ),
+    allow_alias: false,
+    deprecated: false,
+    deprecated_legacy_json_field_conflicts: false,
+    features: None,
+    uninterpreted_option: [],
+    unknown_fields: b"",
+    extension_values: [],
   }
-}
-
-///|
-pub fn EnumOptions::message(self : EnumOptions) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn EnumOptions::allow_alias(self : EnumOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.allow_alias
 }
 
 ///|
 pub fn EnumOptions::set_allow_alias(self : EnumOptions, value : Bool) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.Bool(value),
-  )
+  self.allow_alias = value
 }
 
 ///|
 pub fn EnumOptions::deprecated(self : EnumOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.deprecated
 }
 
 ///|
 pub fn EnumOptions::set_deprecated(self : EnumOptions, value : Bool) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.Bool(value),
-  )
+  self.deprecated = value
 }
 
 ///|
 pub fn EnumOptions::deprecated_legacy_json_field_conflicts(
   self : EnumOptions,
 ) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 6)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.deprecated_legacy_json_field_conflicts
 }
 
 ///|
@@ -12240,19 +14197,14 @@ pub fn EnumOptions::set_deprecated_legacy_json_field_conflicts(
   self : EnumOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 6),
-    @reflect.Bool(value),
-  )
+  self.deprecated_legacy_json_field_conflicts = value
 }
 
 ///|
 pub fn EnumOptions::features(self : EnumOptions) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 7)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.features {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
   }
 }
 
@@ -12261,28 +14213,23 @@ pub fn EnumOptions::set_features(
   self : EnumOptions,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 7),
-    value,
-  )
+  let source = value.message()
+  let target = FeatureSet::new()
+  @proto.merge(target, source)
+  self.features = Some(target)
 }
 
 ///|
 pub fn EnumOptions::uninterpreted_option(
   self : EnumOptions,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 999)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn EnumOptions::set_uninterpreted_option(
-  self : EnumOptions,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 999),
-    value,
+  @reflect.list_view(
+    self.uninterpreted_option,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => UninterpretedOption::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -12299,8 +14246,51 @@ pub fn EnumOptions::from_json(text : String) -> EnumOptions raise @json.Refused 
 }
 
 ///|
+fn EnumOptions::read_field(
+  self : EnumOptions,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    2 => @reflect.Bool(self.allow_alias)
+    3 => @reflect.Bool(self.deprecated)
+    6 => @reflect.Bool(self.deprecated_legacy_json_field_conflicts)
+    7 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+      }
+    999 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.uninterpreted_option,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => UninterpretedOption::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return pair.1
+        }
+      }
+      @reflect.default_for(field)
+    }
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_EnumOptions : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.EnumOptions",
+)
+
+///|
 pub impl @reflect.Message for EnumOptions with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_EnumOptions
 }
 
 ///|
@@ -12311,7 +14301,8 @@ pub impl @reflect.Message for EnumOptions with fn message_type(self) -> &@reflec
 
 ///|
 pub impl @reflect.Message for EnumOptions with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -12319,7 +14310,13 @@ pub impl @reflect.Message for EnumOptions with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_descriptor_proto_EnumOptions.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -12327,7 +14324,11 @@ pub impl @reflect.Message for EnumOptions with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  for pair in self.extension_values {
+    if !f(pair.0, pair.1) {
+      break
+    }
+  }
 }
 
 ///|
@@ -12335,7 +14336,22 @@ pub impl @reflect.Message for EnumOptions with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    2 => self.allow_alias
+    3 => self.deprecated
+    6 => self.deprecated_legacy_json_field_conflicts
+    7 => @reflect.is_set(self.features)
+    999 => self.uninterpreted_option.length() > 0
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return true
+        }
+      }
+      false
+    }
+  }
 }
 
 ///|
@@ -12343,7 +14359,23 @@ pub impl @reflect.Message for EnumOptions with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    2 => self.allow_alias = false
+    3 => self.deprecated = false
+    6 => self.deprecated_legacy_json_field_conflicts = false
+    7 => self.features = None
+    999 => self.uninterpreted_option.clear()
+    _ => {
+      let kept : Array[(@reflect.FieldDescriptor, @reflect.Value)] = []
+      for pair in self.extension_values {
+        if pair.0.number != field.number {
+          kept.push(pair)
+        }
+      }
+      self.extension_values = kept
+    }
+  }
 }
 
 ///|
@@ -12351,7 +14383,7 @@ pub impl @reflect.Message for EnumOptions with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  EnumOptions::read_field(self, field)
 }
 
 ///|
@@ -12360,7 +14392,41 @@ pub impl @reflect.Message for EnumOptions with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    2 => self.allow_alias = value.bool()
+    3 => self.deprecated = value.bool()
+    6 => self.deprecated_legacy_json_field_conflicts = value.bool()
+    7 => {
+      let source = value.message()
+      let target = FeatureSet::new()
+      @proto.merge(target, source)
+      self.features = Some(target)
+    }
+    999 =>
+      @reflect.assign_list(
+        self.uninterpreted_option,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => UninterpretedOption::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    _ => {
+      let mut found = false
+      for i in 0..<self.extension_values.length() {
+        if self.extension_values[i].0.number == field.number {
+          self.extension_values[i] = (field, value)
+          found = true
+        }
+      }
+      if !found {
+        self.extension_values.push((field, value))
+      }
+    }
+  }
 }
 
 ///|
@@ -12368,7 +14434,19 @@ pub impl @reflect.Message for EnumOptions with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    7 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FeatureSet::new()
+          self.features = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => EnumOptions::read_field(self, field)
+  }
 }
 
 ///|
@@ -12376,7 +14454,11 @@ pub impl @reflect.Message for EnumOptions with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    7 => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -12384,12 +14466,15 @@ pub impl @reflect.Message for EnumOptions with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for EnumOptions with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -12397,7 +14482,7 @@ pub impl @reflect.Message for EnumOptions with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -12448,7 +14533,7 @@ pub impl @reflect.MessageType for EnumOptionsType with fn zero(_self) -> &@refle
 
 ///|
 pub impl @reflect.MessageType for EnumOptionsType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto("google.protobuf.EnumOptions")
+  descriptor_google_protobuf_descriptor_proto_EnumOptions
 }
 
 ///|
@@ -12464,33 +14549,31 @@ pub let enumOptions_type : &@reflect.MessageType = EnumOptionsType::new()
 
 ///|
 pub struct EnumValueOptions {
-  inner : @dynamic.Message
+  mut deprecated : Bool
+  mut features : FeatureSet?
+  mut debug_redact : Bool
+  mut feature_support : FieldOptions_FeatureSupport?
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 
 ///|
 pub fn EnumValueOptions::new() -> EnumValueOptions {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.EnumValueOptions",
-      ),
-    ),
+    deprecated: false,
+    features: None,
+    debug_redact: false,
+    feature_support: None,
+    uninterpreted_option: [],
+    unknown_fields: b"",
+    extension_values: [],
   }
-}
-
-///|
-pub fn EnumValueOptions::message(self : EnumValueOptions) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn EnumValueOptions::deprecated(self : EnumValueOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.deprecated
 }
 
 ///|
@@ -12498,19 +14581,14 @@ pub fn EnumValueOptions::set_deprecated(
   self : EnumValueOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.Bool(value),
-  )
+  self.deprecated = value
 }
 
 ///|
 pub fn EnumValueOptions::features(self : EnumValueOptions) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.features {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
   }
 }
 
@@ -12519,20 +14597,15 @@ pub fn EnumValueOptions::set_features(
   self : EnumValueOptions,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    value,
-  )
+  let source = value.message()
+  let target = FeatureSet::new()
+  @proto.merge(target, source)
+  self.features = Some(target)
 }
 
 ///|
 pub fn EnumValueOptions::debug_redact(self : EnumValueOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.debug_redact
 }
 
 ///|
@@ -12540,21 +14613,17 @@ pub fn EnumValueOptions::set_debug_redact(
   self : EnumValueOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.Bool(value),
-  )
+  self.debug_redact = value
 }
 
 ///|
 pub fn EnumValueOptions::feature_support(
   self : EnumValueOptions,
 ) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 4)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.feature_support {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None =>
+      @reflect.Message(FieldOptions_FeatureSupport::new() as &@reflect.Message)
   }
 }
 
@@ -12563,28 +14632,23 @@ pub fn EnumValueOptions::set_feature_support(
   self : EnumValueOptions,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 4),
-    value,
-  )
+  let source = value.message()
+  let target = FieldOptions_FeatureSupport::new()
+  @proto.merge(target, source)
+  self.feature_support = Some(target)
 }
 
 ///|
 pub fn EnumValueOptions::uninterpreted_option(
   self : EnumValueOptions,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 999)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn EnumValueOptions::set_uninterpreted_option(
-  self : EnumValueOptions,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 999),
-    value,
+  @reflect.list_view(
+    self.uninterpreted_option,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => UninterpretedOption::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -12605,8 +14669,58 @@ pub fn EnumValueOptions::from_json(
 }
 
 ///|
+fn EnumValueOptions::read_field(
+  self : EnumValueOptions,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Bool(self.deprecated)
+    2 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+      }
+    3 => @reflect.Bool(self.debug_redact)
+    4 =>
+      match self.feature_support {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None =>
+          @reflect.Message(
+            FieldOptions_FeatureSupport::new() as &@reflect.Message,
+          )
+      }
+    999 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.uninterpreted_option,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => UninterpretedOption::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return pair.1
+        }
+      }
+      @reflect.default_for(field)
+    }
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_EnumValueOptions : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.EnumValueOptions",
+)
+
+///|
 pub impl @reflect.Message for EnumValueOptions with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_EnumValueOptions
 }
 
 ///|
@@ -12617,7 +14731,8 @@ pub impl @reflect.Message for EnumValueOptions with fn message_type(self) -> &@r
 
 ///|
 pub impl @reflect.Message for EnumValueOptions with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -12625,7 +14740,14 @@ pub impl @reflect.Message for EnumValueOptions with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_EnumValueOptions.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -12633,7 +14755,11 @@ pub impl @reflect.Message for EnumValueOptions with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  for pair in self.extension_values {
+    if !f(pair.0, pair.1) {
+      break
+    }
+  }
 }
 
 ///|
@@ -12641,7 +14767,22 @@ pub impl @reflect.Message for EnumValueOptions with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.deprecated
+    2 => @reflect.is_set(self.features)
+    3 => self.debug_redact
+    4 => @reflect.is_set(self.feature_support)
+    999 => self.uninterpreted_option.length() > 0
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return true
+        }
+      }
+      false
+    }
+  }
 }
 
 ///|
@@ -12649,7 +14790,23 @@ pub impl @reflect.Message for EnumValueOptions with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.deprecated = false
+    2 => self.features = None
+    3 => self.debug_redact = false
+    4 => self.feature_support = None
+    999 => self.uninterpreted_option.clear()
+    _ => {
+      let kept : Array[(@reflect.FieldDescriptor, @reflect.Value)] = []
+      for pair in self.extension_values {
+        if pair.0.number != field.number {
+          kept.push(pair)
+        }
+      }
+      self.extension_values = kept
+    }
+  }
 }
 
 ///|
@@ -12657,7 +14814,7 @@ pub impl @reflect.Message for EnumValueOptions with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  EnumValueOptions::read_field(self, field)
 }
 
 ///|
@@ -12666,7 +14823,46 @@ pub impl @reflect.Message for EnumValueOptions with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.deprecated = value.bool()
+    2 => {
+      let source = value.message()
+      let target = FeatureSet::new()
+      @proto.merge(target, source)
+      self.features = Some(target)
+    }
+    3 => self.debug_redact = value.bool()
+    4 => {
+      let source = value.message()
+      let target = FieldOptions_FeatureSupport::new()
+      @proto.merge(target, source)
+      self.feature_support = Some(target)
+    }
+    999 =>
+      @reflect.assign_list(
+        self.uninterpreted_option,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => UninterpretedOption::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    _ => {
+      let mut found = false
+      for i in 0..<self.extension_values.length() {
+        if self.extension_values[i].0.number == field.number {
+          self.extension_values[i] = (field, value)
+          found = true
+        }
+      }
+      if !found {
+        self.extension_values.push((field, value))
+      }
+    }
+  }
 }
 
 ///|
@@ -12674,7 +14870,28 @@ pub impl @reflect.Message for EnumValueOptions with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    2 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FeatureSet::new()
+          self.features = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    4 =>
+      match self.feature_support {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FieldOptions_FeatureSupport::new()
+          self.feature_support = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => EnumValueOptions::read_field(self, field)
+  }
 }
 
 ///|
@@ -12682,7 +14899,13 @@ pub impl @reflect.Message for EnumValueOptions with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    2 => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+    4 =>
+      @reflect.Message(FieldOptions_FeatureSupport::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -12690,12 +14913,15 @@ pub impl @reflect.Message for EnumValueOptions with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for EnumValueOptions with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -12703,7 +14929,7 @@ pub impl @reflect.Message for EnumValueOptions with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -12756,9 +14982,7 @@ pub impl @reflect.MessageType for EnumValueOptionsType with fn zero(_self) -> &@
 
 ///|
 pub impl @reflect.MessageType for EnumValueOptionsType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.EnumValueOptions",
-  )
+  descriptor_google_protobuf_descriptor_proto_EnumValueOptions
 }
 
 ///|
@@ -12774,32 +14998,29 @@ pub let enumValueOptions_type : &@reflect.MessageType = EnumValueOptionsType::ne
 
 ///|
 pub struct ServiceOptions {
-  inner : @dynamic.Message
+  mut features : FeatureSet?
+  mut deprecated : Bool
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 
 ///|
 pub fn ServiceOptions::new() -> ServiceOptions {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.ServiceOptions",
-      ),
-    ),
+    features: None,
+    deprecated: false,
+    uninterpreted_option: [],
+    unknown_fields: b"",
+    extension_values: [],
   }
 }
 
 ///|
-pub fn ServiceOptions::message(self : ServiceOptions) -> @dynamic.Message {
-  self.inner
-}
-
-///|
 pub fn ServiceOptions::features(self : ServiceOptions) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 34)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.features {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
   }
 }
 
@@ -12808,20 +15029,15 @@ pub fn ServiceOptions::set_features(
   self : ServiceOptions,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 34),
-    value,
-  )
+  let source = value.message()
+  let target = FeatureSet::new()
+  @proto.merge(target, source)
+  self.features = Some(target)
 }
 
 ///|
 pub fn ServiceOptions::deprecated(self : ServiceOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 33)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.deprecated
 }
 
 ///|
@@ -12829,28 +15045,20 @@ pub fn ServiceOptions::set_deprecated(
   self : ServiceOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 33),
-    @reflect.Bool(value),
-  )
+  self.deprecated = value
 }
 
 ///|
 pub fn ServiceOptions::uninterpreted_option(
   self : ServiceOptions,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 999)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn ServiceOptions::set_uninterpreted_option(
-  self : ServiceOptions,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 999),
-    value,
+  @reflect.list_view(
+    self.uninterpreted_option,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => UninterpretedOption::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -12871,8 +15079,49 @@ pub fn ServiceOptions::from_json(
 }
 
 ///|
+fn ServiceOptions::read_field(
+  self : ServiceOptions,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    34 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+      }
+    33 => @reflect.Bool(self.deprecated)
+    999 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.uninterpreted_option,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => UninterpretedOption::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return pair.1
+        }
+      }
+      @reflect.default_for(field)
+    }
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_ServiceOptions : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.ServiceOptions",
+)
+
+///|
 pub impl @reflect.Message for ServiceOptions with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_ServiceOptions
 }
 
 ///|
@@ -12883,7 +15132,8 @@ pub impl @reflect.Message for ServiceOptions with fn message_type(self) -> &@ref
 
 ///|
 pub impl @reflect.Message for ServiceOptions with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -12891,7 +15141,13 @@ pub impl @reflect.Message for ServiceOptions with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_descriptor_proto_ServiceOptions.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -12899,7 +15155,11 @@ pub impl @reflect.Message for ServiceOptions with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  for pair in self.extension_values {
+    if !f(pair.0, pair.1) {
+      break
+    }
+  }
 }
 
 ///|
@@ -12907,7 +15167,20 @@ pub impl @reflect.Message for ServiceOptions with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    34 => @reflect.is_set(self.features)
+    33 => self.deprecated
+    999 => self.uninterpreted_option.length() > 0
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return true
+        }
+      }
+      false
+    }
+  }
 }
 
 ///|
@@ -12915,7 +15188,21 @@ pub impl @reflect.Message for ServiceOptions with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    34 => self.features = None
+    33 => self.deprecated = false
+    999 => self.uninterpreted_option.clear()
+    _ => {
+      let kept : Array[(@reflect.FieldDescriptor, @reflect.Value)] = []
+      for pair in self.extension_values {
+        if pair.0.number != field.number {
+          kept.push(pair)
+        }
+      }
+      self.extension_values = kept
+    }
+  }
 }
 
 ///|
@@ -12923,7 +15210,7 @@ pub impl @reflect.Message for ServiceOptions with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  ServiceOptions::read_field(self, field)
 }
 
 ///|
@@ -12932,7 +15219,39 @@ pub impl @reflect.Message for ServiceOptions with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    34 => {
+      let source = value.message()
+      let target = FeatureSet::new()
+      @proto.merge(target, source)
+      self.features = Some(target)
+    }
+    33 => self.deprecated = value.bool()
+    999 =>
+      @reflect.assign_list(
+        self.uninterpreted_option,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => UninterpretedOption::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    _ => {
+      let mut found = false
+      for i in 0..<self.extension_values.length() {
+        if self.extension_values[i].0.number == field.number {
+          self.extension_values[i] = (field, value)
+          found = true
+        }
+      }
+      if !found {
+        self.extension_values.push((field, value))
+      }
+    }
+  }
 }
 
 ///|
@@ -12940,7 +15259,19 @@ pub impl @reflect.Message for ServiceOptions with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    34 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FeatureSet::new()
+          self.features = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => ServiceOptions::read_field(self, field)
+  }
 }
 
 ///|
@@ -12948,7 +15279,11 @@ pub impl @reflect.Message for ServiceOptions with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    34 => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -12956,12 +15291,15 @@ pub impl @reflect.Message for ServiceOptions with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for ServiceOptions with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -12969,7 +15307,7 @@ pub impl @reflect.Message for ServiceOptions with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -13020,9 +15358,7 @@ pub impl @reflect.MessageType for ServiceOptionsType with fn zero(_self) -> &@re
 
 ///|
 pub impl @reflect.MessageType for ServiceOptionsType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.ServiceOptions",
-  )
+  descriptor_google_protobuf_descriptor_proto_ServiceOptions
 }
 
 ///|
@@ -13038,33 +15374,29 @@ pub let serviceOptions_type : &@reflect.MessageType = ServiceOptionsType::new()
 
 ///|
 pub struct MethodOptions {
-  inner : @dynamic.Message
+  mut deprecated : Bool
+  mut idempotency_level : MethodOptions_IdempotencyLevel
+  mut features : FeatureSet?
+  uninterpreted_option : Array[UninterpretedOption]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 
 ///|
 pub fn MethodOptions::new() -> MethodOptions {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.MethodOptions",
-      ),
-    ),
+    deprecated: false,
+    idempotency_level: MethodOptions_IdempotencyLevel::of(0),
+    features: None,
+    uninterpreted_option: [],
+    unknown_fields: b"",
+    extension_values: [],
   }
-}
-
-///|
-pub fn MethodOptions::message(self : MethodOptions) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn MethodOptions::deprecated(self : MethodOptions) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 33)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.deprecated
 }
 
 ///|
@@ -13072,20 +15404,12 @@ pub fn MethodOptions::set_deprecated(
   self : MethodOptions,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 33),
-    @reflect.Bool(value),
-  )
+  self.deprecated = value
 }
 
 ///|
 pub fn MethodOptions::idempotency_level(self : MethodOptions) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 34)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.idempotency_level.code()
 }
 
 ///|
@@ -13093,19 +15417,14 @@ pub fn MethodOptions::set_idempotency_level(
   self : MethodOptions,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 34),
-    @reflect.Enum(value),
-  )
+  self.idempotency_level = MethodOptions_IdempotencyLevel::of(value)
 }
 
 ///|
 pub fn MethodOptions::features(self : MethodOptions) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 35)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.features {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
   }
 }
 
@@ -13114,28 +15433,23 @@ pub fn MethodOptions::set_features(
   self : MethodOptions,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 35),
-    value,
-  )
+  let source = value.message()
+  let target = FeatureSet::new()
+  @proto.merge(target, source)
+  self.features = Some(target)
 }
 
 ///|
 pub fn MethodOptions::uninterpreted_option(
   self : MethodOptions,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 999)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn MethodOptions::set_uninterpreted_option(
-  self : MethodOptions,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 999),
-    value,
+  @reflect.list_view(
+    self.uninterpreted_option,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => UninterpretedOption::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -13156,8 +15470,50 @@ pub fn MethodOptions::from_json(
 }
 
 ///|
+fn MethodOptions::read_field(
+  self : MethodOptions,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    33 => @reflect.Bool(self.deprecated)
+    34 => @reflect.Enum(self.idempotency_level.code())
+    35 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+      }
+    999 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.uninterpreted_option,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => UninterpretedOption::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return pair.1
+        }
+      }
+      @reflect.default_for(field)
+    }
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_MethodOptions : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.MethodOptions",
+)
+
+///|
 pub impl @reflect.Message for MethodOptions with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_MethodOptions
 }
 
 ///|
@@ -13168,7 +15524,8 @@ pub impl @reflect.Message for MethodOptions with fn message_type(self) -> &@refl
 
 ///|
 pub impl @reflect.Message for MethodOptions with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -13176,7 +15533,13 @@ pub impl @reflect.Message for MethodOptions with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_descriptor_proto_MethodOptions.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -13184,7 +15547,11 @@ pub impl @reflect.Message for MethodOptions with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  for pair in self.extension_values {
+    if !f(pair.0, pair.1) {
+      break
+    }
+  }
 }
 
 ///|
@@ -13192,7 +15559,21 @@ pub impl @reflect.Message for MethodOptions with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    33 => self.deprecated
+    34 => self.idempotency_level.code() != 0
+    35 => @reflect.is_set(self.features)
+    999 => self.uninterpreted_option.length() > 0
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return true
+        }
+      }
+      false
+    }
+  }
 }
 
 ///|
@@ -13200,7 +15581,22 @@ pub impl @reflect.Message for MethodOptions with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    33 => self.deprecated = false
+    34 => self.idempotency_level = MethodOptions_IdempotencyLevel::of(0)
+    35 => self.features = None
+    999 => self.uninterpreted_option.clear()
+    _ => {
+      let kept : Array[(@reflect.FieldDescriptor, @reflect.Value)] = []
+      for pair in self.extension_values {
+        if pair.0.number != field.number {
+          kept.push(pair)
+        }
+      }
+      self.extension_values = kept
+    }
+  }
 }
 
 ///|
@@ -13208,7 +15604,7 @@ pub impl @reflect.Message for MethodOptions with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  MethodOptions::read_field(self, field)
 }
 
 ///|
@@ -13217,7 +15613,43 @@ pub impl @reflect.Message for MethodOptions with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    33 => self.deprecated = value.bool()
+    34 =>
+      self.idempotency_level = MethodOptions_IdempotencyLevel::of(
+        value.enum_number(),
+      )
+    35 => {
+      let source = value.message()
+      let target = FeatureSet::new()
+      @proto.merge(target, source)
+      self.features = Some(target)
+    }
+    999 =>
+      @reflect.assign_list(
+        self.uninterpreted_option,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => UninterpretedOption::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    _ => {
+      let mut found = false
+      for i in 0..<self.extension_values.length() {
+        if self.extension_values[i].0.number == field.number {
+          self.extension_values[i] = (field, value)
+          found = true
+        }
+      }
+      if !found {
+        self.extension_values.push((field, value))
+      }
+    }
+  }
 }
 
 ///|
@@ -13225,7 +15657,19 @@ pub impl @reflect.Message for MethodOptions with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    35 =>
+      match self.features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FeatureSet::new()
+          self.features = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => MethodOptions::read_field(self, field)
+  }
 }
 
 ///|
@@ -13233,7 +15677,11 @@ pub impl @reflect.Message for MethodOptions with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    35 => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -13241,12 +15689,15 @@ pub impl @reflect.Message for MethodOptions with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for MethodOptions with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -13254,7 +15705,7 @@ pub impl @reflect.Message for MethodOptions with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -13305,7 +15756,7 @@ pub impl @reflect.MessageType for MethodOptionsType with fn zero(_self) -> &@ref
 
 ///|
 pub impl @reflect.MessageType for MethodOptionsType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto("google.protobuf.MethodOptions")
+  descriptor_google_protobuf_descriptor_proto_MethodOptions
 }
 
 ///|
@@ -13320,44 +15771,74 @@ pub let methodOptions_type : &@reflect.MessageType = MethodOptionsType::new()
   as &@reflect.MessageType
 
 ///|
+pub(all) enum MethodOptions_IdempotencyLevel {
+  IDEMPOTENCY_UNKNOWN
+  NO_SIDE_EFFECTS
+  IDEMPOTENT
+  Unknown(Int32)
+}
+
+///|
+pub fn MethodOptions_IdempotencyLevel::code(
+  self : MethodOptions_IdempotencyLevel,
+) -> Int32 {
+  match self {
+    IDEMPOTENCY_UNKNOWN => 0
+    NO_SIDE_EFFECTS => 1
+    IDEMPOTENT => 2
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn MethodOptions_IdempotencyLevel::of(
+  n : Int32,
+) -> MethodOptions_IdempotencyLevel {
+  match n {
+    0 => IDEMPOTENCY_UNKNOWN
+    1 => NO_SIDE_EFFECTS
+    2 => IDEMPOTENT
+    _ => Unknown(n)
+  }
+}
+
+///|
 pub struct UninterpretedOption {
-  inner : @dynamic.Message
+  name : Array[UninterpretedOption_NamePart]
+  mut identifier_value : String
+  mut positive_int_value : UInt64
+  mut negative_int_value : Int64
+  mut double_value : Double
+  mut string_value : Bytes
+  mut aggregate_value : String
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn UninterpretedOption::new() -> UninterpretedOption {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.UninterpretedOption",
-      ),
-    ),
+    name: [],
+    identifier_value: "",
+    positive_int_value: 0UL,
+    negative_int_value: 0L,
+    double_value: 0.0,
+    string_value: b"",
+    aggregate_value: "",
+    unknown_fields: b"",
   }
-}
-
-///|
-pub fn UninterpretedOption::message(
-  self : UninterpretedOption,
-) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn UninterpretedOption::name(
   self : UninterpretedOption,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn UninterpretedOption::set_name(
-  self : UninterpretedOption,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    value,
+  @reflect.list_view(
+    self.name,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => UninterpretedOption_NamePart::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -13365,12 +15846,7 @@ pub fn UninterpretedOption::set_name(
 pub fn UninterpretedOption::identifier_value(
   self : UninterpretedOption,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.identifier_value
 }
 
 ///|
@@ -13378,22 +15854,14 @@ pub fn UninterpretedOption::set_identifier_value(
   self : UninterpretedOption,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.String(value),
-  )
+  self.identifier_value = value
 }
 
 ///|
 pub fn UninterpretedOption::positive_int_value(
   self : UninterpretedOption,
 ) -> UInt64 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 4)
-  if self.inner.has(f) {
-    self.inner.get(f).uint()
-  } else {
-    0UL
-  }
+  self.positive_int_value
 }
 
 ///|
@@ -13401,22 +15869,14 @@ pub fn UninterpretedOption::set_positive_int_value(
   self : UninterpretedOption,
   value : UInt64,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 4),
-    @reflect.Uint64(value),
-  )
+  self.positive_int_value = value
 }
 
 ///|
 pub fn UninterpretedOption::negative_int_value(
   self : UninterpretedOption,
 ) -> Int64 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 5)
-  if self.inner.has(f) {
-    self.inner.get(f).int()
-  } else {
-    0L
-  }
+  self.negative_int_value
 }
 
 ///|
@@ -13424,20 +15884,12 @@ pub fn UninterpretedOption::set_negative_int_value(
   self : UninterpretedOption,
   value : Int64,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 5),
-    @reflect.Int64(value),
-  )
+  self.negative_int_value = value
 }
 
 ///|
 pub fn UninterpretedOption::double_value(self : UninterpretedOption) -> Double {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 6)
-  if self.inner.has(f) {
-    self.inner.get(f).float()
-  } else {
-    0.0
-  }
+  self.double_value
 }
 
 ///|
@@ -13445,20 +15897,12 @@ pub fn UninterpretedOption::set_double_value(
   self : UninterpretedOption,
   value : Double,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 6),
-    @reflect.Double(value),
-  )
+  self.double_value = value
 }
 
 ///|
 pub fn UninterpretedOption::string_value(self : UninterpretedOption) -> Bytes {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 7)
-  if self.inner.has(f) {
-    self.inner.get(f).bytes()
-  } else {
-    b""
-  }
+  self.string_value
 }
 
 ///|
@@ -13466,22 +15910,14 @@ pub fn UninterpretedOption::set_string_value(
   self : UninterpretedOption,
   value : Bytes,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 7),
-    @reflect.Bytes(value),
-  )
+  self.string_value = value
 }
 
 ///|
 pub fn UninterpretedOption::aggregate_value(
   self : UninterpretedOption,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 8)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.aggregate_value
 }
 
 ///|
@@ -13489,10 +15925,7 @@ pub fn UninterpretedOption::set_aggregate_value(
   self : UninterpretedOption,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 8),
-    @reflect.String(value),
-  )
+  self.aggregate_value = value
 }
 
 ///|
@@ -13512,8 +15945,42 @@ pub fn UninterpretedOption::from_json(
 }
 
 ///|
+fn UninterpretedOption::read_field(
+  self : UninterpretedOption,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    2 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.name,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => UninterpretedOption_NamePart::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    3 => @reflect.String(self.identifier_value)
+    4 => @reflect.Uint64(self.positive_int_value)
+    5 => @reflect.Int64(self.negative_int_value)
+    6 => @reflect.Double(self.double_value)
+    7 => @reflect.Bytes(self.string_value)
+    8 => @reflect.String(self.aggregate_value)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_UninterpretedOption : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.UninterpretedOption",
+)
+
+///|
 pub impl @reflect.Message for UninterpretedOption with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_UninterpretedOption
 }
 
 ///|
@@ -13524,7 +15991,8 @@ pub impl @reflect.Message for UninterpretedOption with fn message_type(self) -> 
 
 ///|
 pub impl @reflect.Message for UninterpretedOption with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -13532,7 +16000,14 @@ pub impl @reflect.Message for UninterpretedOption with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_UninterpretedOption.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -13540,7 +16015,8 @@ pub impl @reflect.Message for UninterpretedOption with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -13548,7 +16024,17 @@ pub impl @reflect.Message for UninterpretedOption with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    2 => self.name.length() > 0
+    3 => self.identifier_value.length() > 0
+    4 => self.positive_int_value != 0UL
+    5 => self.negative_int_value != 0L
+    6 => self.double_value != 0.0
+    7 => self.string_value.length() > 0
+    8 => self.aggregate_value.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -13556,7 +16042,17 @@ pub impl @reflect.Message for UninterpretedOption with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    2 => self.name.clear()
+    3 => self.identifier_value = ""
+    4 => self.positive_int_value = 0UL
+    5 => self.negative_int_value = 0L
+    6 => self.double_value = 0.0
+    7 => self.string_value = b""
+    8 => self.aggregate_value = ""
+    _ => ()
+  }
 }
 
 ///|
@@ -13564,7 +16060,7 @@ pub impl @reflect.Message for UninterpretedOption with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  UninterpretedOption::read_field(self, field)
 }
 
 ///|
@@ -13573,7 +16069,27 @@ pub impl @reflect.Message for UninterpretedOption with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    2 =>
+      @reflect.assign_list(
+        self.name,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => UninterpretedOption_NamePart::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    3 => self.identifier_value = value.string()
+    4 => self.positive_int_value = value.uint()
+    5 => self.negative_int_value = value.int()
+    6 => self.double_value = value.float()
+    7 => self.string_value = value.bytes()
+    8 => self.aggregate_value = value.string()
+    _ => ()
+  }
 }
 
 ///|
@@ -13581,7 +16097,10 @@ pub impl @reflect.Message for UninterpretedOption with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => UninterpretedOption::read_field(self, field)
+  }
 }
 
 ///|
@@ -13589,7 +16108,10 @@ pub impl @reflect.Message for UninterpretedOption with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -13597,12 +16119,15 @@ pub impl @reflect.Message for UninterpretedOption with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for UninterpretedOption with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -13610,7 +16135,7 @@ pub impl @reflect.Message for UninterpretedOption with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -13665,9 +16190,7 @@ pub impl @reflect.MessageType for UninterpretedOptionType with fn zero(_self) ->
 pub impl @reflect.MessageType for UninterpretedOptionType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.UninterpretedOption",
-  )
+  descriptor_google_protobuf_descriptor_proto_UninterpretedOption
 }
 
 ///|
@@ -13683,37 +16206,21 @@ pub let uninterpretedOption_type : &@reflect.MessageType = UninterpretedOptionTy
 
 ///|
 pub struct UninterpretedOption_NamePart {
-  inner : @dynamic.Message
+  mut name_part : String?
+  mut is_extension : Bool?
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn UninterpretedOption_NamePart::new() -> UninterpretedOption_NamePart {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.UninterpretedOption.NamePart",
-      ),
-    ),
-  }
-}
-
-///|
-pub fn UninterpretedOption_NamePart::message(
-  self : UninterpretedOption_NamePart,
-) -> @dynamic.Message {
-  self.inner
+  { name_part: None, is_extension: None, unknown_fields: b"", }
 }
 
 ///|
 pub fn UninterpretedOption_NamePart::name_part(
   self : UninterpretedOption_NamePart,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.name_part.unwrap_or("")
 }
 
 ///|
@@ -13721,22 +16228,14 @@ pub fn UninterpretedOption_NamePart::set_name_part(
   self : UninterpretedOption_NamePart,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.name_part = Some(value)
 }
 
 ///|
 pub fn UninterpretedOption_NamePart::is_extension(
   self : UninterpretedOption_NamePart,
 ) -> Bool {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.is_extension.unwrap_or(false)
 }
 
 ///|
@@ -13744,10 +16243,7 @@ pub fn UninterpretedOption_NamePart::set_is_extension(
   self : UninterpretedOption_NamePart,
   value : Bool,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.Bool(value),
-  )
+  self.is_extension = Some(value)
 }
 
 ///|
@@ -13767,10 +16263,37 @@ pub fn UninterpretedOption_NamePart::from_json(
 }
 
 ///|
+fn UninterpretedOption_NamePart::read_field(
+  self : UninterpretedOption_NamePart,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 =>
+      match self.name_part {
+        Some(v) => @reflect.String(v)
+        None => @reflect.default_for(field)
+      }
+    2 =>
+      match self.is_extension {
+        Some(v) => @reflect.Bool(v)
+        None => @reflect.default_for(field)
+      }
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_UninterpretedOption_NamePart : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.UninterpretedOption.NamePart",
+)
+
+///|
 pub impl @reflect.Message for UninterpretedOption_NamePart with fn descriptor(
   self,
 ) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_UninterpretedOption_NamePart
 }
 
 ///|
@@ -13785,7 +16308,8 @@ pub impl @reflect.Message for UninterpretedOption_NamePart with fn message_type(
 pub impl @reflect.Message for UninterpretedOption_NamePart with fn is_valid(
   self,
 ) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -13793,7 +16317,14 @@ pub impl @reflect.Message for UninterpretedOption_NamePart with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_UninterpretedOption_NamePart.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -13801,7 +16332,8 @@ pub impl @reflect.Message for UninterpretedOption_NamePart with fn range_extensi
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -13809,7 +16341,12 @@ pub impl @reflect.Message for UninterpretedOption_NamePart with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => @reflect.is_set(self.name_part)
+    2 => @reflect.is_set(self.is_extension)
+    _ => false
+  }
 }
 
 ///|
@@ -13817,7 +16354,12 @@ pub impl @reflect.Message for UninterpretedOption_NamePart with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.name_part = None
+    2 => self.is_extension = None
+    _ => ()
+  }
 }
 
 ///|
@@ -13825,7 +16367,7 @@ pub impl @reflect.Message for UninterpretedOption_NamePart with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  UninterpretedOption_NamePart::read_field(self, field)
 }
 
 ///|
@@ -13834,7 +16376,13 @@ pub impl @reflect.Message for UninterpretedOption_NamePart with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.name_part = Some(value.string())
+    2 => self.is_extension = Some(value.bool())
+    _ => ()
+  }
 }
 
 ///|
@@ -13842,7 +16390,10 @@ pub impl @reflect.Message for UninterpretedOption_NamePart with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => UninterpretedOption_NamePart::read_field(self, field)
+  }
 }
 
 ///|
@@ -13850,7 +16401,10 @@ pub impl @reflect.Message for UninterpretedOption_NamePart with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -13858,14 +16412,17 @@ pub impl @reflect.Message for UninterpretedOption_NamePart with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for UninterpretedOption_NamePart with fn get_unknown(
   self,
 ) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -13873,7 +16430,7 @@ pub impl @reflect.Message for UninterpretedOption_NamePart with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -13930,9 +16487,7 @@ pub impl @reflect.MessageType for UninterpretedOption_NamePartType with fn zero(
 pub impl @reflect.MessageType for UninterpretedOption_NamePartType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.UninterpretedOption.NamePart",
-  )
+  descriptor_google_protobuf_descriptor_proto_UninterpretedOption_NamePart
 }
 
 ///|
@@ -13948,69 +16503,63 @@ pub let uninterpretedOption_NamePart_type : &@reflect.MessageType = Uninterprete
 
 ///|
 pub struct FeatureSet {
-  inner : @dynamic.Message
+  mut field_presence : FeatureSet_FieldPresence
+  mut enum_type : FeatureSet_EnumType
+  mut repeated_field_encoding : FeatureSet_RepeatedFieldEncoding
+  mut utf8_validation : FeatureSet_Utf8Validation
+  mut message_encoding : FeatureSet_MessageEncoding
+  mut json_format : FeatureSet_JsonFormat
+  mut enforce_naming_style : FeatureSet_EnforceNamingStyle
+  mut default_symbol_visibility : FeatureSet_VisibilityFeature_DefaultSymbolVisibility
+  mut enforce_proto_limits : FeatureSet_ProtoLimitsFeature_EnforceProtoLimits
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 
 ///|
 pub fn FeatureSet::new() -> FeatureSet {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.FeatureSet",
-      ),
+    field_presence: FeatureSet_FieldPresence::of(0),
+    enum_type: FeatureSet_EnumType::of(0),
+    repeated_field_encoding: FeatureSet_RepeatedFieldEncoding::of(0),
+    utf8_validation: FeatureSet_Utf8Validation::of(0),
+    message_encoding: FeatureSet_MessageEncoding::of(0),
+    json_format: FeatureSet_JsonFormat::of(0),
+    enforce_naming_style: FeatureSet_EnforceNamingStyle::of(0),
+    default_symbol_visibility: FeatureSet_VisibilityFeature_DefaultSymbolVisibility::of(
+      0,
     ),
+    enforce_proto_limits: FeatureSet_ProtoLimitsFeature_EnforceProtoLimits::of(
+      0,
+    ),
+    unknown_fields: b"",
+    extension_values: [],
   }
-}
-
-///|
-pub fn FeatureSet::message(self : FeatureSet) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn FeatureSet::field_presence(self : FeatureSet) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.field_presence.code()
 }
 
 ///|
 pub fn FeatureSet::set_field_presence(self : FeatureSet, value : Int32) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    @reflect.Enum(value),
-  )
+  self.field_presence = FeatureSet_FieldPresence::of(value)
 }
 
 ///|
 pub fn FeatureSet::enum_type(self : FeatureSet) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.enum_type.code()
 }
 
 ///|
 pub fn FeatureSet::set_enum_type(self : FeatureSet, value : Int32) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.Enum(value),
-  )
+  self.enum_type = FeatureSet_EnumType::of(value)
 }
 
 ///|
 pub fn FeatureSet::repeated_field_encoding(self : FeatureSet) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.repeated_field_encoding.code()
 }
 
 ///|
@@ -14018,20 +16567,12 @@ pub fn FeatureSet::set_repeated_field_encoding(
   self : FeatureSet,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.Enum(value),
-  )
+  self.repeated_field_encoding = FeatureSet_RepeatedFieldEncoding::of(value)
 }
 
 ///|
 pub fn FeatureSet::utf8_validation(self : FeatureSet) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 4)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.utf8_validation.code()
 }
 
 ///|
@@ -14039,20 +16580,12 @@ pub fn FeatureSet::set_utf8_validation(
   self : FeatureSet,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 4),
-    @reflect.Enum(value),
-  )
+  self.utf8_validation = FeatureSet_Utf8Validation::of(value)
 }
 
 ///|
 pub fn FeatureSet::message_encoding(self : FeatureSet) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 5)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.message_encoding.code()
 }
 
 ///|
@@ -14060,38 +16593,22 @@ pub fn FeatureSet::set_message_encoding(
   self : FeatureSet,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 5),
-    @reflect.Enum(value),
-  )
+  self.message_encoding = FeatureSet_MessageEncoding::of(value)
 }
 
 ///|
 pub fn FeatureSet::json_format(self : FeatureSet) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 6)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.json_format.code()
 }
 
 ///|
 pub fn FeatureSet::set_json_format(self : FeatureSet, value : Int32) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 6),
-    @reflect.Enum(value),
-  )
+  self.json_format = FeatureSet_JsonFormat::of(value)
 }
 
 ///|
 pub fn FeatureSet::enforce_naming_style(self : FeatureSet) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 7)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.enforce_naming_style.code()
 }
 
 ///|
@@ -14099,20 +16616,12 @@ pub fn FeatureSet::set_enforce_naming_style(
   self : FeatureSet,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 7),
-    @reflect.Enum(value),
-  )
+  self.enforce_naming_style = FeatureSet_EnforceNamingStyle::of(value)
 }
 
 ///|
 pub fn FeatureSet::default_symbol_visibility(self : FeatureSet) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 8)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.default_symbol_visibility.code()
 }
 
 ///|
@@ -14120,20 +16629,14 @@ pub fn FeatureSet::set_default_symbol_visibility(
   self : FeatureSet,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 8),
-    @reflect.Enum(value),
+  self.default_symbol_visibility = FeatureSet_VisibilityFeature_DefaultSymbolVisibility::of(
+    value,
   )
 }
 
 ///|
 pub fn FeatureSet::enforce_proto_limits(self : FeatureSet) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 9)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.enforce_proto_limits.code()
 }
 
 ///|
@@ -14141,9 +16644,8 @@ pub fn FeatureSet::set_enforce_proto_limits(
   self : FeatureSet,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 9),
-    @reflect.Enum(value),
+  self.enforce_proto_limits = FeatureSet_ProtoLimitsFeature_EnforceProtoLimits::of(
+    value,
   )
 }
 
@@ -14160,8 +16662,41 @@ pub fn FeatureSet::from_json(text : String) -> FeatureSet raise @json.Refused {
 }
 
 ///|
+fn FeatureSet::read_field(
+  self : FeatureSet,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Enum(self.field_presence.code())
+    2 => @reflect.Enum(self.enum_type.code())
+    3 => @reflect.Enum(self.repeated_field_encoding.code())
+    4 => @reflect.Enum(self.utf8_validation.code())
+    5 => @reflect.Enum(self.message_encoding.code())
+    6 => @reflect.Enum(self.json_format.code())
+    7 => @reflect.Enum(self.enforce_naming_style.code())
+    8 => @reflect.Enum(self.default_symbol_visibility.code())
+    9 => @reflect.Enum(self.enforce_proto_limits.code())
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return pair.1
+        }
+      }
+      @reflect.default_for(field)
+    }
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_FeatureSet : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.FeatureSet",
+)
+
+///|
 pub impl @reflect.Message for FeatureSet with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_FeatureSet
 }
 
 ///|
@@ -14172,7 +16707,8 @@ pub impl @reflect.Message for FeatureSet with fn message_type(self) -> &@reflect
 
 ///|
 pub impl @reflect.Message for FeatureSet with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -14180,7 +16716,13 @@ pub impl @reflect.Message for FeatureSet with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_descriptor_proto_FeatureSet.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -14188,7 +16730,11 @@ pub impl @reflect.Message for FeatureSet with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  for pair in self.extension_values {
+    if !f(pair.0, pair.1) {
+      break
+    }
+  }
 }
 
 ///|
@@ -14196,7 +16742,26 @@ pub impl @reflect.Message for FeatureSet with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.field_presence.code() != 0
+    2 => self.enum_type.code() != 0
+    3 => self.repeated_field_encoding.code() != 0
+    4 => self.utf8_validation.code() != 0
+    5 => self.message_encoding.code() != 0
+    6 => self.json_format.code() != 0
+    7 => self.enforce_naming_style.code() != 0
+    8 => self.default_symbol_visibility.code() != 0
+    9 => self.enforce_proto_limits.code() != 0
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return true
+        }
+      }
+      false
+    }
+  }
 }
 
 ///|
@@ -14204,7 +16769,33 @@ pub impl @reflect.Message for FeatureSet with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.field_presence = FeatureSet_FieldPresence::of(0)
+    2 => self.enum_type = FeatureSet_EnumType::of(0)
+    3 => self.repeated_field_encoding = FeatureSet_RepeatedFieldEncoding::of(0)
+    4 => self.utf8_validation = FeatureSet_Utf8Validation::of(0)
+    5 => self.message_encoding = FeatureSet_MessageEncoding::of(0)
+    6 => self.json_format = FeatureSet_JsonFormat::of(0)
+    7 => self.enforce_naming_style = FeatureSet_EnforceNamingStyle::of(0)
+    8 =>
+      self.default_symbol_visibility = FeatureSet_VisibilityFeature_DefaultSymbolVisibility::of(
+        0,
+      )
+    9 =>
+      self.enforce_proto_limits = FeatureSet_ProtoLimitsFeature_EnforceProtoLimits::of(
+        0,
+      )
+    _ => {
+      let kept : Array[(@reflect.FieldDescriptor, @reflect.Value)] = []
+      for pair in self.extension_values {
+        if pair.0.number != field.number {
+          kept.push(pair)
+        }
+      }
+      self.extension_values = kept
+    }
+  }
 }
 
 ///|
@@ -14212,7 +16803,7 @@ pub impl @reflect.Message for FeatureSet with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  FeatureSet::read_field(self, field)
 }
 
 ///|
@@ -14221,7 +16812,47 @@ pub impl @reflect.Message for FeatureSet with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.field_presence = FeatureSet_FieldPresence::of(value.enum_number())
+    2 => self.enum_type = FeatureSet_EnumType::of(value.enum_number())
+    3 =>
+      self.repeated_field_encoding = FeatureSet_RepeatedFieldEncoding::of(
+        value.enum_number(),
+      )
+    4 =>
+      self.utf8_validation = FeatureSet_Utf8Validation::of(value.enum_number())
+    5 =>
+      self.message_encoding = FeatureSet_MessageEncoding::of(
+        value.enum_number(),
+      )
+    6 => self.json_format = FeatureSet_JsonFormat::of(value.enum_number())
+    7 =>
+      self.enforce_naming_style = FeatureSet_EnforceNamingStyle::of(
+        value.enum_number(),
+      )
+    8 =>
+      self.default_symbol_visibility = FeatureSet_VisibilityFeature_DefaultSymbolVisibility::of(
+        value.enum_number(),
+      )
+    9 =>
+      self.enforce_proto_limits = FeatureSet_ProtoLimitsFeature_EnforceProtoLimits::of(
+        value.enum_number(),
+      )
+    _ => {
+      let mut found = false
+      for i in 0..<self.extension_values.length() {
+        if self.extension_values[i].0.number == field.number {
+          self.extension_values[i] = (field, value)
+          found = true
+        }
+      }
+      if !found {
+        self.extension_values.push((field, value))
+      }
+    }
+  }
 }
 
 ///|
@@ -14229,7 +16860,10 @@ pub impl @reflect.Message for FeatureSet with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => FeatureSet::read_field(self, field)
+  }
 }
 
 ///|
@@ -14237,7 +16871,10 @@ pub impl @reflect.Message for FeatureSet with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -14245,12 +16882,15 @@ pub impl @reflect.Message for FeatureSet with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for FeatureSet with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -14258,7 +16898,7 @@ pub impl @reflect.Message for FeatureSet with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -14309,7 +16949,7 @@ pub impl @reflect.MessageType for FeatureSetType with fn zero(_self) -> &@reflec
 
 ///|
 pub impl @reflect.MessageType for FeatureSetType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto("google.protobuf.FeatureSet")
+  descriptor_google_protobuf_descriptor_proto_FeatureSet
 }
 
 ///|
@@ -14324,26 +16964,227 @@ pub let featureSet_type : &@reflect.MessageType = FeatureSetType::new()
   as &@reflect.MessageType
 
 ///|
-pub struct FeatureSet_VisibilityFeature {
-  inner : @dynamic.Message
+pub(all) enum FeatureSet_FieldPresence {
+  FIELD_PRESENCE_UNKNOWN
+  EXPLICIT
+  IMPLICIT
+  LEGACY_REQUIRED
+  Unknown(Int32)
 }
 
 ///|
-pub fn FeatureSet_VisibilityFeature::new() -> FeatureSet_VisibilityFeature {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.FeatureSet.VisibilityFeature",
-      ),
-    ),
+pub fn FeatureSet_FieldPresence::code(self : FeatureSet_FieldPresence) -> Int32 {
+  match self {
+    FIELD_PRESENCE_UNKNOWN => 0
+    EXPLICIT => 1
+    IMPLICIT => 2
+    LEGACY_REQUIRED => 3
+    Unknown(n) => n
   }
 }
 
 ///|
-pub fn FeatureSet_VisibilityFeature::message(
-  self : FeatureSet_VisibilityFeature,
-) -> @dynamic.Message {
-  self.inner
+pub fn FeatureSet_FieldPresence::of(n : Int32) -> FeatureSet_FieldPresence {
+  match n {
+    0 => FIELD_PRESENCE_UNKNOWN
+    1 => EXPLICIT
+    2 => IMPLICIT
+    3 => LEGACY_REQUIRED
+    _ => Unknown(n)
+  }
+}
+
+///|
+pub(all) enum FeatureSet_EnumType {
+  ENUM_TYPE_UNKNOWN
+  OPEN
+  CLOSED
+  Unknown(Int32)
+}
+
+///|
+pub fn FeatureSet_EnumType::code(self : FeatureSet_EnumType) -> Int32 {
+  match self {
+    ENUM_TYPE_UNKNOWN => 0
+    OPEN => 1
+    CLOSED => 2
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn FeatureSet_EnumType::of(n : Int32) -> FeatureSet_EnumType {
+  match n {
+    0 => ENUM_TYPE_UNKNOWN
+    1 => OPEN
+    2 => CLOSED
+    _ => Unknown(n)
+  }
+}
+
+///|
+pub(all) enum FeatureSet_RepeatedFieldEncoding {
+  REPEATED_FIELD_ENCODING_UNKNOWN
+  PACKED
+  EXPANDED
+  Unknown(Int32)
+}
+
+///|
+pub fn FeatureSet_RepeatedFieldEncoding::code(
+  self : FeatureSet_RepeatedFieldEncoding,
+) -> Int32 {
+  match self {
+    REPEATED_FIELD_ENCODING_UNKNOWN => 0
+    PACKED => 1
+    EXPANDED => 2
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn FeatureSet_RepeatedFieldEncoding::of(
+  n : Int32,
+) -> FeatureSet_RepeatedFieldEncoding {
+  match n {
+    0 => REPEATED_FIELD_ENCODING_UNKNOWN
+    1 => PACKED
+    2 => EXPANDED
+    _ => Unknown(n)
+  }
+}
+
+///|
+pub(all) enum FeatureSet_Utf8Validation {
+  UTF8_VALIDATION_UNKNOWN
+  VERIFY
+  NONE
+  Unknown(Int32)
+}
+
+///|
+pub fn FeatureSet_Utf8Validation::code(
+  self : FeatureSet_Utf8Validation,
+) -> Int32 {
+  match self {
+    UTF8_VALIDATION_UNKNOWN => 0
+    VERIFY => 2
+    NONE => 3
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn FeatureSet_Utf8Validation::of(n : Int32) -> FeatureSet_Utf8Validation {
+  match n {
+    0 => UTF8_VALIDATION_UNKNOWN
+    2 => VERIFY
+    3 => NONE
+    _ => Unknown(n)
+  }
+}
+
+///|
+pub(all) enum FeatureSet_MessageEncoding {
+  MESSAGE_ENCODING_UNKNOWN
+  LENGTH_PREFIXED
+  DELIMITED
+  Unknown(Int32)
+}
+
+///|
+pub fn FeatureSet_MessageEncoding::code(
+  self : FeatureSet_MessageEncoding,
+) -> Int32 {
+  match self {
+    MESSAGE_ENCODING_UNKNOWN => 0
+    LENGTH_PREFIXED => 1
+    DELIMITED => 2
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn FeatureSet_MessageEncoding::of(n : Int32) -> FeatureSet_MessageEncoding {
+  match n {
+    0 => MESSAGE_ENCODING_UNKNOWN
+    1 => LENGTH_PREFIXED
+    2 => DELIMITED
+    _ => Unknown(n)
+  }
+}
+
+///|
+pub(all) enum FeatureSet_JsonFormat {
+  JSON_FORMAT_UNKNOWN
+  ALLOW
+  LEGACY_BEST_EFFORT
+  Unknown(Int32)
+}
+
+///|
+pub fn FeatureSet_JsonFormat::code(self : FeatureSet_JsonFormat) -> Int32 {
+  match self {
+    JSON_FORMAT_UNKNOWN => 0
+    ALLOW => 1
+    LEGACY_BEST_EFFORT => 2
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn FeatureSet_JsonFormat::of(n : Int32) -> FeatureSet_JsonFormat {
+  match n {
+    0 => JSON_FORMAT_UNKNOWN
+    1 => ALLOW
+    2 => LEGACY_BEST_EFFORT
+    _ => Unknown(n)
+  }
+}
+
+///|
+pub(all) enum FeatureSet_EnforceNamingStyle {
+  ENFORCE_NAMING_STYLE_UNKNOWN
+  STYLE2024
+  STYLE_LEGACY
+  STYLE2026
+  Unknown(Int32)
+}
+
+///|
+pub fn FeatureSet_EnforceNamingStyle::code(
+  self : FeatureSet_EnforceNamingStyle,
+) -> Int32 {
+  match self {
+    ENFORCE_NAMING_STYLE_UNKNOWN => 0
+    STYLE2024 => 1
+    STYLE_LEGACY => 2
+    STYLE2026 => 3
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn FeatureSet_EnforceNamingStyle::of(
+  n : Int32,
+) -> FeatureSet_EnforceNamingStyle {
+  match n {
+    0 => ENFORCE_NAMING_STYLE_UNKNOWN
+    1 => STYLE2024
+    2 => STYLE_LEGACY
+    3 => STYLE2026
+    _ => Unknown(n)
+  }
+}
+
+///|
+pub struct FeatureSet_VisibilityFeature {
+  mut unknown_fields : Bytes
+}
+
+///|
+pub fn FeatureSet_VisibilityFeature::new() -> FeatureSet_VisibilityFeature {
+  { unknown_fields: b"", }
 }
 
 ///|
@@ -14363,10 +17204,27 @@ pub fn FeatureSet_VisibilityFeature::from_json(
 }
 
 ///|
+fn FeatureSet_VisibilityFeature::read_field(
+  self : FeatureSet_VisibilityFeature,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_FeatureSet_VisibilityFeature : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.FeatureSet.VisibilityFeature",
+)
+
+///|
 pub impl @reflect.Message for FeatureSet_VisibilityFeature with fn descriptor(
   self,
 ) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_FeatureSet_VisibilityFeature
 }
 
 ///|
@@ -14381,7 +17239,8 @@ pub impl @reflect.Message for FeatureSet_VisibilityFeature with fn message_type(
 pub impl @reflect.Message for FeatureSet_VisibilityFeature with fn is_valid(
   self,
 ) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -14389,7 +17248,14 @@ pub impl @reflect.Message for FeatureSet_VisibilityFeature with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_FeatureSet_VisibilityFeature.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -14397,7 +17263,8 @@ pub impl @reflect.Message for FeatureSet_VisibilityFeature with fn range_extensi
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -14405,7 +17272,10 @@ pub impl @reflect.Message for FeatureSet_VisibilityFeature with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    _ => false
+  }
 }
 
 ///|
@@ -14413,7 +17283,10 @@ pub impl @reflect.Message for FeatureSet_VisibilityFeature with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    _ => ()
+  }
 }
 
 ///|
@@ -14421,7 +17294,7 @@ pub impl @reflect.Message for FeatureSet_VisibilityFeature with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  FeatureSet_VisibilityFeature::read_field(self, field)
 }
 
 ///|
@@ -14430,7 +17303,11 @@ pub impl @reflect.Message for FeatureSet_VisibilityFeature with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    _ => ()
+  }
 }
 
 ///|
@@ -14438,7 +17315,10 @@ pub impl @reflect.Message for FeatureSet_VisibilityFeature with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => FeatureSet_VisibilityFeature::read_field(self, field)
+  }
 }
 
 ///|
@@ -14446,7 +17326,10 @@ pub impl @reflect.Message for FeatureSet_VisibilityFeature with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -14454,14 +17337,17 @@ pub impl @reflect.Message for FeatureSet_VisibilityFeature with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for FeatureSet_VisibilityFeature with fn get_unknown(
   self,
 ) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -14469,7 +17355,7 @@ pub impl @reflect.Message for FeatureSet_VisibilityFeature with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -14526,9 +17412,7 @@ pub impl @reflect.MessageType for FeatureSet_VisibilityFeatureType with fn zero(
 pub impl @reflect.MessageType for FeatureSet_VisibilityFeatureType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.FeatureSet.VisibilityFeature",
-  )
+  descriptor_google_protobuf_descriptor_proto_FeatureSet_VisibilityFeature
 }
 
 ///|
@@ -14543,26 +17427,51 @@ pub let featureSet_VisibilityFeature_type : &@reflect.MessageType = FeatureSet_V
   as &@reflect.MessageType
 
 ///|
-pub struct FeatureSet_ProtoLimitsFeature {
-  inner : @dynamic.Message
+pub(all) enum FeatureSet_VisibilityFeature_DefaultSymbolVisibility {
+  DEFAULT_SYMBOL_VISIBILITY_UNKNOWN
+  EXPORT_ALL
+  EXPORT_TOP_LEVEL
+  LOCAL_ALL
+  STRICT
+  Unknown(Int32)
 }
 
 ///|
-pub fn FeatureSet_ProtoLimitsFeature::new() -> FeatureSet_ProtoLimitsFeature {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.FeatureSet.ProtoLimitsFeature",
-      ),
-    ),
+pub fn FeatureSet_VisibilityFeature_DefaultSymbolVisibility::code(
+  self : FeatureSet_VisibilityFeature_DefaultSymbolVisibility,
+) -> Int32 {
+  match self {
+    DEFAULT_SYMBOL_VISIBILITY_UNKNOWN => 0
+    EXPORT_ALL => 1
+    EXPORT_TOP_LEVEL => 2
+    LOCAL_ALL => 3
+    STRICT => 4
+    Unknown(n) => n
   }
 }
 
 ///|
-pub fn FeatureSet_ProtoLimitsFeature::message(
-  self : FeatureSet_ProtoLimitsFeature,
-) -> @dynamic.Message {
-  self.inner
+pub fn FeatureSet_VisibilityFeature_DefaultSymbolVisibility::of(
+  n : Int32,
+) -> FeatureSet_VisibilityFeature_DefaultSymbolVisibility {
+  match n {
+    0 => DEFAULT_SYMBOL_VISIBILITY_UNKNOWN
+    1 => EXPORT_ALL
+    2 => EXPORT_TOP_LEVEL
+    3 => LOCAL_ALL
+    4 => STRICT
+    _ => Unknown(n)
+  }
+}
+
+///|
+pub struct FeatureSet_ProtoLimitsFeature {
+  mut unknown_fields : Bytes
+}
+
+///|
+pub fn FeatureSet_ProtoLimitsFeature::new() -> FeatureSet_ProtoLimitsFeature {
+  { unknown_fields: b"", }
 }
 
 ///|
@@ -14582,10 +17491,27 @@ pub fn FeatureSet_ProtoLimitsFeature::from_json(
 }
 
 ///|
+fn FeatureSet_ProtoLimitsFeature::read_field(
+  self : FeatureSet_ProtoLimitsFeature,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_FeatureSet_ProtoLimitsFeature : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.FeatureSet.ProtoLimitsFeature",
+)
+
+///|
 pub impl @reflect.Message for FeatureSet_ProtoLimitsFeature with fn descriptor(
   self,
 ) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_FeatureSet_ProtoLimitsFeature
 }
 
 ///|
@@ -14600,7 +17526,8 @@ pub impl @reflect.Message for FeatureSet_ProtoLimitsFeature with fn message_type
 pub impl @reflect.Message for FeatureSet_ProtoLimitsFeature with fn is_valid(
   self,
 ) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -14608,7 +17535,14 @@ pub impl @reflect.Message for FeatureSet_ProtoLimitsFeature with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_FeatureSet_ProtoLimitsFeature.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -14616,7 +17550,8 @@ pub impl @reflect.Message for FeatureSet_ProtoLimitsFeature with fn range_extens
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -14624,7 +17559,10 @@ pub impl @reflect.Message for FeatureSet_ProtoLimitsFeature with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    _ => false
+  }
 }
 
 ///|
@@ -14632,7 +17570,10 @@ pub impl @reflect.Message for FeatureSet_ProtoLimitsFeature with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    _ => ()
+  }
 }
 
 ///|
@@ -14640,7 +17581,7 @@ pub impl @reflect.Message for FeatureSet_ProtoLimitsFeature with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  FeatureSet_ProtoLimitsFeature::read_field(self, field)
 }
 
 ///|
@@ -14649,7 +17590,11 @@ pub impl @reflect.Message for FeatureSet_ProtoLimitsFeature with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    _ => ()
+  }
 }
 
 ///|
@@ -14657,7 +17602,10 @@ pub impl @reflect.Message for FeatureSet_ProtoLimitsFeature with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => FeatureSet_ProtoLimitsFeature::read_field(self, field)
+  }
 }
 
 ///|
@@ -14665,7 +17613,10 @@ pub impl @reflect.Message for FeatureSet_ProtoLimitsFeature with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -14673,14 +17624,17 @@ pub impl @reflect.Message for FeatureSet_ProtoLimitsFeature with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for FeatureSet_ProtoLimitsFeature with fn get_unknown(
   self,
 ) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -14688,7 +17642,7 @@ pub impl @reflect.Message for FeatureSet_ProtoLimitsFeature with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -14745,9 +17699,7 @@ pub impl @reflect.MessageType for FeatureSet_ProtoLimitsFeatureType with fn zero
 pub impl @reflect.MessageType for FeatureSet_ProtoLimitsFeatureType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.FeatureSet.ProtoLimitsFeature",
-  )
+  descriptor_google_protobuf_descriptor_proto_FeatureSet_ProtoLimitsFeature
 }
 
 ///|
@@ -14762,55 +17714,72 @@ pub let featureSet_ProtoLimitsFeature_type : &@reflect.MessageType = FeatureSet_
   as &@reflect.MessageType
 
 ///|
+pub(all) enum FeatureSet_ProtoLimitsFeature_EnforceProtoLimits {
+  PROTO_LIMITS_UNKNOWN
+  LEGACY_NO_EXPLICIT_LIMITS
+  PROTO_LIMITS2026
+  Unknown(Int32)
+}
+
+///|
+pub fn FeatureSet_ProtoLimitsFeature_EnforceProtoLimits::code(
+  self : FeatureSet_ProtoLimitsFeature_EnforceProtoLimits,
+) -> Int32 {
+  match self {
+    PROTO_LIMITS_UNKNOWN => 0
+    LEGACY_NO_EXPLICIT_LIMITS => 1
+    PROTO_LIMITS2026 => 2
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn FeatureSet_ProtoLimitsFeature_EnforceProtoLimits::of(
+  n : Int32,
+) -> FeatureSet_ProtoLimitsFeature_EnforceProtoLimits {
+  match n {
+    0 => PROTO_LIMITS_UNKNOWN
+    1 => LEGACY_NO_EXPLICIT_LIMITS
+    2 => PROTO_LIMITS2026
+    _ => Unknown(n)
+  }
+}
+
+///|
 pub struct FeatureSetDefaults {
-  inner : @dynamic.Message
+  defaults : Array[FeatureSetDefaults_FeatureSetEditionDefault]
+  mut minimum_edition : Edition
+  mut maximum_edition : Edition
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn FeatureSetDefaults::new() -> FeatureSetDefaults {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.FeatureSetDefaults",
-      ),
-    ),
+    defaults: [],
+    minimum_edition: Edition::of(0),
+    maximum_edition: Edition::of(0),
+    unknown_fields: b"",
   }
-}
-
-///|
-pub fn FeatureSetDefaults::message(
-  self : FeatureSetDefaults,
-) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn FeatureSetDefaults::defaults(
   self : FeatureSetDefaults,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn FeatureSetDefaults::set_defaults(
-  self : FeatureSetDefaults,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    value,
+  @reflect.list_view(
+    self.defaults,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => FeatureSetDefaults_FeatureSetEditionDefault::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
 ///|
 pub fn FeatureSetDefaults::minimum_edition(self : FeatureSetDefaults) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 4)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.minimum_edition.code()
 }
 
 ///|
@@ -14818,20 +17787,12 @@ pub fn FeatureSetDefaults::set_minimum_edition(
   self : FeatureSetDefaults,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 4),
-    @reflect.Enum(value),
-  )
+  self.minimum_edition = Edition::of(value)
 }
 
 ///|
 pub fn FeatureSetDefaults::maximum_edition(self : FeatureSetDefaults) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 5)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.maximum_edition.code()
 }
 
 ///|
@@ -14839,10 +17800,7 @@ pub fn FeatureSetDefaults::set_maximum_edition(
   self : FeatureSetDefaults,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 5),
-    @reflect.Enum(value),
-  )
+  self.maximum_edition = Edition::of(value)
 }
 
 ///|
@@ -14862,8 +17820,38 @@ pub fn FeatureSetDefaults::from_json(
 }
 
 ///|
+fn FeatureSetDefaults::read_field(
+  self : FeatureSetDefaults,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.defaults,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => FeatureSetDefaults_FeatureSetEditionDefault::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    4 => @reflect.Enum(self.minimum_edition.code())
+    5 => @reflect.Enum(self.maximum_edition.code())
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_FeatureSetDefaults : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.FeatureSetDefaults",
+)
+
+///|
 pub impl @reflect.Message for FeatureSetDefaults with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_FeatureSetDefaults
 }
 
 ///|
@@ -14874,7 +17862,8 @@ pub impl @reflect.Message for FeatureSetDefaults with fn message_type(self) -> &
 
 ///|
 pub impl @reflect.Message for FeatureSetDefaults with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -14882,7 +17871,14 @@ pub impl @reflect.Message for FeatureSetDefaults with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_FeatureSetDefaults.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -14890,7 +17886,8 @@ pub impl @reflect.Message for FeatureSetDefaults with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -14898,7 +17895,13 @@ pub impl @reflect.Message for FeatureSetDefaults with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.defaults.length() > 0
+    4 => self.minimum_edition.code() != 0
+    5 => self.maximum_edition.code() != 0
+    _ => false
+  }
 }
 
 ///|
@@ -14906,7 +17909,13 @@ pub impl @reflect.Message for FeatureSetDefaults with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.defaults.clear()
+    4 => self.minimum_edition = Edition::of(0)
+    5 => self.maximum_edition = Edition::of(0)
+    _ => ()
+  }
 }
 
 ///|
@@ -14914,7 +17923,7 @@ pub impl @reflect.Message for FeatureSetDefaults with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  FeatureSetDefaults::read_field(self, field)
 }
 
 ///|
@@ -14923,7 +17932,23 @@ pub impl @reflect.Message for FeatureSetDefaults with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 =>
+      @reflect.assign_list(
+        self.defaults,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => FeatureSetDefaults_FeatureSetEditionDefault::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    4 => self.minimum_edition = Edition::of(value.enum_number())
+    5 => self.maximum_edition = Edition::of(value.enum_number())
+    _ => ()
+  }
 }
 
 ///|
@@ -14931,7 +17956,10 @@ pub impl @reflect.Message for FeatureSetDefaults with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => FeatureSetDefaults::read_field(self, field)
+  }
 }
 
 ///|
@@ -14939,7 +17967,10 @@ pub impl @reflect.Message for FeatureSetDefaults with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -14947,12 +17978,15 @@ pub impl @reflect.Message for FeatureSetDefaults with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for FeatureSetDefaults with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -14960,7 +17994,7 @@ pub impl @reflect.Message for FeatureSetDefaults with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -15015,9 +18049,7 @@ pub impl @reflect.MessageType for FeatureSetDefaultsType with fn zero(_self) -> 
 pub impl @reflect.MessageType for FeatureSetDefaultsType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.FeatureSetDefaults",
-  )
+  descriptor_google_protobuf_descriptor_proto_FeatureSetDefaults
 }
 
 ///|
@@ -15033,37 +18065,27 @@ pub let featureSetDefaults_type : &@reflect.MessageType = FeatureSetDefaultsType
 
 ///|
 pub struct FeatureSetDefaults_FeatureSetEditionDefault {
-  inner : @dynamic.Message
+  mut edition : Edition
+  mut overridable_features : FeatureSet?
+  mut fixed_features : FeatureSet?
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn FeatureSetDefaults_FeatureSetEditionDefault::new() -> FeatureSetDefaults_FeatureSetEditionDefault {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.FeatureSetDefaults.FeatureSetEditionDefault",
-      ),
-    ),
+    edition: Edition::of(0),
+    overridable_features: None,
+    fixed_features: None,
+    unknown_fields: b"",
   }
-}
-
-///|
-pub fn FeatureSetDefaults_FeatureSetEditionDefault::message(
-  self : FeatureSetDefaults_FeatureSetEditionDefault,
-) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn FeatureSetDefaults_FeatureSetEditionDefault::edition(
   self : FeatureSetDefaults_FeatureSetEditionDefault,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.edition.code()
 }
 
 ///|
@@ -15071,21 +18093,16 @@ pub fn FeatureSetDefaults_FeatureSetEditionDefault::set_edition(
   self : FeatureSetDefaults_FeatureSetEditionDefault,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.Enum(value),
-  )
+  self.edition = Edition::of(value)
 }
 
 ///|
 pub fn FeatureSetDefaults_FeatureSetEditionDefault::overridable_features(
   self : FeatureSetDefaults_FeatureSetEditionDefault,
 ) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 4)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.overridable_features {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
   }
 }
 
@@ -15094,21 +18111,19 @@ pub fn FeatureSetDefaults_FeatureSetEditionDefault::set_overridable_features(
   self : FeatureSetDefaults_FeatureSetEditionDefault,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 4),
-    value,
-  )
+  let source = value.message()
+  let target = FeatureSet::new()
+  @proto.merge(target, source)
+  self.overridable_features = Some(target)
 }
 
 ///|
 pub fn FeatureSetDefaults_FeatureSetEditionDefault::fixed_features(
   self : FeatureSetDefaults_FeatureSetEditionDefault,
 ) -> @reflect.Value {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 5)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.fixed_features {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
   }
 }
 
@@ -15117,10 +18132,10 @@ pub fn FeatureSetDefaults_FeatureSetEditionDefault::set_fixed_features(
   self : FeatureSetDefaults_FeatureSetEditionDefault,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 5),
-    value,
-  )
+  let source = value.message()
+  let target = FeatureSet::new()
+  @proto.merge(target, source)
+  self.fixed_features = Some(target)
 }
 
 ///|
@@ -15140,10 +18155,38 @@ pub fn FeatureSetDefaults_FeatureSetEditionDefault::from_json(
 }
 
 ///|
+fn FeatureSetDefaults_FeatureSetEditionDefault::read_field(
+  self : FeatureSetDefaults_FeatureSetEditionDefault,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    3 => @reflect.Enum(self.edition.code())
+    4 =>
+      match self.overridable_features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+      }
+    5 =>
+      match self.fixed_features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+      }
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_FeatureSetDefaults_FeatureSetEditionDefault : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.FeatureSetDefaults.FeatureSetEditionDefault",
+)
+
+///|
 pub impl @reflect.Message for FeatureSetDefaults_FeatureSetEditionDefault with fn descriptor(
   self,
 ) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_FeatureSetDefaults_FeatureSetEditionDefault
 }
 
 ///|
@@ -15158,7 +18201,8 @@ pub impl @reflect.Message for FeatureSetDefaults_FeatureSetEditionDefault with f
 pub impl @reflect.Message for FeatureSetDefaults_FeatureSetEditionDefault with fn is_valid(
   self,
 ) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -15166,7 +18210,14 @@ pub impl @reflect.Message for FeatureSetDefaults_FeatureSetEditionDefault with f
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_FeatureSetDefaults_FeatureSetEditionDefault.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -15174,7 +18225,8 @@ pub impl @reflect.Message for FeatureSetDefaults_FeatureSetEditionDefault with f
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -15182,7 +18234,13 @@ pub impl @reflect.Message for FeatureSetDefaults_FeatureSetEditionDefault with f
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    3 => self.edition.code() != 0
+    4 => @reflect.is_set(self.overridable_features)
+    5 => @reflect.is_set(self.fixed_features)
+    _ => false
+  }
 }
 
 ///|
@@ -15190,7 +18248,13 @@ pub impl @reflect.Message for FeatureSetDefaults_FeatureSetEditionDefault with f
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    3 => self.edition = Edition::of(0)
+    4 => self.overridable_features = None
+    5 => self.fixed_features = None
+    _ => ()
+  }
 }
 
 ///|
@@ -15198,7 +18262,7 @@ pub impl @reflect.Message for FeatureSetDefaults_FeatureSetEditionDefault with f
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  FeatureSetDefaults_FeatureSetEditionDefault::read_field(self, field)
 }
 
 ///|
@@ -15207,7 +18271,24 @@ pub impl @reflect.Message for FeatureSetDefaults_FeatureSetEditionDefault with f
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    3 => self.edition = Edition::of(value.enum_number())
+    4 => {
+      let source = value.message()
+      let target = FeatureSet::new()
+      @proto.merge(target, source)
+      self.overridable_features = Some(target)
+    }
+    5 => {
+      let source = value.message()
+      let target = FeatureSet::new()
+      @proto.merge(target, source)
+      self.fixed_features = Some(target)
+    }
+    _ => ()
+  }
 }
 
 ///|
@@ -15215,7 +18296,28 @@ pub impl @reflect.Message for FeatureSetDefaults_FeatureSetEditionDefault with f
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    4 =>
+      match self.overridable_features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FeatureSet::new()
+          self.overridable_features = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    5 =>
+      match self.fixed_features {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = FeatureSet::new()
+          self.fixed_features = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => FeatureSetDefaults_FeatureSetEditionDefault::read_field(self, field)
+  }
 }
 
 ///|
@@ -15223,7 +18325,12 @@ pub impl @reflect.Message for FeatureSetDefaults_FeatureSetEditionDefault with f
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    4 => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+    5 => @reflect.Message(FeatureSet::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -15231,14 +18338,17 @@ pub impl @reflect.Message for FeatureSetDefaults_FeatureSetEditionDefault with f
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for FeatureSetDefaults_FeatureSetEditionDefault with fn get_unknown(
   self,
 ) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -15246,7 +18356,7 @@ pub impl @reflect.Message for FeatureSetDefaults_FeatureSetEditionDefault with f
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -15307,9 +18417,7 @@ pub impl @reflect.MessageType for FeatureSetDefaults_FeatureSetEditionDefaultTyp
 pub impl @reflect.MessageType for FeatureSetDefaults_FeatureSetEditionDefaultType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.FeatureSetDefaults.FeatureSetEditionDefault",
-  )
+  descriptor_google_protobuf_descriptor_proto_FeatureSetDefaults_FeatureSetEditionDefault
 }
 
 ///|
@@ -15325,39 +18433,25 @@ pub let featureSetDefaults_FeatureSetEditionDefault_type : &@reflect.MessageType
 
 ///|
 pub struct SourceCodeInfo {
-  inner : @dynamic.Message
+  location : Array[SourceCodeInfo_Location]
+  mut unknown_fields : Bytes
+  mut extension_values : Array[(@reflect.FieldDescriptor, @reflect.Value)]
 }
 
 ///|
 pub fn SourceCodeInfo::new() -> SourceCodeInfo {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.SourceCodeInfo",
-      ),
-    ),
-  }
-}
-
-///|
-pub fn SourceCodeInfo::message(self : SourceCodeInfo) -> @dynamic.Message {
-  self.inner
+  { location: [], unknown_fields: b"", extension_values: [], }
 }
 
 ///|
 pub fn SourceCodeInfo::location(self : SourceCodeInfo) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn SourceCodeInfo::set_location(
-  self : SourceCodeInfo,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    value,
+  @reflect.list_view(
+    self.location,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => SourceCodeInfo_Location::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -15378,8 +18472,43 @@ pub fn SourceCodeInfo::from_json(
 }
 
 ///|
+fn SourceCodeInfo::read_field(
+  self : SourceCodeInfo,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.location,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => SourceCodeInfo_Location::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return pair.1
+        }
+      }
+      @reflect.default_for(field)
+    }
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_SourceCodeInfo : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.SourceCodeInfo",
+)
+
+///|
 pub impl @reflect.Message for SourceCodeInfo with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_SourceCodeInfo
 }
 
 ///|
@@ -15390,7 +18519,8 @@ pub impl @reflect.Message for SourceCodeInfo with fn message_type(self) -> &@ref
 
 ///|
 pub impl @reflect.Message for SourceCodeInfo with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -15398,7 +18528,13 @@ pub impl @reflect.Message for SourceCodeInfo with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_descriptor_proto_SourceCodeInfo.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -15406,7 +18542,11 @@ pub impl @reflect.Message for SourceCodeInfo with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  for pair in self.extension_values {
+    if !f(pair.0, pair.1) {
+      break
+    }
+  }
 }
 
 ///|
@@ -15414,7 +18554,18 @@ pub impl @reflect.Message for SourceCodeInfo with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.location.length() > 0
+    _ => {
+      for pair in self.extension_values {
+        if pair.0.number == field.number {
+          return true
+        }
+      }
+      false
+    }
+  }
 }
 
 ///|
@@ -15422,7 +18573,19 @@ pub impl @reflect.Message for SourceCodeInfo with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.location.clear()
+    _ => {
+      let kept : Array[(@reflect.FieldDescriptor, @reflect.Value)] = []
+      for pair in self.extension_values {
+        if pair.0.number != field.number {
+          kept.push(pair)
+        }
+      }
+      self.extension_values = kept
+    }
+  }
 }
 
 ///|
@@ -15430,7 +18593,7 @@ pub impl @reflect.Message for SourceCodeInfo with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  SourceCodeInfo::read_field(self, field)
 }
 
 ///|
@@ -15439,7 +18602,32 @@ pub impl @reflect.Message for SourceCodeInfo with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 =>
+      @reflect.assign_list(
+        self.location,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => SourceCodeInfo_Location::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    _ => {
+      let mut found = false
+      for i in 0..<self.extension_values.length() {
+        if self.extension_values[i].0.number == field.number {
+          self.extension_values[i] = (field, value)
+          found = true
+        }
+      }
+      if !found {
+        self.extension_values.push((field, value))
+      }
+    }
+  }
 }
 
 ///|
@@ -15447,7 +18635,10 @@ pub impl @reflect.Message for SourceCodeInfo with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => SourceCodeInfo::read_field(self, field)
+  }
 }
 
 ///|
@@ -15455,7 +18646,10 @@ pub impl @reflect.Message for SourceCodeInfo with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -15463,12 +18657,15 @@ pub impl @reflect.Message for SourceCodeInfo with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for SourceCodeInfo with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -15476,7 +18673,7 @@ pub impl @reflect.Message for SourceCodeInfo with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -15527,9 +18724,7 @@ pub impl @reflect.MessageType for SourceCodeInfoType with fn zero(_self) -> &@re
 
 ///|
 pub impl @reflect.MessageType for SourceCodeInfoType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.SourceCodeInfo",
-  )
+  descriptor_google_protobuf_descriptor_proto_SourceCodeInfo
 }
 
 ///|
@@ -15545,53 +18740,55 @@ pub let sourceCodeInfo_type : &@reflect.MessageType = SourceCodeInfoType::new()
 
 ///|
 pub struct SourceCodeInfo_Location {
-  inner : @dynamic.Message
+  path : Array[Int32]
+  span : Array[Int32]
+  mut leading_comments : String
+  mut trailing_comments : String
+  leading_detached_comments : Array[String]
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn SourceCodeInfo_Location::new() -> SourceCodeInfo_Location {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.SourceCodeInfo.Location",
-      ),
-    ),
+    path: [],
+    span: [],
+    leading_comments: "",
+    trailing_comments: "",
+    leading_detached_comments: [],
+    unknown_fields: b"",
   }
-}
-
-///|
-pub fn SourceCodeInfo_Location::message(
-  self : SourceCodeInfo_Location,
-) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn SourceCodeInfo_Location::path(
   self : SourceCodeInfo_Location,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  self.inner.mutable(f).list()
+  @reflect.list_view(
+    self.path,
+    @reflect.scalar_element(v => @reflect.Int32(v), v => v.int().to_int(), () => {
+      0
+    }),
+  )
 }
 
 ///|
 pub fn SourceCodeInfo_Location::span(
   self : SourceCodeInfo_Location,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  self.inner.mutable(f).list()
+  @reflect.list_view(
+    self.span,
+    @reflect.scalar_element(v => @reflect.Int32(v), v => v.int().to_int(), () => {
+      0
+    }),
+  )
 }
 
 ///|
 pub fn SourceCodeInfo_Location::leading_comments(
   self : SourceCodeInfo_Location,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.leading_comments
 }
 
 ///|
@@ -15599,22 +18796,14 @@ pub fn SourceCodeInfo_Location::set_leading_comments(
   self : SourceCodeInfo_Location,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.String(value),
-  )
+  self.leading_comments = value
 }
 
 ///|
 pub fn SourceCodeInfo_Location::trailing_comments(
   self : SourceCodeInfo_Location,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 4)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.trailing_comments
 }
 
 ///|
@@ -15622,18 +18811,17 @@ pub fn SourceCodeInfo_Location::set_trailing_comments(
   self : SourceCodeInfo_Location,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 4),
-    @reflect.String(value),
-  )
+  self.trailing_comments = value
 }
 
 ///|
 pub fn SourceCodeInfo_Location::leading_detached_comments(
   self : SourceCodeInfo_Location,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 6)
-  self.inner.mutable(f).list()
+  @reflect.list_view(
+    self.leading_detached_comments,
+    @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => ""),
+  )
 }
 
 ///|
@@ -15653,8 +18841,58 @@ pub fn SourceCodeInfo_Location::from_json(
 }
 
 ///|
+fn SourceCodeInfo_Location::read_field(
+  self : SourceCodeInfo_Location,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.path,
+          @reflect.scalar_element(
+            v => @reflect.Int32(v),
+            v => v.int().to_int(),
+            () => 0,
+          ),
+        ),
+      )
+    2 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.span,
+          @reflect.scalar_element(
+            v => @reflect.Int32(v),
+            v => v.int().to_int(),
+            () => 0,
+          ),
+        ),
+      )
+    3 => @reflect.String(self.leading_comments)
+    4 => @reflect.String(self.trailing_comments)
+    6 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.leading_detached_comments,
+          @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => {
+            ""
+          }),
+        ),
+      )
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_SourceCodeInfo_Location : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.SourceCodeInfo.Location",
+)
+
+///|
 pub impl @reflect.Message for SourceCodeInfo_Location with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_SourceCodeInfo_Location
 }
 
 ///|
@@ -15665,7 +18903,8 @@ pub impl @reflect.Message for SourceCodeInfo_Location with fn message_type(self)
 
 ///|
 pub impl @reflect.Message for SourceCodeInfo_Location with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -15673,7 +18912,14 @@ pub impl @reflect.Message for SourceCodeInfo_Location with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_SourceCodeInfo_Location.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -15681,7 +18927,8 @@ pub impl @reflect.Message for SourceCodeInfo_Location with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -15689,7 +18936,15 @@ pub impl @reflect.Message for SourceCodeInfo_Location with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.path.length() > 0
+    2 => self.span.length() > 0
+    3 => self.leading_comments.length() > 0
+    4 => self.trailing_comments.length() > 0
+    6 => self.leading_detached_comments.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -15697,7 +18952,15 @@ pub impl @reflect.Message for SourceCodeInfo_Location with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.path.clear()
+    2 => self.span.clear()
+    3 => self.leading_comments = ""
+    4 => self.trailing_comments = ""
+    6 => self.leading_detached_comments.clear()
+    _ => ()
+  }
 }
 
 ///|
@@ -15705,7 +18968,7 @@ pub impl @reflect.Message for SourceCodeInfo_Location with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  SourceCodeInfo_Location::read_field(self, field)
 }
 
 ///|
@@ -15714,7 +18977,37 @@ pub impl @reflect.Message for SourceCodeInfo_Location with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 =>
+      @reflect.assign_list(
+        self.path,
+        value.list(),
+        @reflect.scalar_element(v => @reflect.Int32(v), v => v.int().to_int(), () => {
+          0
+        }),
+      )
+    2 =>
+      @reflect.assign_list(
+        self.span,
+        value.list(),
+        @reflect.scalar_element(v => @reflect.Int32(v), v => v.int().to_int(), () => {
+          0
+        }),
+      )
+    3 => self.leading_comments = value.string()
+    4 => self.trailing_comments = value.string()
+    6 =>
+      @reflect.assign_list(
+        self.leading_detached_comments,
+        value.list(),
+        @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => {
+          ""
+        }),
+      )
+    _ => ()
+  }
 }
 
 ///|
@@ -15722,7 +19015,10 @@ pub impl @reflect.Message for SourceCodeInfo_Location with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => SourceCodeInfo_Location::read_field(self, field)
+  }
 }
 
 ///|
@@ -15730,7 +19026,10 @@ pub impl @reflect.Message for SourceCodeInfo_Location with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -15738,12 +19037,15 @@ pub impl @reflect.Message for SourceCodeInfo_Location with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for SourceCodeInfo_Location with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -15751,7 +19053,7 @@ pub impl @reflect.Message for SourceCodeInfo_Location with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -15808,9 +19110,7 @@ pub impl @reflect.MessageType for SourceCodeInfo_LocationType with fn zero(
 pub impl @reflect.MessageType for SourceCodeInfo_LocationType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.SourceCodeInfo.Location",
-  )
+  descriptor_google_protobuf_descriptor_proto_SourceCodeInfo_Location
 }
 
 ///|
@@ -15826,41 +19126,26 @@ pub let sourceCodeInfo_Location_type : &@reflect.MessageType = SourceCodeInfo_Lo
 
 ///|
 pub struct GeneratedCodeInfo {
-  inner : @dynamic.Message
+  annotation : Array[GeneratedCodeInfo_Annotation]
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn GeneratedCodeInfo::new() -> GeneratedCodeInfo {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.GeneratedCodeInfo",
-      ),
-    ),
-  }
-}
-
-///|
-pub fn GeneratedCodeInfo::message(self : GeneratedCodeInfo) -> @dynamic.Message {
-  self.inner
+  { annotation: [], unknown_fields: b"", }
 }
 
 ///|
 pub fn GeneratedCodeInfo::annotation(
   self : GeneratedCodeInfo,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn GeneratedCodeInfo::set_annotation(
-  self : GeneratedCodeInfo,
-  value : @reflect.Value,
-) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 1),
-    value,
+  @reflect.list_view(
+    self.annotation,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => GeneratedCodeInfo_Annotation::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
@@ -15881,8 +19166,36 @@ pub fn GeneratedCodeInfo::from_json(
 }
 
 ///|
+fn GeneratedCodeInfo::read_field(
+  self : GeneratedCodeInfo,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.annotation,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => GeneratedCodeInfo_Annotation::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_GeneratedCodeInfo : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.GeneratedCodeInfo",
+)
+
+///|
 pub impl @reflect.Message for GeneratedCodeInfo with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_GeneratedCodeInfo
 }
 
 ///|
@@ -15893,7 +19206,8 @@ pub impl @reflect.Message for GeneratedCodeInfo with fn message_type(self) -> &@
 
 ///|
 pub impl @reflect.Message for GeneratedCodeInfo with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -15901,7 +19215,14 @@ pub impl @reflect.Message for GeneratedCodeInfo with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_GeneratedCodeInfo.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -15909,7 +19230,8 @@ pub impl @reflect.Message for GeneratedCodeInfo with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -15917,7 +19239,11 @@ pub impl @reflect.Message for GeneratedCodeInfo with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.annotation.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -15925,7 +19251,11 @@ pub impl @reflect.Message for GeneratedCodeInfo with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.annotation.clear()
+    _ => ()
+  }
 }
 
 ///|
@@ -15933,7 +19263,7 @@ pub impl @reflect.Message for GeneratedCodeInfo with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  GeneratedCodeInfo::read_field(self, field)
 }
 
 ///|
@@ -15942,7 +19272,21 @@ pub impl @reflect.Message for GeneratedCodeInfo with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 =>
+      @reflect.assign_list(
+        self.annotation,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => GeneratedCodeInfo_Annotation::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    _ => ()
+  }
 }
 
 ///|
@@ -15950,7 +19294,10 @@ pub impl @reflect.Message for GeneratedCodeInfo with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => GeneratedCodeInfo::read_field(self, field)
+  }
 }
 
 ///|
@@ -15958,7 +19305,10 @@ pub impl @reflect.Message for GeneratedCodeInfo with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -15966,12 +19316,15 @@ pub impl @reflect.Message for GeneratedCodeInfo with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for GeneratedCodeInfo with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -15979,7 +19332,7 @@ pub impl @reflect.Message for GeneratedCodeInfo with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -16034,9 +19387,7 @@ pub impl @reflect.MessageType for GeneratedCodeInfoType with fn zero(_self) -> &
 pub impl @reflect.MessageType for GeneratedCodeInfoType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.GeneratedCodeInfo",
-  )
+  descriptor_google_protobuf_descriptor_proto_GeneratedCodeInfo
 }
 
 ///|
@@ -16052,45 +19403,43 @@ pub let generatedCodeInfo_type : &@reflect.MessageType = GeneratedCodeInfoType::
 
 ///|
 pub struct GeneratedCodeInfo_Annotation {
-  inner : @dynamic.Message
+  path : Array[Int32]
+  mut source_file : String
+  mut begin : Int32
+  mut end : Int32
+  mut semantic : GeneratedCodeInfo_Annotation_Semantic
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn GeneratedCodeInfo_Annotation::new() -> GeneratedCodeInfo_Annotation {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_descriptor_proto(
-        "google.protobuf.GeneratedCodeInfo.Annotation",
-      ),
-    ),
+    path: [],
+    source_file: "",
+    begin: 0,
+    end: 0,
+    semantic: GeneratedCodeInfo_Annotation_Semantic::of(0),
+    unknown_fields: b"",
   }
-}
-
-///|
-pub fn GeneratedCodeInfo_Annotation::message(
-  self : GeneratedCodeInfo_Annotation,
-) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn GeneratedCodeInfo_Annotation::path(
   self : GeneratedCodeInfo_Annotation,
 ) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 1)
-  self.inner.mutable(f).list()
+  @reflect.list_view(
+    self.path,
+    @reflect.scalar_element(v => @reflect.Int32(v), v => v.int().to_int(), () => {
+      0
+    }),
+  )
 }
 
 ///|
 pub fn GeneratedCodeInfo_Annotation::source_file(
   self : GeneratedCodeInfo_Annotation,
 ) -> String {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.source_file
 }
 
 ///|
@@ -16098,22 +19447,14 @@ pub fn GeneratedCodeInfo_Annotation::set_source_file(
   self : GeneratedCodeInfo_Annotation,
   value : String,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 2),
-    @reflect.String(value),
-  )
+  self.source_file = value
 }
 
 ///|
 pub fn GeneratedCodeInfo_Annotation::begin(
   self : GeneratedCodeInfo_Annotation,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.begin
 }
 
 ///|
@@ -16121,22 +19462,14 @@ pub fn GeneratedCodeInfo_Annotation::set_begin(
   self : GeneratedCodeInfo_Annotation,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 3),
-    @reflect.Int32(value),
-  )
+  self.begin = value
 }
 
 ///|
 pub fn GeneratedCodeInfo_Annotation::end(
   self : GeneratedCodeInfo_Annotation,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 4)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.end
 }
 
 ///|
@@ -16144,22 +19477,14 @@ pub fn GeneratedCodeInfo_Annotation::set_end(
   self : GeneratedCodeInfo_Annotation,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 4),
-    @reflect.Int32(value),
-  )
+  self.end = value
 }
 
 ///|
 pub fn GeneratedCodeInfo_Annotation::semantic(
   self : GeneratedCodeInfo_Annotation,
 ) -> Int32 {
-  let f = field_of_google_protobuf_descriptor_proto(self.inner, 5)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.semantic.code()
 }
 
 ///|
@@ -16167,10 +19492,7 @@ pub fn GeneratedCodeInfo_Annotation::set_semantic(
   self : GeneratedCodeInfo_Annotation,
   value : Int32,
 ) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_descriptor_proto(self.inner, 5),
-    @reflect.Enum(value),
-  )
+  self.semantic = GeneratedCodeInfo_Annotation_Semantic::of(value)
 }
 
 ///|
@@ -16190,10 +19512,42 @@ pub fn GeneratedCodeInfo_Annotation::from_json(
 }
 
 ///|
+fn GeneratedCodeInfo_Annotation::read_field(
+  self : GeneratedCodeInfo_Annotation,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.path,
+          @reflect.scalar_element(
+            v => @reflect.Int32(v),
+            v => v.int().to_int(),
+            () => 0,
+          ),
+        ),
+      )
+    2 => @reflect.String(self.source_file)
+    3 => @reflect.Int32(self.begin)
+    4 => @reflect.Int32(self.end)
+    5 => @reflect.Enum(self.semantic.code())
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_descriptor_proto_GeneratedCodeInfo_Annotation : @reflect.MessageDescriptor = find_message_google_protobuf_descriptor_proto(
+  "google.protobuf.GeneratedCodeInfo.Annotation",
+)
+
+///|
 pub impl @reflect.Message for GeneratedCodeInfo_Annotation with fn descriptor(
   self,
 ) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_descriptor_proto_GeneratedCodeInfo_Annotation
 }
 
 ///|
@@ -16208,7 +19562,8 @@ pub impl @reflect.Message for GeneratedCodeInfo_Annotation with fn message_type(
 pub impl @reflect.Message for GeneratedCodeInfo_Annotation with fn is_valid(
   self,
 ) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -16216,7 +19571,14 @@ pub impl @reflect.Message for GeneratedCodeInfo_Annotation with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for
+    field in descriptor_google_protobuf_descriptor_proto_GeneratedCodeInfo_Annotation.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -16224,7 +19586,8 @@ pub impl @reflect.Message for GeneratedCodeInfo_Annotation with fn range_extensi
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -16232,7 +19595,15 @@ pub impl @reflect.Message for GeneratedCodeInfo_Annotation with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.path.length() > 0
+    2 => self.source_file.length() > 0
+    3 => self.begin != 0
+    4 => self.end != 0
+    5 => self.semantic.code() != 0
+    _ => false
+  }
 }
 
 ///|
@@ -16240,7 +19611,15 @@ pub impl @reflect.Message for GeneratedCodeInfo_Annotation with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.path.clear()
+    2 => self.source_file = ""
+    3 => self.begin = 0
+    4 => self.end = 0
+    5 => self.semantic = GeneratedCodeInfo_Annotation_Semantic::of(0)
+    _ => ()
+  }
 }
 
 ///|
@@ -16248,7 +19627,7 @@ pub impl @reflect.Message for GeneratedCodeInfo_Annotation with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  GeneratedCodeInfo_Annotation::read_field(self, field)
 }
 
 ///|
@@ -16257,7 +19636,26 @@ pub impl @reflect.Message for GeneratedCodeInfo_Annotation with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 =>
+      @reflect.assign_list(
+        self.path,
+        value.list(),
+        @reflect.scalar_element(v => @reflect.Int32(v), v => v.int().to_int(), () => {
+          0
+        }),
+      )
+    2 => self.source_file = value.string()
+    3 => self.begin = value.int().to_int()
+    4 => self.end = value.int().to_int()
+    5 =>
+      self.semantic = GeneratedCodeInfo_Annotation_Semantic::of(
+        value.enum_number(),
+      )
+    _ => ()
+  }
 }
 
 ///|
@@ -16265,7 +19663,10 @@ pub impl @reflect.Message for GeneratedCodeInfo_Annotation with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => GeneratedCodeInfo_Annotation::read_field(self, field)
+  }
 }
 
 ///|
@@ -16273,7 +19674,10 @@ pub impl @reflect.Message for GeneratedCodeInfo_Annotation with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -16281,14 +19685,17 @@ pub impl @reflect.Message for GeneratedCodeInfo_Annotation with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for GeneratedCodeInfo_Annotation with fn get_unknown(
   self,
 ) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -16296,7 +19703,7 @@ pub impl @reflect.Message for GeneratedCodeInfo_Annotation with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -16353,9 +19760,7 @@ pub impl @reflect.MessageType for GeneratedCodeInfo_AnnotationType with fn zero(
 pub impl @reflect.MessageType for GeneratedCodeInfo_AnnotationType with fn descriptor(
   _self,
 ) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_descriptor_proto(
-    "google.protobuf.GeneratedCodeInfo.Annotation",
-  )
+  descriptor_google_protobuf_descriptor_proto_GeneratedCodeInfo_Annotation
 }
 
 ///|
@@ -16368,3 +19773,35 @@ pub extend GeneratedCodeInfo_AnnotationType with @reflect.MessageType::{
 ///|
 pub let generatedCodeInfo_Annotation_type : &@reflect.MessageType = GeneratedCodeInfo_AnnotationType::new()
   as &@reflect.MessageType
+
+///|
+pub(all) enum GeneratedCodeInfo_Annotation_Semantic {
+  NONE
+  SET
+  ALIAS
+  Unknown(Int32)
+}
+
+///|
+pub fn GeneratedCodeInfo_Annotation_Semantic::code(
+  self : GeneratedCodeInfo_Annotation_Semantic,
+) -> Int32 {
+  match self {
+    NONE => 0
+    SET => 1
+    ALIAS => 2
+    Unknown(n) => n
+  }
+}
+
+///|
+pub fn GeneratedCodeInfo_Annotation_Semantic::of(
+  n : Int32,
+) -> GeneratedCodeInfo_Annotation_Semantic {
+  match n {
+    0 => NONE
+    1 => SET
+    2 => ALIAS
+    _ => Unknown(n)
+  }
+}

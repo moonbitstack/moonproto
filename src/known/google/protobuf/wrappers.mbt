@@ -459,51 +459,24 @@ fn find_message_google_protobuf_wrappers_proto(
 }
 
 ///|
-fn field_of_google_protobuf_wrappers_proto(
-  message : @dynamic.Message,
-  number : Int32,
-) -> @reflect.FieldDescriptor {
-  match message.descriptor().field_by_number(number) {
-    Some(field) => field
-    None => abort("moonproto: missing field " + number.to_string())
-  }
-}
-
-///|
 pub struct DoubleValue {
-  inner : @dynamic.Message
+  mut value : Double
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn DoubleValue::new() -> DoubleValue {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_wrappers_proto("google.protobuf.DoubleValue"),
-    ),
-  }
-}
-
-///|
-pub fn DoubleValue::message(self : DoubleValue) -> @dynamic.Message {
-  self.inner
+  { value: 0.0, unknown_fields: b"", }
 }
 
 ///|
 pub fn DoubleValue::value(self : DoubleValue) -> Double {
-  let f = field_of_google_protobuf_wrappers_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).float()
-  } else {
-    0.0
-  }
+  self.value
 }
 
 ///|
 pub fn DoubleValue::set_value(self : DoubleValue, value : Double) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_wrappers_proto(self.inner, 1),
-    @reflect.Double(value),
-  )
+  self.value = value
 }
 
 ///|
@@ -519,8 +492,26 @@ pub fn DoubleValue::from_json(text : String) -> DoubleValue raise @json.Refused 
 }
 
 ///|
+fn DoubleValue::read_field(
+  self : DoubleValue,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Double(self.value)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_wrappers_proto_DoubleValue : @reflect.MessageDescriptor = find_message_google_protobuf_wrappers_proto(
+  "google.protobuf.DoubleValue",
+)
+
+///|
 pub impl @reflect.Message for DoubleValue with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_wrappers_proto_DoubleValue
 }
 
 ///|
@@ -531,7 +522,8 @@ pub impl @reflect.Message for DoubleValue with fn message_type(self) -> &@reflec
 
 ///|
 pub impl @reflect.Message for DoubleValue with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -539,7 +531,13 @@ pub impl @reflect.Message for DoubleValue with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_wrappers_proto_DoubleValue.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -547,7 +545,8 @@ pub impl @reflect.Message for DoubleValue with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -555,7 +554,11 @@ pub impl @reflect.Message for DoubleValue with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.value != 0.0
+    _ => false
+  }
 }
 
 ///|
@@ -563,7 +566,11 @@ pub impl @reflect.Message for DoubleValue with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.value = 0.0
+    _ => ()
+  }
 }
 
 ///|
@@ -571,7 +578,7 @@ pub impl @reflect.Message for DoubleValue with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  DoubleValue::read_field(self, field)
 }
 
 ///|
@@ -580,7 +587,12 @@ pub impl @reflect.Message for DoubleValue with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.value = value.float()
+    _ => ()
+  }
 }
 
 ///|
@@ -588,7 +600,10 @@ pub impl @reflect.Message for DoubleValue with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => DoubleValue::read_field(self, field)
+  }
 }
 
 ///|
@@ -596,7 +611,10 @@ pub impl @reflect.Message for DoubleValue with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -604,12 +622,15 @@ pub impl @reflect.Message for DoubleValue with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for DoubleValue with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -617,7 +638,7 @@ pub impl @reflect.Message for DoubleValue with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -668,7 +689,7 @@ pub impl @reflect.MessageType for DoubleValueType with fn zero(_self) -> &@refle
 
 ///|
 pub impl @reflect.MessageType for DoubleValueType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_wrappers_proto("google.protobuf.DoubleValue")
+  descriptor_google_protobuf_wrappers_proto_DoubleValue
 }
 
 ///|
@@ -684,39 +705,23 @@ pub let doubleValue_type : &@reflect.MessageType = DoubleValueType::new()
 
 ///|
 pub struct FloatValue {
-  inner : @dynamic.Message
+  mut value : Double
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn FloatValue::new() -> FloatValue {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_wrappers_proto("google.protobuf.FloatValue"),
-    ),
-  }
-}
-
-///|
-pub fn FloatValue::message(self : FloatValue) -> @dynamic.Message {
-  self.inner
+  { value: 0.0, unknown_fields: b"", }
 }
 
 ///|
 pub fn FloatValue::value(self : FloatValue) -> Double {
-  let f = field_of_google_protobuf_wrappers_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).float()
-  } else {
-    0.0
-  }
+  self.value
 }
 
 ///|
 pub fn FloatValue::set_value(self : FloatValue, value : Double) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_wrappers_proto(self.inner, 1),
-    @reflect.Double(value),
-  )
+  self.value = value
 }
 
 ///|
@@ -732,8 +737,26 @@ pub fn FloatValue::from_json(text : String) -> FloatValue raise @json.Refused {
 }
 
 ///|
+fn FloatValue::read_field(
+  self : FloatValue,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.float_value(self.value)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_wrappers_proto_FloatValue : @reflect.MessageDescriptor = find_message_google_protobuf_wrappers_proto(
+  "google.protobuf.FloatValue",
+)
+
+///|
 pub impl @reflect.Message for FloatValue with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_wrappers_proto_FloatValue
 }
 
 ///|
@@ -744,7 +767,8 @@ pub impl @reflect.Message for FloatValue with fn message_type(self) -> &@reflect
 
 ///|
 pub impl @reflect.Message for FloatValue with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -752,7 +776,13 @@ pub impl @reflect.Message for FloatValue with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_wrappers_proto_FloatValue.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -760,7 +790,8 @@ pub impl @reflect.Message for FloatValue with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -768,7 +799,11 @@ pub impl @reflect.Message for FloatValue with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.value != 0.0
+    _ => false
+  }
 }
 
 ///|
@@ -776,7 +811,11 @@ pub impl @reflect.Message for FloatValue with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.value = 0.0
+    _ => ()
+  }
 }
 
 ///|
@@ -784,7 +823,7 @@ pub impl @reflect.Message for FloatValue with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  FloatValue::read_field(self, field)
 }
 
 ///|
@@ -793,7 +832,12 @@ pub impl @reflect.Message for FloatValue with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.value = value.float()
+    _ => ()
+  }
 }
 
 ///|
@@ -801,7 +845,10 @@ pub impl @reflect.Message for FloatValue with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => FloatValue::read_field(self, field)
+  }
 }
 
 ///|
@@ -809,7 +856,10 @@ pub impl @reflect.Message for FloatValue with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -817,12 +867,15 @@ pub impl @reflect.Message for FloatValue with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for FloatValue with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -830,7 +883,7 @@ pub impl @reflect.Message for FloatValue with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -881,7 +934,7 @@ pub impl @reflect.MessageType for FloatValueType with fn zero(_self) -> &@reflec
 
 ///|
 pub impl @reflect.MessageType for FloatValueType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_wrappers_proto("google.protobuf.FloatValue")
+  descriptor_google_protobuf_wrappers_proto_FloatValue
 }
 
 ///|
@@ -897,39 +950,23 @@ pub let floatValue_type : &@reflect.MessageType = FloatValueType::new()
 
 ///|
 pub struct Int64Value {
-  inner : @dynamic.Message
+  mut value : Int64
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn Int64Value::new() -> Int64Value {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_wrappers_proto("google.protobuf.Int64Value"),
-    ),
-  }
-}
-
-///|
-pub fn Int64Value::message(self : Int64Value) -> @dynamic.Message {
-  self.inner
+  { value: 0L, unknown_fields: b"", }
 }
 
 ///|
 pub fn Int64Value::value(self : Int64Value) -> Int64 {
-  let f = field_of_google_protobuf_wrappers_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).int()
-  } else {
-    0L
-  }
+  self.value
 }
 
 ///|
 pub fn Int64Value::set_value(self : Int64Value, value : Int64) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_wrappers_proto(self.inner, 1),
-    @reflect.Int64(value),
-  )
+  self.value = value
 }
 
 ///|
@@ -945,8 +982,26 @@ pub fn Int64Value::from_json(text : String) -> Int64Value raise @json.Refused {
 }
 
 ///|
+fn Int64Value::read_field(
+  self : Int64Value,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Int64(self.value)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_wrappers_proto_Int64Value : @reflect.MessageDescriptor = find_message_google_protobuf_wrappers_proto(
+  "google.protobuf.Int64Value",
+)
+
+///|
 pub impl @reflect.Message for Int64Value with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_wrappers_proto_Int64Value
 }
 
 ///|
@@ -957,7 +1012,8 @@ pub impl @reflect.Message for Int64Value with fn message_type(self) -> &@reflect
 
 ///|
 pub impl @reflect.Message for Int64Value with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -965,7 +1021,13 @@ pub impl @reflect.Message for Int64Value with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_wrappers_proto_Int64Value.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -973,7 +1035,8 @@ pub impl @reflect.Message for Int64Value with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -981,7 +1044,11 @@ pub impl @reflect.Message for Int64Value with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.value != 0L
+    _ => false
+  }
 }
 
 ///|
@@ -989,7 +1056,11 @@ pub impl @reflect.Message for Int64Value with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.value = 0L
+    _ => ()
+  }
 }
 
 ///|
@@ -997,7 +1068,7 @@ pub impl @reflect.Message for Int64Value with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  Int64Value::read_field(self, field)
 }
 
 ///|
@@ -1006,7 +1077,12 @@ pub impl @reflect.Message for Int64Value with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.value = value.int()
+    _ => ()
+  }
 }
 
 ///|
@@ -1014,7 +1090,10 @@ pub impl @reflect.Message for Int64Value with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => Int64Value::read_field(self, field)
+  }
 }
 
 ///|
@@ -1022,7 +1101,10 @@ pub impl @reflect.Message for Int64Value with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -1030,12 +1112,15 @@ pub impl @reflect.Message for Int64Value with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for Int64Value with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -1043,7 +1128,7 @@ pub impl @reflect.Message for Int64Value with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -1094,7 +1179,7 @@ pub impl @reflect.MessageType for Int64ValueType with fn zero(_self) -> &@reflec
 
 ///|
 pub impl @reflect.MessageType for Int64ValueType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_wrappers_proto("google.protobuf.Int64Value")
+  descriptor_google_protobuf_wrappers_proto_Int64Value
 }
 
 ///|
@@ -1110,39 +1195,23 @@ pub let int64Value_type : &@reflect.MessageType = Int64ValueType::new()
 
 ///|
 pub struct UInt64Value {
-  inner : @dynamic.Message
+  mut value : UInt64
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn UInt64Value::new() -> UInt64Value {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_wrappers_proto("google.protobuf.UInt64Value"),
-    ),
-  }
-}
-
-///|
-pub fn UInt64Value::message(self : UInt64Value) -> @dynamic.Message {
-  self.inner
+  { value: 0UL, unknown_fields: b"", }
 }
 
 ///|
 pub fn UInt64Value::value(self : UInt64Value) -> UInt64 {
-  let f = field_of_google_protobuf_wrappers_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).uint()
-  } else {
-    0UL
-  }
+  self.value
 }
 
 ///|
 pub fn UInt64Value::set_value(self : UInt64Value, value : UInt64) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_wrappers_proto(self.inner, 1),
-    @reflect.Uint64(value),
-  )
+  self.value = value
 }
 
 ///|
@@ -1158,8 +1227,26 @@ pub fn UInt64Value::from_json(text : String) -> UInt64Value raise @json.Refused 
 }
 
 ///|
+fn UInt64Value::read_field(
+  self : UInt64Value,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Uint64(self.value)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_wrappers_proto_UInt64Value : @reflect.MessageDescriptor = find_message_google_protobuf_wrappers_proto(
+  "google.protobuf.UInt64Value",
+)
+
+///|
 pub impl @reflect.Message for UInt64Value with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_wrappers_proto_UInt64Value
 }
 
 ///|
@@ -1170,7 +1257,8 @@ pub impl @reflect.Message for UInt64Value with fn message_type(self) -> &@reflec
 
 ///|
 pub impl @reflect.Message for UInt64Value with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -1178,7 +1266,13 @@ pub impl @reflect.Message for UInt64Value with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_wrappers_proto_UInt64Value.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -1186,7 +1280,8 @@ pub impl @reflect.Message for UInt64Value with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -1194,7 +1289,11 @@ pub impl @reflect.Message for UInt64Value with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.value != 0UL
+    _ => false
+  }
 }
 
 ///|
@@ -1202,7 +1301,11 @@ pub impl @reflect.Message for UInt64Value with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.value = 0UL
+    _ => ()
+  }
 }
 
 ///|
@@ -1210,7 +1313,7 @@ pub impl @reflect.Message for UInt64Value with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  UInt64Value::read_field(self, field)
 }
 
 ///|
@@ -1219,7 +1322,12 @@ pub impl @reflect.Message for UInt64Value with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.value = value.uint()
+    _ => ()
+  }
 }
 
 ///|
@@ -1227,7 +1335,10 @@ pub impl @reflect.Message for UInt64Value with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => UInt64Value::read_field(self, field)
+  }
 }
 
 ///|
@@ -1235,7 +1346,10 @@ pub impl @reflect.Message for UInt64Value with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -1243,12 +1357,15 @@ pub impl @reflect.Message for UInt64Value with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for UInt64Value with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -1256,7 +1373,7 @@ pub impl @reflect.Message for UInt64Value with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -1307,7 +1424,7 @@ pub impl @reflect.MessageType for UInt64ValueType with fn zero(_self) -> &@refle
 
 ///|
 pub impl @reflect.MessageType for UInt64ValueType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_wrappers_proto("google.protobuf.UInt64Value")
+  descriptor_google_protobuf_wrappers_proto_UInt64Value
 }
 
 ///|
@@ -1323,39 +1440,23 @@ pub let uInt64Value_type : &@reflect.MessageType = UInt64ValueType::new()
 
 ///|
 pub struct Int32Value {
-  inner : @dynamic.Message
+  mut value : Int32
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn Int32Value::new() -> Int32Value {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_wrappers_proto("google.protobuf.Int32Value"),
-    ),
-  }
-}
-
-///|
-pub fn Int32Value::message(self : Int32Value) -> @dynamic.Message {
-  self.inner
+  { value: 0, unknown_fields: b"", }
 }
 
 ///|
 pub fn Int32Value::value(self : Int32Value) -> Int32 {
-  let f = field_of_google_protobuf_wrappers_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.value
 }
 
 ///|
 pub fn Int32Value::set_value(self : Int32Value, value : Int32) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_wrappers_proto(self.inner, 1),
-    @reflect.Int32(value),
-  )
+  self.value = value
 }
 
 ///|
@@ -1371,8 +1472,26 @@ pub fn Int32Value::from_json(text : String) -> Int32Value raise @json.Refused {
 }
 
 ///|
+fn Int32Value::read_field(
+  self : Int32Value,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Int32(self.value)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_wrappers_proto_Int32Value : @reflect.MessageDescriptor = find_message_google_protobuf_wrappers_proto(
+  "google.protobuf.Int32Value",
+)
+
+///|
 pub impl @reflect.Message for Int32Value with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_wrappers_proto_Int32Value
 }
 
 ///|
@@ -1383,7 +1502,8 @@ pub impl @reflect.Message for Int32Value with fn message_type(self) -> &@reflect
 
 ///|
 pub impl @reflect.Message for Int32Value with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -1391,7 +1511,13 @@ pub impl @reflect.Message for Int32Value with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_wrappers_proto_Int32Value.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -1399,7 +1525,8 @@ pub impl @reflect.Message for Int32Value with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -1407,7 +1534,11 @@ pub impl @reflect.Message for Int32Value with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.value != 0
+    _ => false
+  }
 }
 
 ///|
@@ -1415,7 +1546,11 @@ pub impl @reflect.Message for Int32Value with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.value = 0
+    _ => ()
+  }
 }
 
 ///|
@@ -1423,7 +1558,7 @@ pub impl @reflect.Message for Int32Value with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  Int32Value::read_field(self, field)
 }
 
 ///|
@@ -1432,7 +1567,12 @@ pub impl @reflect.Message for Int32Value with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.value = value.int().to_int()
+    _ => ()
+  }
 }
 
 ///|
@@ -1440,7 +1580,10 @@ pub impl @reflect.Message for Int32Value with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => Int32Value::read_field(self, field)
+  }
 }
 
 ///|
@@ -1448,7 +1591,10 @@ pub impl @reflect.Message for Int32Value with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -1456,12 +1602,15 @@ pub impl @reflect.Message for Int32Value with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for Int32Value with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -1469,7 +1618,7 @@ pub impl @reflect.Message for Int32Value with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -1520,7 +1669,7 @@ pub impl @reflect.MessageType for Int32ValueType with fn zero(_self) -> &@reflec
 
 ///|
 pub impl @reflect.MessageType for Int32ValueType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_wrappers_proto("google.protobuf.Int32Value")
+  descriptor_google_protobuf_wrappers_proto_Int32Value
 }
 
 ///|
@@ -1536,39 +1685,23 @@ pub let int32Value_type : &@reflect.MessageType = Int32ValueType::new()
 
 ///|
 pub struct UInt32Value {
-  inner : @dynamic.Message
+  mut value : UInt32
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn UInt32Value::new() -> UInt32Value {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_wrappers_proto("google.protobuf.UInt32Value"),
-    ),
-  }
-}
-
-///|
-pub fn UInt32Value::message(self : UInt32Value) -> @dynamic.Message {
-  self.inner
+  { value: 0U, unknown_fields: b"", }
 }
 
 ///|
 pub fn UInt32Value::value(self : UInt32Value) -> UInt32 {
-  let f = field_of_google_protobuf_wrappers_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).uint().to_uint()
-  } else {
-    0U
-  }
+  self.value
 }
 
 ///|
 pub fn UInt32Value::set_value(self : UInt32Value, value : UInt32) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_wrappers_proto(self.inner, 1),
-    @reflect.Uint32(value),
-  )
+  self.value = value
 }
 
 ///|
@@ -1584,8 +1717,26 @@ pub fn UInt32Value::from_json(text : String) -> UInt32Value raise @json.Refused 
 }
 
 ///|
+fn UInt32Value::read_field(
+  self : UInt32Value,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Uint32(self.value)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_wrappers_proto_UInt32Value : @reflect.MessageDescriptor = find_message_google_protobuf_wrappers_proto(
+  "google.protobuf.UInt32Value",
+)
+
+///|
 pub impl @reflect.Message for UInt32Value with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_wrappers_proto_UInt32Value
 }
 
 ///|
@@ -1596,7 +1747,8 @@ pub impl @reflect.Message for UInt32Value with fn message_type(self) -> &@reflec
 
 ///|
 pub impl @reflect.Message for UInt32Value with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -1604,7 +1756,13 @@ pub impl @reflect.Message for UInt32Value with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_wrappers_proto_UInt32Value.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -1612,7 +1770,8 @@ pub impl @reflect.Message for UInt32Value with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -1620,7 +1779,11 @@ pub impl @reflect.Message for UInt32Value with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.value != 0U
+    _ => false
+  }
 }
 
 ///|
@@ -1628,7 +1791,11 @@ pub impl @reflect.Message for UInt32Value with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.value = 0U
+    _ => ()
+  }
 }
 
 ///|
@@ -1636,7 +1803,7 @@ pub impl @reflect.Message for UInt32Value with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  UInt32Value::read_field(self, field)
 }
 
 ///|
@@ -1645,7 +1812,12 @@ pub impl @reflect.Message for UInt32Value with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.value = value.uint().to_uint()
+    _ => ()
+  }
 }
 
 ///|
@@ -1653,7 +1825,10 @@ pub impl @reflect.Message for UInt32Value with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => UInt32Value::read_field(self, field)
+  }
 }
 
 ///|
@@ -1661,7 +1836,10 @@ pub impl @reflect.Message for UInt32Value with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -1669,12 +1847,15 @@ pub impl @reflect.Message for UInt32Value with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for UInt32Value with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -1682,7 +1863,7 @@ pub impl @reflect.Message for UInt32Value with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -1733,7 +1914,7 @@ pub impl @reflect.MessageType for UInt32ValueType with fn zero(_self) -> &@refle
 
 ///|
 pub impl @reflect.MessageType for UInt32ValueType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_wrappers_proto("google.protobuf.UInt32Value")
+  descriptor_google_protobuf_wrappers_proto_UInt32Value
 }
 
 ///|
@@ -1749,39 +1930,23 @@ pub let uInt32Value_type : &@reflect.MessageType = UInt32ValueType::new()
 
 ///|
 pub struct BoolValue {
-  inner : @dynamic.Message
+  mut value : Bool
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn BoolValue::new() -> BoolValue {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_wrappers_proto("google.protobuf.BoolValue"),
-    ),
-  }
-}
-
-///|
-pub fn BoolValue::message(self : BoolValue) -> @dynamic.Message {
-  self.inner
+  { value: false, unknown_fields: b"", }
 }
 
 ///|
 pub fn BoolValue::value(self : BoolValue) -> Bool {
-  let f = field_of_google_protobuf_wrappers_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.value
 }
 
 ///|
 pub fn BoolValue::set_value(self : BoolValue, value : Bool) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_wrappers_proto(self.inner, 1),
-    @reflect.Bool(value),
-  )
+  self.value = value
 }
 
 ///|
@@ -1797,8 +1962,26 @@ pub fn BoolValue::from_json(text : String) -> BoolValue raise @json.Refused {
 }
 
 ///|
+fn BoolValue::read_field(
+  self : BoolValue,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Bool(self.value)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_wrappers_proto_BoolValue : @reflect.MessageDescriptor = find_message_google_protobuf_wrappers_proto(
+  "google.protobuf.BoolValue",
+)
+
+///|
 pub impl @reflect.Message for BoolValue with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_wrappers_proto_BoolValue
 }
 
 ///|
@@ -1809,7 +1992,8 @@ pub impl @reflect.Message for BoolValue with fn message_type(self) -> &@reflect.
 
 ///|
 pub impl @reflect.Message for BoolValue with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -1817,7 +2001,13 @@ pub impl @reflect.Message for BoolValue with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_wrappers_proto_BoolValue.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -1825,7 +2015,8 @@ pub impl @reflect.Message for BoolValue with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -1833,7 +2024,11 @@ pub impl @reflect.Message for BoolValue with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.value
+    _ => false
+  }
 }
 
 ///|
@@ -1841,7 +2036,11 @@ pub impl @reflect.Message for BoolValue with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.value = false
+    _ => ()
+  }
 }
 
 ///|
@@ -1849,7 +2048,7 @@ pub impl @reflect.Message for BoolValue with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  BoolValue::read_field(self, field)
 }
 
 ///|
@@ -1858,7 +2057,12 @@ pub impl @reflect.Message for BoolValue with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.value = value.bool()
+    _ => ()
+  }
 }
 
 ///|
@@ -1866,7 +2070,10 @@ pub impl @reflect.Message for BoolValue with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => BoolValue::read_field(self, field)
+  }
 }
 
 ///|
@@ -1874,7 +2081,10 @@ pub impl @reflect.Message for BoolValue with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -1882,12 +2092,15 @@ pub impl @reflect.Message for BoolValue with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for BoolValue with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -1895,7 +2108,7 @@ pub impl @reflect.Message for BoolValue with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -1946,7 +2159,7 @@ pub impl @reflect.MessageType for BoolValueType with fn zero(_self) -> &@reflect
 
 ///|
 pub impl @reflect.MessageType for BoolValueType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_wrappers_proto("google.protobuf.BoolValue")
+  descriptor_google_protobuf_wrappers_proto_BoolValue
 }
 
 ///|
@@ -1962,39 +2175,23 @@ pub let boolValue_type : &@reflect.MessageType = BoolValueType::new()
 
 ///|
 pub struct StringValue {
-  inner : @dynamic.Message
+  mut value : String
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn StringValue::new() -> StringValue {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_wrappers_proto("google.protobuf.StringValue"),
-    ),
-  }
-}
-
-///|
-pub fn StringValue::message(self : StringValue) -> @dynamic.Message {
-  self.inner
+  { value: "", unknown_fields: b"", }
 }
 
 ///|
 pub fn StringValue::value(self : StringValue) -> String {
-  let f = field_of_google_protobuf_wrappers_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.value
 }
 
 ///|
 pub fn StringValue::set_value(self : StringValue, value : String) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_wrappers_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.value = value
 }
 
 ///|
@@ -2010,8 +2207,26 @@ pub fn StringValue::from_json(text : String) -> StringValue raise @json.Refused 
 }
 
 ///|
+fn StringValue::read_field(
+  self : StringValue,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.value)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_wrappers_proto_StringValue : @reflect.MessageDescriptor = find_message_google_protobuf_wrappers_proto(
+  "google.protobuf.StringValue",
+)
+
+///|
 pub impl @reflect.Message for StringValue with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_wrappers_proto_StringValue
 }
 
 ///|
@@ -2022,7 +2237,8 @@ pub impl @reflect.Message for StringValue with fn message_type(self) -> &@reflec
 
 ///|
 pub impl @reflect.Message for StringValue with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -2030,7 +2246,13 @@ pub impl @reflect.Message for StringValue with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_wrappers_proto_StringValue.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -2038,7 +2260,8 @@ pub impl @reflect.Message for StringValue with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -2046,7 +2269,11 @@ pub impl @reflect.Message for StringValue with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.value.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -2054,7 +2281,11 @@ pub impl @reflect.Message for StringValue with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.value = ""
+    _ => ()
+  }
 }
 
 ///|
@@ -2062,7 +2293,7 @@ pub impl @reflect.Message for StringValue with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  StringValue::read_field(self, field)
 }
 
 ///|
@@ -2071,7 +2302,12 @@ pub impl @reflect.Message for StringValue with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.value = value.string()
+    _ => ()
+  }
 }
 
 ///|
@@ -2079,7 +2315,10 @@ pub impl @reflect.Message for StringValue with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => StringValue::read_field(self, field)
+  }
 }
 
 ///|
@@ -2087,7 +2326,10 @@ pub impl @reflect.Message for StringValue with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -2095,12 +2337,15 @@ pub impl @reflect.Message for StringValue with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for StringValue with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -2108,7 +2353,7 @@ pub impl @reflect.Message for StringValue with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -2159,7 +2404,7 @@ pub impl @reflect.MessageType for StringValueType with fn zero(_self) -> &@refle
 
 ///|
 pub impl @reflect.MessageType for StringValueType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_wrappers_proto("google.protobuf.StringValue")
+  descriptor_google_protobuf_wrappers_proto_StringValue
 }
 
 ///|
@@ -2175,39 +2420,23 @@ pub let stringValue_type : &@reflect.MessageType = StringValueType::new()
 
 ///|
 pub struct BytesValue {
-  inner : @dynamic.Message
+  mut value : Bytes
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn BytesValue::new() -> BytesValue {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_wrappers_proto("google.protobuf.BytesValue"),
-    ),
-  }
-}
-
-///|
-pub fn BytesValue::message(self : BytesValue) -> @dynamic.Message {
-  self.inner
+  { value: b"", unknown_fields: b"", }
 }
 
 ///|
 pub fn BytesValue::value(self : BytesValue) -> Bytes {
-  let f = field_of_google_protobuf_wrappers_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).bytes()
-  } else {
-    b""
-  }
+  self.value
 }
 
 ///|
 pub fn BytesValue::set_value(self : BytesValue, value : Bytes) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_wrappers_proto(self.inner, 1),
-    @reflect.Bytes(value),
-  )
+  self.value = value
 }
 
 ///|
@@ -2223,8 +2452,26 @@ pub fn BytesValue::from_json(text : String) -> BytesValue raise @json.Refused {
 }
 
 ///|
+fn BytesValue::read_field(
+  self : BytesValue,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Bytes(self.value)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_wrappers_proto_BytesValue : @reflect.MessageDescriptor = find_message_google_protobuf_wrappers_proto(
+  "google.protobuf.BytesValue",
+)
+
+///|
 pub impl @reflect.Message for BytesValue with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_wrappers_proto_BytesValue
 }
 
 ///|
@@ -2235,7 +2482,8 @@ pub impl @reflect.Message for BytesValue with fn message_type(self) -> &@reflect
 
 ///|
 pub impl @reflect.Message for BytesValue with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -2243,7 +2491,13 @@ pub impl @reflect.Message for BytesValue with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_wrappers_proto_BytesValue.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -2251,7 +2505,8 @@ pub impl @reflect.Message for BytesValue with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -2259,7 +2514,11 @@ pub impl @reflect.Message for BytesValue with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.value.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -2267,7 +2526,11 @@ pub impl @reflect.Message for BytesValue with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.value = b""
+    _ => ()
+  }
 }
 
 ///|
@@ -2275,7 +2538,7 @@ pub impl @reflect.Message for BytesValue with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  BytesValue::read_field(self, field)
 }
 
 ///|
@@ -2284,7 +2547,12 @@ pub impl @reflect.Message for BytesValue with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.value = value.bytes()
+    _ => ()
+  }
 }
 
 ///|
@@ -2292,7 +2560,10 @@ pub impl @reflect.Message for BytesValue with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => BytesValue::read_field(self, field)
+  }
 }
 
 ///|
@@ -2300,7 +2571,10 @@ pub impl @reflect.Message for BytesValue with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -2308,12 +2582,15 @@ pub impl @reflect.Message for BytesValue with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for BytesValue with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -2321,7 +2598,7 @@ pub impl @reflect.Message for BytesValue with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -2372,7 +2649,7 @@ pub impl @reflect.MessageType for BytesValueType with fn zero(_self) -> &@reflec
 
 ///|
 pub impl @reflect.MessageType for BytesValueType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_wrappers_proto("google.protobuf.BytesValue")
+  descriptor_google_protobuf_wrappers_proto_BytesValue
 }
 
 ///|

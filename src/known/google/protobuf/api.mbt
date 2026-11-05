@@ -527,153 +527,123 @@ fn find_message_google_protobuf_api_proto(
 }
 
 ///|
-fn field_of_google_protobuf_api_proto(
-  message : @dynamic.Message,
-  number : Int32,
-) -> @reflect.FieldDescriptor {
-  match message.descriptor().field_by_number(number) {
-    Some(field) => field
-    None => abort("moonproto: missing field " + number.to_string())
-  }
-}
-
-///|
 pub struct Api {
-  inner : @dynamic.Message
+  mut name : String
+  methods : Array[Method]
+  options : Array[Option_]
+  mut version : String
+  mut source_context : SourceContext?
+  mixins : Array[Mixin]
+  mut syntax : Syntax
+  mut edition : String
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn Api::new() -> Api {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_api_proto("google.protobuf.Api"),
-    ),
+    name: "",
+    methods: [],
+    options: [],
+    version: "",
+    source_context: None,
+    mixins: [],
+    syntax: Syntax::of(0),
+    edition: "",
+    unknown_fields: b"",
   }
-}
-
-///|
-pub fn Api::message(self : Api) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn Api::name(self : Api) -> String {
-  let f = field_of_google_protobuf_api_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.name
 }
 
 ///|
 pub fn Api::set_name(self : Api, value : String) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_api_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.name = value
 }
 
 ///|
 pub fn Api::methods(self : Api) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_api_proto(self.inner, 2)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn Api::set_methods(self : Api, value : @reflect.Value) -> Unit {
-  self.inner.set(field_of_google_protobuf_api_proto(self.inner, 2), value)
-}
-
-///|
-pub fn Api::options(self : Api) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_api_proto(self.inner, 3)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn Api::set_options(self : Api, value : @reflect.Value) -> Unit {
-  self.inner.set(field_of_google_protobuf_api_proto(self.inner, 3), value)
-}
-
-///|
-pub fn Api::version(self : Api) -> String {
-  let f = field_of_google_protobuf_api_proto(self.inner, 4)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
-}
-
-///|
-pub fn Api::set_version(self : Api, value : String) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_api_proto(self.inner, 4),
-    @reflect.String(value),
+  @reflect.list_view(
+    self.methods,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => Method::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
   )
 }
 
 ///|
+pub fn Api::options(self : Api) -> &@reflect.ListField {
+  @reflect.list_view(
+    self.options,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => Option_::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
+  )
+}
+
+///|
+pub fn Api::version(self : Api) -> String {
+  self.version
+}
+
+///|
+pub fn Api::set_version(self : Api, value : String) -> Unit {
+  self.version = value
+}
+
+///|
 pub fn Api::source_context(self : Api) -> @reflect.Value {
-  let f = field_of_google_protobuf_api_proto(self.inner, 5)
-  if self.inner.has(f) {
-    self.inner.get(f)
-  } else {
-    self.inner.mutable(f)
+  match self.source_context {
+    Some(v) => @reflect.Message(v as &@reflect.Message)
+    None => @reflect.Message(SourceContext::new() as &@reflect.Message)
   }
 }
 
 ///|
 pub fn Api::set_source_context(self : Api, value : @reflect.Value) -> Unit {
-  self.inner.set(field_of_google_protobuf_api_proto(self.inner, 5), value)
+  let source = value.message()
+  let target = SourceContext::new()
+  @proto.merge(target, source)
+  self.source_context = Some(target)
 }
 
 ///|
 pub fn Api::mixins(self : Api) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_api_proto(self.inner, 6)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn Api::set_mixins(self : Api, value : @reflect.Value) -> Unit {
-  self.inner.set(field_of_google_protobuf_api_proto(self.inner, 6), value)
+  @reflect.list_view(
+    self.mixins,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => Mixin::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
+  )
 }
 
 ///|
 pub fn Api::syntax(self : Api) -> Int32 {
-  let f = field_of_google_protobuf_api_proto(self.inner, 7)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.syntax.code()
 }
 
 ///|
 pub fn Api::set_syntax(self : Api, value : Int32) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_api_proto(self.inner, 7),
-    @reflect.Enum(value),
-  )
+  self.syntax = Syntax::of(value)
 }
 
 ///|
 pub fn Api::edition(self : Api) -> String {
-  let f = field_of_google_protobuf_api_proto(self.inner, 8)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.edition
 }
 
 ///|
 pub fn Api::set_edition(self : Api, value : String) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_api_proto(self.inner, 8),
-    @reflect.String(value),
-  )
+  self.edition = value
 }
 
 ///|
@@ -689,8 +659,67 @@ pub fn Api::from_json(text : String) -> Api raise @json.Refused {
 }
 
 ///|
+fn Api::read_field(
+  self : Api,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.name)
+    2 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.methods,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => Method::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    3 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.options,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => Option_::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    4 => @reflect.String(self.version)
+    5 =>
+      match self.source_context {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => @reflect.Message(SourceContext::new() as &@reflect.Message)
+      }
+    6 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.mixins,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => Mixin::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    7 => @reflect.Enum(self.syntax.code())
+    8 => @reflect.String(self.edition)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_api_proto_Api : @reflect.MessageDescriptor = find_message_google_protobuf_api_proto(
+  "google.protobuf.Api",
+)
+
+///|
 pub impl @reflect.Message for Api with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_api_proto_Api
 }
 
 ///|
@@ -701,7 +730,8 @@ pub impl @reflect.Message for Api with fn message_type(self) -> &@reflect.Messag
 
 ///|
 pub impl @reflect.Message for Api with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -709,7 +739,13 @@ pub impl @reflect.Message for Api with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_api_proto_Api.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -717,7 +753,8 @@ pub impl @reflect.Message for Api with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -725,7 +762,18 @@ pub impl @reflect.Message for Api with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.name.length() > 0
+    2 => self.methods.length() > 0
+    3 => self.options.length() > 0
+    4 => self.version.length() > 0
+    5 => @reflect.is_set(self.source_context)
+    6 => self.mixins.length() > 0
+    7 => self.syntax.code() != 0
+    8 => self.edition.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -733,7 +781,18 @@ pub impl @reflect.Message for Api with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.name = ""
+    2 => self.methods.clear()
+    3 => self.options.clear()
+    4 => self.version = ""
+    5 => self.source_context = None
+    6 => self.mixins.clear()
+    7 => self.syntax = Syntax::of(0)
+    8 => self.edition = ""
+    _ => ()
+  }
 }
 
 ///|
@@ -741,7 +800,7 @@ pub impl @reflect.Message for Api with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  Api::read_field(self, field)
 }
 
 ///|
@@ -750,7 +809,51 @@ pub impl @reflect.Message for Api with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.name = value.string()
+    2 =>
+      @reflect.assign_list(
+        self.methods,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => Method::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    3 =>
+      @reflect.assign_list(
+        self.options,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => Option_::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    4 => self.version = value.string()
+    5 => {
+      let source = value.message()
+      let target = SourceContext::new()
+      @proto.merge(target, source)
+      self.source_context = Some(target)
+    }
+    6 =>
+      @reflect.assign_list(
+        self.mixins,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => Mixin::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    7 => self.syntax = Syntax::of(value.enum_number())
+    8 => self.edition = value.string()
+    _ => ()
+  }
 }
 
 ///|
@@ -758,7 +861,19 @@ pub impl @reflect.Message for Api with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    5 =>
+      match self.source_context {
+        Some(v) => @reflect.Message(v as &@reflect.Message)
+        None => {
+          let v = SourceContext::new()
+          self.source_context = Some(v)
+          @reflect.Message(v as &@reflect.Message)
+        }
+      }
+    _ => Api::read_field(self, field)
+  }
 }
 
 ///|
@@ -766,7 +881,11 @@ pub impl @reflect.Message for Api with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    5 => @reflect.Message(SourceContext::new() as &@reflect.Message)
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -774,12 +893,15 @@ pub impl @reflect.Message for Api with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for Api with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -787,7 +909,7 @@ pub impl @reflect.Message for Api with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -838,7 +960,7 @@ pub impl @reflect.MessageType for ApiType with fn zero(_self) -> &@reflect.Messa
 
 ///|
 pub impl @reflect.MessageType for ApiType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_api_proto("google.protobuf.Api")
+  descriptor_google_protobuf_api_proto_Api
 }
 
 ///|
@@ -850,158 +972,112 @@ pub let api_type : &@reflect.MessageType = ApiType::new()
 
 ///|
 pub struct Method {
-  inner : @dynamic.Message
+  mut name : String
+  mut request_type_url : String
+  mut request_streaming : Bool
+  mut response_type_url : String
+  mut response_streaming : Bool
+  options : Array[Option_]
+  mut syntax : Syntax
+  mut edition : String
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn Method::new() -> Method {
   {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_api_proto("google.protobuf.Method"),
-    ),
+    name: "",
+    request_type_url: "",
+    request_streaming: false,
+    response_type_url: "",
+    response_streaming: false,
+    options: [],
+    syntax: Syntax::of(0),
+    edition: "",
+    unknown_fields: b"",
   }
-}
-
-///|
-pub fn Method::message(self : Method) -> @dynamic.Message {
-  self.inner
 }
 
 ///|
 pub fn Method::name(self : Method) -> String {
-  let f = field_of_google_protobuf_api_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.name
 }
 
 ///|
 pub fn Method::set_name(self : Method, value : String) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_api_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.name = value
 }
 
 ///|
 pub fn Method::request_type_url(self : Method) -> String {
-  let f = field_of_google_protobuf_api_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.request_type_url
 }
 
 ///|
 pub fn Method::set_request_type_url(self : Method, value : String) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_api_proto(self.inner, 2),
-    @reflect.String(value),
-  )
+  self.request_type_url = value
 }
 
 ///|
 pub fn Method::request_streaming(self : Method) -> Bool {
-  let f = field_of_google_protobuf_api_proto(self.inner, 3)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.request_streaming
 }
 
 ///|
 pub fn Method::set_request_streaming(self : Method, value : Bool) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_api_proto(self.inner, 3),
-    @reflect.Bool(value),
-  )
+  self.request_streaming = value
 }
 
 ///|
 pub fn Method::response_type_url(self : Method) -> String {
-  let f = field_of_google_protobuf_api_proto(self.inner, 4)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.response_type_url
 }
 
 ///|
 pub fn Method::set_response_type_url(self : Method, value : String) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_api_proto(self.inner, 4),
-    @reflect.String(value),
-  )
+  self.response_type_url = value
 }
 
 ///|
 pub fn Method::response_streaming(self : Method) -> Bool {
-  let f = field_of_google_protobuf_api_proto(self.inner, 5)
-  if self.inner.has(f) {
-    self.inner.get(f).bool()
-  } else {
-    false
-  }
+  self.response_streaming
 }
 
 ///|
 pub fn Method::set_response_streaming(self : Method, value : Bool) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_api_proto(self.inner, 5),
-    @reflect.Bool(value),
-  )
+  self.response_streaming = value
 }
 
 ///|
 pub fn Method::options(self : Method) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_api_proto(self.inner, 6)
-  self.inner.mutable(f).list()
-}
-
-///|
-pub fn Method::set_options(self : Method, value : @reflect.Value) -> Unit {
-  self.inner.set(field_of_google_protobuf_api_proto(self.inner, 6), value)
+  @reflect.list_view(
+    self.options,
+    @reflect.message_element(
+      v => @reflect.Message(v as &@reflect.Message),
+      () => Option_::new(),
+      (v, m) => @proto.merge(v, m),
+    ),
+  )
 }
 
 ///|
 pub fn Method::syntax(self : Method) -> Int32 {
-  let f = field_of_google_protobuf_api_proto(self.inner, 7)
-  if self.inner.has(f) {
-    self.inner.get(f).enum_number()
-  } else {
-    0
-  }
+  self.syntax.code()
 }
 
 ///|
 pub fn Method::set_syntax(self : Method, value : Int32) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_api_proto(self.inner, 7),
-    @reflect.Enum(value),
-  )
+  self.syntax = Syntax::of(value)
 }
 
 ///|
 pub fn Method::edition(self : Method) -> String {
-  let f = field_of_google_protobuf_api_proto(self.inner, 8)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.edition
 }
 
 ///|
 pub fn Method::set_edition(self : Method, value : String) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_api_proto(self.inner, 8),
-    @reflect.String(value),
-  )
+  self.edition = value
 }
 
 ///|
@@ -1017,8 +1093,43 @@ pub fn Method::from_json(text : String) -> Method raise @json.Refused {
 }
 
 ///|
+fn Method::read_field(
+  self : Method,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.name)
+    2 => @reflect.String(self.request_type_url)
+    3 => @reflect.Bool(self.request_streaming)
+    4 => @reflect.String(self.response_type_url)
+    5 => @reflect.Bool(self.response_streaming)
+    6 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.options,
+          @reflect.message_element(
+            v => @reflect.Message(v as &@reflect.Message),
+            () => Option_::new(),
+            (v, m) => @proto.merge(v, m),
+          ),
+        ),
+      )
+    7 => @reflect.Enum(self.syntax.code())
+    8 => @reflect.String(self.edition)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_api_proto_Method : @reflect.MessageDescriptor = find_message_google_protobuf_api_proto(
+  "google.protobuf.Method",
+)
+
+///|
 pub impl @reflect.Message for Method with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_api_proto_Method
 }
 
 ///|
@@ -1029,7 +1140,8 @@ pub impl @reflect.Message for Method with fn message_type(self) -> &@reflect.Mes
 
 ///|
 pub impl @reflect.Message for Method with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -1037,7 +1149,13 @@ pub impl @reflect.Message for Method with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_api_proto_Method.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -1045,7 +1163,8 @@ pub impl @reflect.Message for Method with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -1053,7 +1172,18 @@ pub impl @reflect.Message for Method with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.name.length() > 0
+    2 => self.request_type_url.length() > 0
+    3 => self.request_streaming
+    4 => self.response_type_url.length() > 0
+    5 => self.response_streaming
+    6 => self.options.length() > 0
+    7 => self.syntax.code() != 0
+    8 => self.edition.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -1061,7 +1191,18 @@ pub impl @reflect.Message for Method with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.name = ""
+    2 => self.request_type_url = ""
+    3 => self.request_streaming = false
+    4 => self.response_type_url = ""
+    5 => self.response_streaming = false
+    6 => self.options.clear()
+    7 => self.syntax = Syntax::of(0)
+    8 => self.edition = ""
+    _ => ()
+  }
 }
 
 ///|
@@ -1069,7 +1210,7 @@ pub impl @reflect.Message for Method with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  Method::read_field(self, field)
 }
 
 ///|
@@ -1078,7 +1219,28 @@ pub impl @reflect.Message for Method with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.name = value.string()
+    2 => self.request_type_url = value.string()
+    3 => self.request_streaming = value.bool()
+    4 => self.response_type_url = value.string()
+    5 => self.response_streaming = value.bool()
+    6 =>
+      @reflect.assign_list(
+        self.options,
+        value.list(),
+        @reflect.message_element(
+          v => @reflect.Message(v as &@reflect.Message),
+          () => Option_::new(),
+          (v, m) => @proto.merge(v, m),
+        ),
+      )
+    7 => self.syntax = Syntax::of(value.enum_number())
+    8 => self.edition = value.string()
+    _ => ()
+  }
 }
 
 ///|
@@ -1086,7 +1248,10 @@ pub impl @reflect.Message for Method with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => Method::read_field(self, field)
+  }
 }
 
 ///|
@@ -1094,7 +1259,10 @@ pub impl @reflect.Message for Method with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -1102,12 +1270,15 @@ pub impl @reflect.Message for Method with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for Method with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -1115,7 +1286,7 @@ pub impl @reflect.Message for Method with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -1166,7 +1337,7 @@ pub impl @reflect.MessageType for MethodType with fn zero(_self) -> &@reflect.Me
 
 ///|
 pub impl @reflect.MessageType for MethodType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_api_proto("google.protobuf.Method")
+  descriptor_google_protobuf_api_proto_Method
 }
 
 ///|
@@ -1178,57 +1349,34 @@ pub let method_type : &@reflect.MessageType = MethodType::new()
 
 ///|
 pub struct Mixin {
-  inner : @dynamic.Message
+  mut name : String
+  mut root : String
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn Mixin::new() -> Mixin {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_api_proto("google.protobuf.Mixin"),
-    ),
-  }
-}
-
-///|
-pub fn Mixin::message(self : Mixin) -> @dynamic.Message {
-  self.inner
+  { name: "", root: "", unknown_fields: b"", }
 }
 
 ///|
 pub fn Mixin::name(self : Mixin) -> String {
-  let f = field_of_google_protobuf_api_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.name
 }
 
 ///|
 pub fn Mixin::set_name(self : Mixin, value : String) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_api_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.name = value
 }
 
 ///|
 pub fn Mixin::root(self : Mixin) -> String {
-  let f = field_of_google_protobuf_api_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.root
 }
 
 ///|
 pub fn Mixin::set_root(self : Mixin, value : String) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_api_proto(self.inner, 2),
-    @reflect.String(value),
-  )
+  self.root = value
 }
 
 ///|
@@ -1244,8 +1392,27 @@ pub fn Mixin::from_json(text : String) -> Mixin raise @json.Refused {
 }
 
 ///|
+fn Mixin::read_field(
+  self : Mixin,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.name)
+    2 => @reflect.String(self.root)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_api_proto_Mixin : @reflect.MessageDescriptor = find_message_google_protobuf_api_proto(
+  "google.protobuf.Mixin",
+)
+
+///|
 pub impl @reflect.Message for Mixin with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_api_proto_Mixin
 }
 
 ///|
@@ -1256,7 +1423,8 @@ pub impl @reflect.Message for Mixin with fn message_type(self) -> &@reflect.Mess
 
 ///|
 pub impl @reflect.Message for Mixin with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -1264,7 +1432,13 @@ pub impl @reflect.Message for Mixin with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_api_proto_Mixin.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -1272,7 +1446,8 @@ pub impl @reflect.Message for Mixin with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -1280,7 +1455,12 @@ pub impl @reflect.Message for Mixin with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.name.length() > 0
+    2 => self.root.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -1288,7 +1468,12 @@ pub impl @reflect.Message for Mixin with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.name = ""
+    2 => self.root = ""
+    _ => ()
+  }
 }
 
 ///|
@@ -1296,7 +1481,7 @@ pub impl @reflect.Message for Mixin with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  Mixin::read_field(self, field)
 }
 
 ///|
@@ -1305,7 +1490,13 @@ pub impl @reflect.Message for Mixin with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.name = value.string()
+    2 => self.root = value.string()
+    _ => ()
+  }
 }
 
 ///|
@@ -1313,7 +1504,10 @@ pub impl @reflect.Message for Mixin with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => Mixin::read_field(self, field)
+  }
 }
 
 ///|
@@ -1321,7 +1515,10 @@ pub impl @reflect.Message for Mixin with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -1329,12 +1526,15 @@ pub impl @reflect.Message for Mixin with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for Mixin with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -1342,7 +1542,7 @@ pub impl @reflect.Message for Mixin with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -1393,7 +1593,7 @@ pub impl @reflect.MessageType for MixinType with fn zero(_self) -> &@reflect.Mes
 
 ///|
 pub impl @reflect.MessageType for MixinType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_api_proto("google.protobuf.Mixin")
+  descriptor_google_protobuf_api_proto_Mixin
 }
 
 ///|

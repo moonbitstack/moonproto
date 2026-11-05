@@ -2,7 +2,7 @@
 // `.proto` files shipped with protobuf 36.2.
 import {
   "moonbitstack/moonproto/desc",
-  "moonbitstack/moonproto/dynamic",
   "moonbitstack/moonproto/json",
+  "moonbitstack/moonproto/proto",
   "moonbitstack/moonproto/reflect",
 }

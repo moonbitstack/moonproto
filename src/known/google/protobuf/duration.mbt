@@ -129,69 +129,35 @@ fn find_message_google_protobuf_duration_proto(
 }
 
 ///|
-fn field_of_google_protobuf_duration_proto(
-  message : @dynamic.Message,
-  number : Int32,
-) -> @reflect.FieldDescriptor {
-  match message.descriptor().field_by_number(number) {
-    Some(field) => field
-    None => abort("moonproto: missing field " + number.to_string())
-  }
-}
-
-///|
 pub struct Duration {
-  inner : @dynamic.Message
+  mut seconds : Int64
+  mut nanos : Int32
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn Duration::new() -> Duration {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_duration_proto("google.protobuf.Duration"),
-    ),
-  }
-}
-
-///|
-pub fn Duration::message(self : Duration) -> @dynamic.Message {
-  self.inner
+  { seconds: 0L, nanos: 0, unknown_fields: b"", }
 }
 
 ///|
 pub fn Duration::seconds(self : Duration) -> Int64 {
-  let f = field_of_google_protobuf_duration_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).int()
-  } else {
-    0L
-  }
+  self.seconds
 }
 
 ///|
 pub fn Duration::set_seconds(self : Duration, value : Int64) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_duration_proto(self.inner, 1),
-    @reflect.Int64(value),
-  )
+  self.seconds = value
 }
 
 ///|
 pub fn Duration::nanos(self : Duration) -> Int32 {
-  let f = field_of_google_protobuf_duration_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.nanos
 }
 
 ///|
 pub fn Duration::set_nanos(self : Duration, value : Int32) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_duration_proto(self.inner, 2),
-    @reflect.Int32(value),
-  )
+  self.nanos = value
 }
 
 ///|
@@ -207,8 +173,27 @@ pub fn Duration::from_json(text : String) -> Duration raise @json.Refused {
 }
 
 ///|
+fn Duration::read_field(
+  self : Duration,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Int64(self.seconds)
+    2 => @reflect.Int32(self.nanos)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_duration_proto_Duration : @reflect.MessageDescriptor = find_message_google_protobuf_duration_proto(
+  "google.protobuf.Duration",
+)
+
+///|
 pub impl @reflect.Message for Duration with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_duration_proto_Duration
 }
 
 ///|
@@ -219,7 +204,8 @@ pub impl @reflect.Message for Duration with fn message_type(self) -> &@reflect.M
 
 ///|
 pub impl @reflect.Message for Duration with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -227,7 +213,13 @@ pub impl @reflect.Message for Duration with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_duration_proto_Duration.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -235,7 +227,8 @@ pub impl @reflect.Message for Duration with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -243,7 +236,12 @@ pub impl @reflect.Message for Duration with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.seconds != 0L
+    2 => self.nanos != 0
+    _ => false
+  }
 }
 
 ///|
@@ -251,7 +249,12 @@ pub impl @reflect.Message for Duration with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.seconds = 0L
+    2 => self.nanos = 0
+    _ => ()
+  }
 }
 
 ///|
@@ -259,7 +262,7 @@ pub impl @reflect.Message for Duration with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  Duration::read_field(self, field)
 }
 
 ///|
@@ -268,7 +271,13 @@ pub impl @reflect.Message for Duration with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.seconds = value.int()
+    2 => self.nanos = value.int().to_int()
+    _ => ()
+  }
 }
 
 ///|
@@ -276,7 +285,10 @@ pub impl @reflect.Message for Duration with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => Duration::read_field(self, field)
+  }
 }
 
 ///|
@@ -284,7 +296,10 @@ pub impl @reflect.Message for Duration with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -292,12 +307,15 @@ pub impl @reflect.Message for Duration with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for Duration with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -305,7 +323,7 @@ pub impl @reflect.Message for Duration with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -356,7 +374,7 @@ pub impl @reflect.MessageType for DurationType with fn zero(_self) -> &@reflect.
 
 ///|
 pub impl @reflect.MessageType for DurationType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_duration_proto("google.protobuf.Duration")
+  descriptor_google_protobuf_duration_proto_Duration
 }
 
 ///|

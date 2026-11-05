@@ -107,39 +107,22 @@ fn find_message_google_protobuf_field_mask_proto(
 }
 
 ///|
-fn field_of_google_protobuf_field_mask_proto(
-  message : @dynamic.Message,
-  number : Int32,
-) -> @reflect.FieldDescriptor {
-  match message.descriptor().field_by_number(number) {
-    Some(field) => field
-    None => abort("moonproto: missing field " + number.to_string())
-  }
-}
-
-///|
 pub struct FieldMask {
-  inner : @dynamic.Message
+  paths : Array[String]
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn FieldMask::new() -> FieldMask {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_field_mask_proto("google.protobuf.FieldMask"),
-    ),
-  }
-}
-
-///|
-pub fn FieldMask::message(self : FieldMask) -> @dynamic.Message {
-  self.inner
+  { paths: [], unknown_fields: b"", }
 }
 
 ///|
 pub fn FieldMask::paths(self : FieldMask) -> &@reflect.ListField {
-  let f = field_of_google_protobuf_field_mask_proto(self.inner, 1)
-  self.inner.mutable(f).list()
+  @reflect.list_view(
+    self.paths,
+    @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => ""),
+  )
 }
 
 ///|
@@ -155,8 +138,34 @@ pub fn FieldMask::from_json(text : String) -> FieldMask raise @json.Refused {
 }
 
 ///|
+fn FieldMask::read_field(
+  self : FieldMask,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 =>
+      @reflect.ListView(
+        @reflect.list_view(
+          self.paths,
+          @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => {
+            ""
+          }),
+        ),
+      )
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_field_mask_proto_FieldMask : @reflect.MessageDescriptor = find_message_google_protobuf_field_mask_proto(
+  "google.protobuf.FieldMask",
+)
+
+///|
 pub impl @reflect.Message for FieldMask with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_field_mask_proto_FieldMask
 }
 
 ///|
@@ -167,7 +176,8 @@ pub impl @reflect.Message for FieldMask with fn message_type(self) -> &@reflect.
 
 ///|
 pub impl @reflect.Message for FieldMask with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -175,7 +185,13 @@ pub impl @reflect.Message for FieldMask with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_field_mask_proto_FieldMask.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -183,7 +199,8 @@ pub impl @reflect.Message for FieldMask with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -191,7 +208,11 @@ pub impl @reflect.Message for FieldMask with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.paths.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -199,7 +220,11 @@ pub impl @reflect.Message for FieldMask with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.paths.clear()
+    _ => ()
+  }
 }
 
 ///|
@@ -207,7 +232,7 @@ pub impl @reflect.Message for FieldMask with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  FieldMask::read_field(self, field)
 }
 
 ///|
@@ -216,7 +241,19 @@ pub impl @reflect.Message for FieldMask with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 =>
+      @reflect.assign_list(
+        self.paths,
+        value.list(),
+        @reflect.scalar_element(v => @reflect.String(v), v => v.string(), () => {
+          ""
+        }),
+      )
+    _ => ()
+  }
 }
 
 ///|
@@ -224,7 +261,10 @@ pub impl @reflect.Message for FieldMask with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => FieldMask::read_field(self, field)
+  }
 }
 
 ///|
@@ -232,7 +272,10 @@ pub impl @reflect.Message for FieldMask with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -240,12 +283,15 @@ pub impl @reflect.Message for FieldMask with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for FieldMask with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -253,7 +299,7 @@ pub impl @reflect.Message for FieldMask with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -304,7 +350,7 @@ pub impl @reflect.MessageType for FieldMaskType with fn zero(_self) -> &@reflect
 
 ///|
 pub impl @reflect.MessageType for FieldMaskType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_field_mask_proto("google.protobuf.FieldMask")
+  descriptor_google_protobuf_field_mask_proto_FieldMask
 }
 
 ///|

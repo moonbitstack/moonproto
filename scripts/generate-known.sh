@@ -16,7 +16,7 @@ if [ ! -d "$include/google/protobuf" ]; then
   exit 1
 fi
 
-(cd "$root" && moon build --target native >/dev/null)
+(cd "$root" && moon build --target native src/cmd/protoc-gen-mbt >/dev/null)
 plugin="$root/_build/native/debug/build/cmd/protoc-gen-mbt/protoc-gen-mbt"
 if [ -f "$plugin.exe" ]; then
   plugin="$plugin.exe"

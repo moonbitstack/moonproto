@@ -129,69 +129,35 @@ fn find_message_google_protobuf_timestamp_proto(
 }
 
 ///|
-fn field_of_google_protobuf_timestamp_proto(
-  message : @dynamic.Message,
-  number : Int32,
-) -> @reflect.FieldDescriptor {
-  match message.descriptor().field_by_number(number) {
-    Some(field) => field
-    None => abort("moonproto: missing field " + number.to_string())
-  }
-}
-
-///|
 pub struct Timestamp {
-  inner : @dynamic.Message
+  mut seconds : Int64
+  mut nanos : Int32
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn Timestamp::new() -> Timestamp {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_timestamp_proto("google.protobuf.Timestamp"),
-    ),
-  }
-}
-
-///|
-pub fn Timestamp::message(self : Timestamp) -> @dynamic.Message {
-  self.inner
+  { seconds: 0L, nanos: 0, unknown_fields: b"", }
 }
 
 ///|
 pub fn Timestamp::seconds(self : Timestamp) -> Int64 {
-  let f = field_of_google_protobuf_timestamp_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).int()
-  } else {
-    0L
-  }
+  self.seconds
 }
 
 ///|
 pub fn Timestamp::set_seconds(self : Timestamp, value : Int64) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_timestamp_proto(self.inner, 1),
-    @reflect.Int64(value),
-  )
+  self.seconds = value
 }
 
 ///|
 pub fn Timestamp::nanos(self : Timestamp) -> Int32 {
-  let f = field_of_google_protobuf_timestamp_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).int().to_int()
-  } else {
-    0
-  }
+  self.nanos
 }
 
 ///|
 pub fn Timestamp::set_nanos(self : Timestamp, value : Int32) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_timestamp_proto(self.inner, 2),
-    @reflect.Int32(value),
-  )
+  self.nanos = value
 }
 
 ///|
@@ -207,8 +173,27 @@ pub fn Timestamp::from_json(text : String) -> Timestamp raise @json.Refused {
 }
 
 ///|
+fn Timestamp::read_field(
+  self : Timestamp,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.Int64(self.seconds)
+    2 => @reflect.Int32(self.nanos)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_timestamp_proto_Timestamp : @reflect.MessageDescriptor = find_message_google_protobuf_timestamp_proto(
+  "google.protobuf.Timestamp",
+)
+
+///|
 pub impl @reflect.Message for Timestamp with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_timestamp_proto_Timestamp
 }
 
 ///|
@@ -219,7 +204,8 @@ pub impl @reflect.Message for Timestamp with fn message_type(self) -> &@reflect.
 
 ///|
 pub impl @reflect.Message for Timestamp with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -227,7 +213,13 @@ pub impl @reflect.Message for Timestamp with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_timestamp_proto_Timestamp.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -235,7 +227,8 @@ pub impl @reflect.Message for Timestamp with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -243,7 +236,12 @@ pub impl @reflect.Message for Timestamp with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.seconds != 0L
+    2 => self.nanos != 0
+    _ => false
+  }
 }
 
 ///|
@@ -251,7 +249,12 @@ pub impl @reflect.Message for Timestamp with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.seconds = 0L
+    2 => self.nanos = 0
+    _ => ()
+  }
 }
 
 ///|
@@ -259,7 +262,7 @@ pub impl @reflect.Message for Timestamp with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  Timestamp::read_field(self, field)
 }
 
 ///|
@@ -268,7 +271,13 @@ pub impl @reflect.Message for Timestamp with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.seconds = value.int()
+    2 => self.nanos = value.int().to_int()
+    _ => ()
+  }
 }
 
 ///|
@@ -276,7 +285,10 @@ pub impl @reflect.Message for Timestamp with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => Timestamp::read_field(self, field)
+  }
 }
 
 ///|
@@ -284,7 +296,10 @@ pub impl @reflect.Message for Timestamp with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -292,12 +307,15 @@ pub impl @reflect.Message for Timestamp with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for Timestamp with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -305,7 +323,7 @@ pub impl @reflect.Message for Timestamp with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -356,7 +374,7 @@ pub impl @reflect.MessageType for TimestampType with fn zero(_self) -> &@reflect
 
 ///|
 pub impl @reflect.MessageType for TimestampType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_timestamp_proto("google.protobuf.Timestamp")
+  descriptor_google_protobuf_timestamp_proto_Timestamp
 }
 
 ///|

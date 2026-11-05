@@ -8,7 +8,7 @@ protoc="${PROTOC:-protoc}"
 include="${PROTOC_INCLUDE:-}"
 pkg="$root/src/zz_codegen_check"
 
-(cd "$root" && moon build --target native >/dev/null)
+(cd "$root" && moon build --target native src/cmd/protoc-gen-mbt >/dev/null)
 plugin="$root/_build/native/debug/build/cmd/protoc-gen-mbt/protoc-gen-mbt"
 if [ -f "$plugin.exe" ]; then
   plugin="$plugin.exe"
@@ -37,8 +37,8 @@ cp "$tmp"/*.mbt "$pkg"/
 cat > "$pkg/moon.pkg" <<'PKG'
 import {
   "moonbitstack/moonproto/desc",
-  "moonbitstack/moonproto/dynamic",
   "moonbitstack/moonproto/json",
+  "moonbitstack/moonproto/proto",
   "moonbitstack/moonproto/reflect",
 }
 PKG

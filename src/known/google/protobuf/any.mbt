@@ -129,69 +129,35 @@ fn find_message_google_protobuf_any_proto(
 }
 
 ///|
-fn field_of_google_protobuf_any_proto(
-  message : @dynamic.Message,
-  number : Int32,
-) -> @reflect.FieldDescriptor {
-  match message.descriptor().field_by_number(number) {
-    Some(field) => field
-    None => abort("moonproto: missing field " + number.to_string())
-  }
-}
-
-///|
 pub struct Any {
-  inner : @dynamic.Message
+  mut type_url : String
+  mut value : Bytes
+  mut unknown_fields : Bytes
 }
 
 ///|
 pub fn Any::new() -> Any {
-  {
-    inner: @dynamic.Message::new(
-      find_message_google_protobuf_any_proto("google.protobuf.Any"),
-    ),
-  }
-}
-
-///|
-pub fn Any::message(self : Any) -> @dynamic.Message {
-  self.inner
+  { type_url: "", value: b"", unknown_fields: b"", }
 }
 
 ///|
 pub fn Any::type_url(self : Any) -> String {
-  let f = field_of_google_protobuf_any_proto(self.inner, 1)
-  if self.inner.has(f) {
-    self.inner.get(f).string()
-  } else {
-    ""
-  }
+  self.type_url
 }
 
 ///|
 pub fn Any::set_type_url(self : Any, value : String) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_any_proto(self.inner, 1),
-    @reflect.String(value),
-  )
+  self.type_url = value
 }
 
 ///|
 pub fn Any::value(self : Any) -> Bytes {
-  let f = field_of_google_protobuf_any_proto(self.inner, 2)
-  if self.inner.has(f) {
-    self.inner.get(f).bytes()
-  } else {
-    b""
-  }
+  self.value
 }
 
 ///|
 pub fn Any::set_value(self : Any, value : Bytes) -> Unit {
-  self.inner.set(
-    field_of_google_protobuf_any_proto(self.inner, 2),
-    @reflect.Bytes(value),
-  )
+  self.value = value
 }
 
 ///|
@@ -207,8 +173,27 @@ pub fn Any::from_json(text : String) -> Any raise @json.Refused {
 }
 
 ///|
+fn Any::read_field(
+  self : Any,
+  field : @reflect.FieldDescriptor,
+) -> @reflect.Value {
+  let _ = self
+  match field.number {
+    1 => @reflect.String(self.type_url)
+    2 => @reflect.Bytes(self.value)
+    _ => @reflect.default_for(field)
+  }
+}
+
+///|
+let descriptor_google_protobuf_any_proto_Any : @reflect.MessageDescriptor = find_message_google_protobuf_any_proto(
+  "google.protobuf.Any",
+)
+
+///|
 pub impl @reflect.Message for Any with fn descriptor(self) -> @reflect.MessageDescriptor {
-  self.inner.descriptor()
+  let _ = self
+  descriptor_google_protobuf_any_proto_Any
 }
 
 ///|
@@ -219,7 +204,8 @@ pub impl @reflect.Message for Any with fn message_type(self) -> &@reflect.Messag
 
 ///|
 pub impl @reflect.Message for Any with fn is_valid(self) -> Bool {
-  self.inner.is_valid()
+  let _ = self
+  true
 }
 
 ///|
@@ -227,7 +213,13 @@ pub impl @reflect.Message for Any with fn range(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range(f)
+  for field in descriptor_google_protobuf_any_proto_Any.fields {
+    if @reflect.Message::has(self, field) {
+      if !f(field, @reflect.Message::get(self, field)) {
+        break
+      }
+    }
+  }
 }
 
 ///|
@@ -235,7 +227,8 @@ pub impl @reflect.Message for Any with fn range_extensions(
   self,
   f : (@reflect.FieldDescriptor, @reflect.Value) -> Bool,
 ) -> Unit {
-  self.inner.range_extensions(f)
+  let _ = self
+  let _ = f
 }
 
 ///|
@@ -243,7 +236,12 @@ pub impl @reflect.Message for Any with fn has(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Bool {
-  self.inner.has(field)
+  let _ = self
+  match field.number {
+    1 => self.type_url.length() > 0
+    2 => self.value.length() > 0
+    _ => false
+  }
 }
 
 ///|
@@ -251,7 +249,12 @@ pub impl @reflect.Message for Any with fn clear(
   self,
   field : @reflect.FieldDescriptor,
 ) -> Unit {
-  self.inner.clear(field)
+  let _ = self
+  match field.number {
+    1 => self.type_url = ""
+    2 => self.value = b""
+    _ => ()
+  }
 }
 
 ///|
@@ -259,7 +262,7 @@ pub impl @reflect.Message for Any with fn get(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.get(field)
+  Any::read_field(self, field)
 }
 
 ///|
@@ -268,7 +271,13 @@ pub impl @reflect.Message for Any with fn set(
   field : @reflect.FieldDescriptor,
   value : @reflect.Value,
 ) -> Unit {
-  self.inner.set(field, value)
+  let _ = self
+  let _ = value
+  match field.number {
+    1 => self.type_url = value.string()
+    2 => self.value = value.bytes()
+    _ => ()
+  }
 }
 
 ///|
@@ -276,7 +285,10 @@ pub impl @reflect.Message for Any with fn mutable(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.mutable(field)
+  let _ = self
+  match field.number {
+    _ => Any::read_field(self, field)
+  }
 }
 
 ///|
@@ -284,7 +296,10 @@ pub impl @reflect.Message for Any with fn new_field(
   self,
   field : @reflect.FieldDescriptor,
 ) -> @reflect.Value {
-  self.inner.new_field(field)
+  let _ = self
+  match field.number {
+    _ => @reflect.new_field_value(field)
+  }
 }
 
 ///|
@@ -292,12 +307,15 @@ pub impl @reflect.Message for Any with fn which_oneof(
   self,
   oneof : @reflect.OneofDescriptor,
 ) -> Int32? {
-  self.inner.which_oneof(oneof)
+  let _ = self
+  match oneof.name {
+    _ => None
+  }
 }
 
 ///|
 pub impl @reflect.Message for Any with fn get_unknown(self) -> @reflect.RawFields {
-  self.inner.get_unknown()
+  @reflect.RawFields::from_bytes(self.unknown_fields)
 }
 
 ///|
@@ -305,7 +323,7 @@ pub impl @reflect.Message for Any with fn set_unknown(
   self,
   raw : @reflect.RawFields,
 ) -> Unit {
-  self.inner.set_unknown(raw)
+  self.unknown_fields = raw.bytes()
 }
 
 ///|
@@ -356,7 +374,7 @@ pub impl @reflect.MessageType for AnyType with fn zero(_self) -> &@reflect.Messa
 
 ///|
 pub impl @reflect.MessageType for AnyType with fn descriptor(_self) -> @reflect.MessageDescriptor {
-  find_message_google_protobuf_any_proto("google.protobuf.Any")
+  descriptor_google_protobuf_any_proto_Any
 }
 
 ///|
