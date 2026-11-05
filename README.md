@@ -169,7 +169,7 @@ map, the nested message, the enum and the active oneof member.
 | `tests/shapes/proto2.proto` | required, defaults, packed repeats, extension range and a top-level extension | 0 |
 | `tests/shapes/proto3.proto` | every scalar, repeated messages, map, enum, oneof | 0 |
 | `tests/shapes/edition2023.proto` | file-level implicit presence, per-field packed and expanded encoding | 0 |
-| `tests/shapes/edition2024.proto` | current edition naming rules and explicit presence | 0 |
+| `tests/shapes/edition2024.proto` | current edition naming rules, explicit presence, a closed enum and a delimited (group-encoded) field | 0 |
 
 ### Mutation evidence
 
@@ -196,6 +196,7 @@ source file before it exits.
 | `scripts/vendor_conformance_descriptors.sh` | regenerates that descriptor set from a protobuf 36.2 checkout |
 | `scripts/check-codegen.sh` | the four generated schemas compile warning-free |
 | `scripts/check-gointerop.sh` | the checked-in Go schema is exactly what `protoc-gen-go` v1.36.12 emits |
+| `scripts/interop.sh` | the fixture's reference bytes are what `protoc` itself encodes |
 | `scripts/interop-go.sh` | Go and MoonBit encode and decode each other's bytes |
 | `scripts/mutation-check.sh` | the three mutation checks above |
 | `scripts/generate-known.sh` | regenerates the well-known package from the protobuf includes |

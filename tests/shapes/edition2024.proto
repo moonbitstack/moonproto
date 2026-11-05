@@ -1,5 +1,5 @@
 // Edition 2024: explicit presence by default, a delimited-encoded message
-// field, an open enum, a map and a oneof. The current edition is checked with
+// field, a closed enum, a map and a oneof. The current edition is checked with
 // the same plugin as the legacy syntaxes.
 edition = "2024";
 package shapes.e2024;
@@ -9,7 +9,7 @@ message Edition2024Record {
   string title = 2;
   repeated int32 values = 3;
   map<string, int32> counts = 4;
-  Edition2024Item item = 5;
+  Edition2024Item item = 5 [features.message_encoding = DELIMITED];
   Edition2024Mode mode = 6;
   oneof choice {
     string word = 7;
@@ -22,6 +22,11 @@ message Edition2024Record {
 }
 
 enum Edition2024Mode {
+  // A closed enum is still allowed in 2024, and this one keeps the shape
+  // coverage that the 2023 sample cannot have: an implicit-presence enum field
+  // must stay open, so the closed case lives here.
+  option features.enum_type = CLOSED;
+
   // Edition 2024's naming lint rejects an underscore next to a digit, so the
   // numeric part of the prefix is written without one.
   EDITION2024_MODE_UNSPECIFIED = 0;

@@ -88,6 +88,9 @@ jobs:
       - name: protoc-gen-go schema is reproducible
         run: bash scripts/check-gointerop.sh
 
+      - name: the fixture bytes are what protoc encodes
+        run: bash scripts/interop.sh
+
       - name: protoc-gen-go bidirectional interop
         run: bash scripts/interop-go.sh
 
