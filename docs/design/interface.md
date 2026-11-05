@@ -929,11 +929,12 @@ The implementation settled several points the draft left open.
   open is settled in favour of named fields: a scalar is `T?` when it has
   presence and `T` when it does not, a repeated field is `Array[T]`, a map is
   `Map[K, V]`, a oneof is a generated enum whose payload variant the accessors
-  read, unknown bytes are a `Bytes` pair of field, and extensions live in a
-  number-keyed map. The generated `Message` implementation reads and writes
-  those fields directly, so a decoded message needs no side table and a field
-  access is a record access. `dynamic` stays the only generic implementation,
-  and it remains what the group, unknown-field and extension tests build cases
-  with. Recursion needs no special case: a message only ever contains itself
-  through `Array[T]` or `T?`, and both already go through a pointer, which is
-  why the generated `DescriptorProto` nests itself without a box.
+  read, unknown bytes are one `Bytes` field, and extensions live in an array of
+  (descriptor, value) pairs. The generated `Message` implementation reads and
+  writes those fields directly, so a decoded message needs no side table and a
+  field access is a record access. `dynamic` stays the only generic
+  implementation, and it remains what the group, unknown-field and extension
+  tests build cases with. Recursion needs no special case: a message only ever
+  contains itself through `Array[T]` or `T?`, and both already go through a
+  pointer, which is why the generated `DescriptorProto` nests itself without a
+  box.
