@@ -1,0 +1,29 @@
+// Edition 2024: explicit presence by default, a delimited-encoded message
+// field, an open enum, a map and a oneof. The current edition is checked with
+// the same plugin as the legacy syntaxes.
+edition = "2024";
+package shapes.e2024;
+
+message Edition2024Record {
+  int32 id = 1;
+  string title = 2;
+  repeated int32 values = 3;
+  map<string, int32> counts = 4;
+  Edition2024Item item = 5;
+  Edition2024Mode mode = 6;
+  oneof choice {
+    string word = 7;
+    int64 number = 8;
+  }
+
+  message Edition2024Item {
+    bytes payload = 1;
+  }
+}
+
+enum Edition2024Mode {
+  // Edition 2024's naming lint rejects an underscore next to a digit, so the
+  // numeric part of the prefix is written without one.
+  EDITION2024_MODE_UNSPECIFIED = 0;
+  EDITION2024_MODE_ON = 1;
+}

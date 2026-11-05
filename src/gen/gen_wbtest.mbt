@@ -178,3 +178,27 @@ test "editions features survive into the generated descriptor" {
   assert_true(generated.contains("edition: Some(\"2023\")"))
   assert_true(generated.contains("field_presence: 2"))
 }
+
+///|
+test "protoc's unresolved feature sets inherit through the plugin protocol" {
+  let source = "edition = \"2023\";\npackage e;\n" +
+    "option features.field_presence = IMPLICIT;\n" +
+    "message M { repeated int32 nums = 1 [features.repeated_field_encoding = EXPANDED]; }\n"
+  let file = @parser.parse("e.proto", source) catch {
+    _ => abort("parse failed")
+  }
+  let request : Request = {
+    files_to_generate: ["e.proto"],
+    parameter: "",
+    proto_file: [file],
+  }
+  let bytes = encode_request(request) catch { _ => abort("encode failed") }
+  let back = decode_request(bytes) catch { _ => abort("decode failed") }
+  let decoded = back.proto_file[0]
+  assert_eq(decoded.edition, Some("2023"))
+  assert_eq(decoded.features.field_presence, 2)
+  let field = decoded.message_type[0].field[0]
+  // The field inherits implicit presence and keeps its own encoding override.
+  assert_eq(field.features.field_presence, 2)
+  assert_eq(field.features.repeated_field_encoding, 2)
+}

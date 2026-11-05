@@ -1,0 +1,31 @@
+// Edition 2023: file-level implicit presence, a per-field packed override, a
+// closed enum, a map, a nested message and a oneof. Editions replace the
+// `syntax` keyword with a feature set.
+edition = "2023";
+package shapes.e2023;
+
+option features.field_presence = IMPLICIT;
+
+enum Edition2023Mode {
+  EDITION_2023_MODE_UNSPECIFIED = 0;
+  EDITION_2023_MODE_PLAIN = 1;
+  EDITION_2023_MODE_DELUXE = 2;
+}
+
+message Edition2023Record {
+  int32 id = 1;
+  string title = 2;
+  repeated int32 values = 3 [features.repeated_field_encoding = PACKED];
+  repeated string notes = 4 [features.repeated_field_encoding = EXPANDED];
+  map<string, string> labels = 5;
+  Edition2023Mode mode = 6;
+  Edition2023Detail detail = 7;
+  oneof choice {
+    int64 count = 8;
+    bytes raw = 9;
+  }
+
+  message Edition2023Detail {
+    bool ok = 1;
+  }
+}

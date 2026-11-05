@@ -1,0 +1,41 @@
+// A proto3 shape: implicit-presence scalars, every numeric kind, repeated
+// scalars and messages, a map, a nested message, an enum, and a oneof whose
+// members cover a scalar, a string and a message.
+syntax = "proto3";
+package shapes.p3;
+
+enum ModernColor {
+  MODERN_COLOR_UNSPECIFIED = 0;
+  MODERN_COLOR_BLUE = 1;
+  MODERN_COLOR_RED = 2;
+}
+
+message Envelope {
+  int32 i32 = 1;
+  int64 i64 = 2;
+  uint32 u32 = 3;
+  uint64 u64 = 4;
+  sint32 s32 = 5;
+  sint64 s64 = 6;
+  fixed32 f32 = 7;
+  fixed64 f64 = 8;
+  float flt = 9;
+  double dbl = 10;
+  bool flag = 11;
+  string text = 12;
+  bytes blob = 13;
+  repeated int32 nums = 14;
+  repeated EnvelopeItem items = 15;
+  map<string, int32> counts = 16;
+  EnvelopeItem inner = 17;
+  ModernColor color = 18;
+  oneof pick {
+    int32 pick_i = 19;
+    string pick_s = 20;
+    EnvelopeItem pick_m = 21;
+  }
+
+  message EnvelopeItem {
+    string name = 1;
+  }
+}

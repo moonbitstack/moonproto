@@ -1,0 +1,35 @@
+// A proto2 shape: required and optional fields, explicit defaults, packed and
+// expanded repeated fields, a nested message, a group-free oneof and an
+// extension range with a top-level extension.
+syntax = "proto2";
+package shapes.p2;
+
+enum LegacyMode {
+  LEGACY_MODE_UNKNOWN = 0;
+  LEGACY_MODE_FAST = 1;
+  LEGACY_MODE_SLOW = 2;
+}
+
+message LegacyRecord {
+  required int32 id = 1;
+  optional string label = 2 [default = "untitled"];
+  optional bool active = 3 [default = true];
+  optional double weight = 4 [default = 1.5];
+  repeated int32 samples = 5 [packed = true];
+  repeated string tags = 6;
+  optional LegacyDetail detail = 7;
+  optional LegacyMode mode = 8 [default = LEGACY_MODE_FAST];
+  oneof choice {
+    int32 choice_number = 9;
+    string choice_word = 10;
+  }
+  extensions 100 to 199;
+
+  message LegacyDetail {
+    optional string note = 1;
+  }
+}
+
+extend LegacyRecord {
+  optional string annotation = 100;
+}

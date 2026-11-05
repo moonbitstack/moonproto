@@ -80,8 +80,33 @@ fn m(
 
 ///|
 fn descriptor_file() -> @desc.FileDescriptorProto {
-  let options = m("MessageOptions", [f("map_entry", 7, 1, 8, None)], [])
-  let field_options = m("FieldOptions", [f("packed", 2, 1, 8, None)], [])
+  // `FeatureSet` members are enums on the wire but plain varints, so declaring
+  // them as int32 lets us read the values without importing every feature enum.
+  let feature_set = m(
+    "FeatureSet",
+    [
+      f("field_presence", 1, 1, 5, None),
+      f("enum_type", 2, 1, 5, None),
+      f("repeated_field_encoding", 3, 1, 5, None),
+      f("utf8_validation", 4, 1, 5, None),
+      f("message_encoding", 5, 1, 5, None),
+      f("json_format", 6, 1, 5, None),
+    ],
+    [],
+  )
+  let feature_ref = Some(".google.protobuf.FeatureSet")
+  let options = m(
+    "MessageOptions",
+    [f("map_entry", 7, 1, 8, None), f("features", 12, 1, 11, feature_ref)],
+    [],
+  )
+  let field_options = m(
+    "FieldOptions",
+    [f("packed", 2, 1, 8, None), f("features", 21, 1, 11, feature_ref)],
+    [],
+  )
+  let file_options = m("FileOptions", [f("features", 50, 1, 11, feature_ref)], [])
+  let enum_options = m("EnumOptions", [f("features", 7, 1, 11, feature_ref)], [])
   let extension_range = m(
     "ExtensionRange",
     [f("start", 1, 1, 5, None), f("end", 2, 1, 5, None)],
@@ -102,6 +127,7 @@ fn descriptor_file() -> @desc.FileDescriptorProto {
     [
       f("name", 1, 1, 9, None),
       f("value", 2, 3, 11, Some(".google.protobuf.EnumValueDescriptorProto")),
+      f("options", 3, 1, 11, Some(".google.protobuf.EnumOptions")),
     ],
     [enum_value],
   )
@@ -179,7 +205,9 @@ fn descriptor_file() -> @desc.FileDescriptorProto {
       f("enum_type", 5, 3, 11, Some(".google.protobuf.EnumDescriptorProto")),
       f("service", 6, 3, 11, Some(".google.protobuf.ServiceDescriptorProto")),
       f("extension", 7, 3, 11, Some(".google.protobuf.FieldDescriptorProto")),
+      f("options", 8, 1, 11, Some(".google.protobuf.FileOptions")),
       f("syntax", 12, 1, 9, None),
+      f("edition", 14, 1, 5, None),
     ],
     [],
   )
@@ -227,7 +255,7 @@ fn descriptor_file() -> @desc.FileDescriptorProto {
     message_type: [
       file_descriptor, message_descriptor, field_descriptor, oneof_descriptor, enum_descriptor,
       enum_value, service_descriptor, method_descriptor, extension_range, reserved_range,
-      options, field_options,
+      options, field_options, file_options, enum_options, feature_set,
     ],
     enum_type: enums,
     service: [],
@@ -265,6 +293,8 @@ fn plugin_file() -> @desc.FileDescriptorProto {
     [
       f("error", 1, 1, 9, None),
       f("supported_features", 2, 1, 4, None),
+      f("minimum_edition", 3, 1, 5, None),
+      f("maximum_edition", 4, 1, 5, None),
       f(
         "file",
         15,
@@ -440,6 +470,48 @@ fn get_messages(
 }
 
 ///|
+/// protoc sends feature overrides unresolved: a declaration carries only the
+/// features written on it, and children inherit the rest from their parent.
+/// Collect the six that change the generated shape.
+fn read_features(
+  owner : &@reflect.Message,
+  options_field : Int32,
+  features_field : Int32,
+) -> @desc.Features {
+  match get_message(owner, options_field) {
+    Some(options) =>
+      match get_message(options, features_field) {
+        Some(set) =>
+          {
+            field_presence: get_int(set, 1),
+            enum_type: get_int(set, 2),
+            repeated_field_encoding: get_int(set, 3),
+            utf8_validation: get_int(set, 4),
+            message_encoding: get_int(set, 5),
+            json_format: get_int(set, 6),
+          }
+        None => @desc.features_auto
+      }
+    None => @desc.features_auto
+  }
+}
+
+///|
+/// `Edition` is an enum on the wire; keep the spelling the descriptor records
+/// use so generated files read the same way as parsed `.proto` sources.
+fn edition_name(code : Int32) -> String? {
+  match code {
+    998 => Some("proto2")
+    999 => Some("proto3")
+    1000 => Some("2023")
+    1001 => Some("2024")
+    1002 => Some("2026")
+    9999 => Some("UNSTABLE")
+    _ => None
+  }
+}
+
+///|
 /// Decode a `CodeGeneratorRequest`.
 pub fn decode_request(bytes : Bytes) -> Request raise Refused {
   let message_type = find_type(
@@ -462,13 +534,17 @@ pub fn decode_request(bytes : Bytes) -> Request raise Refused {
 
 ///|
 fn to_file_proto(message : &@reflect.Message) -> @desc.FileDescriptorProto {
+  let features = @desc.Features::merge(
+    @desc.features_auto,
+    read_features(message, 8, 50),
+  )
   let messages : Array[@desc.DescriptorProto] = []
   for item in get_messages(message, 4) {
-    messages.push(to_message_proto(item))
+    messages.push(to_message_proto(item, features))
   }
   let enums : Array[@desc.EnumDescriptorProto] = []
   for item in get_messages(message, 5) {
-    enums.push(to_enum_proto(item))
+    enums.push(to_enum_proto(item, features))
   }
   let services : Array[@desc.ServiceDescriptorProto] = []
   for item in get_messages(message, 6) {
@@ -476,7 +552,7 @@ fn to_file_proto(message : &@reflect.Message) -> @desc.FileDescriptorProto {
   }
   let extensions : Array[@desc.FieldDescriptorProto] = []
   for item in get_messages(message, 7) {
-    extensions.push(to_field_proto(item))
+    extensions.push(to_field_proto(item, features))
   }
   {
     name: get_string(message, 1),
@@ -488,25 +564,29 @@ fn to_file_proto(message : &@reflect.Message) -> @desc.FileDescriptorProto {
     extension: extensions,
     dependency: get_strings(message, 3),
     public_dependency: [],
-    edition: None,
-    features: @desc.features_auto,
+    edition: edition_name(get_int(message, 14)),
+    features,
     options: [],
   }
 }
 
 ///|
-fn to_message_proto(message : &@reflect.Message) -> @desc.DescriptorProto {
+fn to_message_proto(
+  message : &@reflect.Message,
+  parent : @desc.Features,
+) -> @desc.DescriptorProto {
+  let features = @desc.Features::merge(parent, read_features(message, 7, 12))
   let fields : Array[@desc.FieldDescriptorProto] = []
   for item in get_messages(message, 2) {
-    fields.push(to_field_proto(item))
+    fields.push(to_field_proto(item, features))
   }
   let nested : Array[@desc.DescriptorProto] = []
   for item in get_messages(message, 3) {
-    nested.push(to_message_proto(item))
+    nested.push(to_message_proto(item, features))
   }
   let enums : Array[@desc.EnumDescriptorProto] = []
   for item in get_messages(message, 4) {
-    enums.push(to_enum_proto(item))
+    enums.push(to_enum_proto(item, features))
   }
   let extension_ranges : Array[(Int32, Int32)] = []
   for item in get_messages(message, 5) {
@@ -514,7 +594,7 @@ fn to_message_proto(message : &@reflect.Message) -> @desc.DescriptorProto {
   }
   let extensions : Array[@desc.FieldDescriptorProto] = []
   for item in get_messages(message, 6) {
-    extensions.push(to_field_proto(item))
+    extensions.push(to_field_proto(item, features))
   }
   let oneofs : Array[@desc.OneofDescriptorProto] = []
   for item in get_messages(message, 8) {
@@ -539,15 +619,25 @@ fn to_message_proto(message : &@reflect.Message) -> @desc.DescriptorProto {
     reserved_name: get_strings(message, 10),
     extension_range: extension_ranges,
     map_entry,
-    features: @desc.features_auto,
+    features,
     options: [],
   }
 }
 
 ///|
-fn to_field_proto(message : &@reflect.Message) -> @desc.FieldDescriptorProto {
+fn to_field_proto(
+  message : &@reflect.Message,
+  parent : @desc.Features,
+) -> @desc.FieldDescriptorProto {
+  let features = @desc.Features::merge(parent, read_features(message, 8, 21))
+  // Only an explicit `[packed = false]` turns packing off. An options message
+  // that exists solely to carry `features` must not be read as that request.
   let packed_off = match get_message(message, 8) {
-    Some(options) => if get_bool(options, 2) { false } else { true }
+    Some(options) =>
+      match options.descriptor().field_by_number(2) {
+        Some(field) => options.has(field) && !get_bool(options, 2)
+        None => false
+      }
     None => false
   }
   {
@@ -582,23 +672,22 @@ fn to_field_proto(message : &@reflect.Message) -> @desc.FieldDescriptorProto {
       "" => None
       text => Some(text)
     },
-    features: @desc.features_auto,
+    features,
     options: [],
   }
 }
 
 ///|
-fn to_enum_proto(message : &@reflect.Message) -> @desc.EnumDescriptorProto {
+fn to_enum_proto(
+  message : &@reflect.Message,
+  parent : @desc.Features,
+) -> @desc.EnumDescriptorProto {
+  let features = @desc.Features::merge(parent, read_features(message, 3, 7))
   let values : Array[@desc.EnumValueDescriptorProto] = []
   for item in get_messages(message, 2) {
     values.push({ name: get_string(item, 1), number: get_int(item, 2), })
   }
-  {
-    name: get_string(message, 1),
-    value: values,
-    features: @desc.features_auto,
-    options: [],
-  }
+  { name: get_string(message, 1), value: values, features, options: [], }
 }
 
 ///|
@@ -637,6 +726,22 @@ pub fn encode_response(
         Some(field) => message.set(field, @reflect.String(text))
         None => ()
       }
+    None => ()
+  }
+  // protobuf refuses to send an editions file to a plugin that does not
+  // advertise editions support. Claim proto3 optional and every edition from
+  // proto2 through 2024; the feature set itself is carried by `syntax` and by
+  // the per-declaration defaults in `desc`.
+  match message.descriptor().field_by_number(2) {
+    Some(field) => message.set(field, @reflect.Uint64(3UL))
+    None => ()
+  }
+  match message.descriptor().field_by_number(3) {
+    Some(field) => message.set(field, @reflect.Int32(998))
+    None => ()
+  }
+  match message.descriptor().field_by_number(4) {
+    Some(field) => message.set(field, @reflect.Int32(1001))
     None => ()
   }
   let file_field = match message.descriptor().field_by_number(15) {
@@ -705,6 +810,18 @@ fn set_bool(message : &@reflect.Message, number : Int32, value : Bool) -> Unit {
 }
 
 ///|
+fn set_child(
+  message : &@reflect.Message,
+  number : Int32,
+  child : &@reflect.Message,
+) -> Unit {
+  match message.descriptor().field_by_number(number) {
+    Some(field) => message.set(field, @reflect.Message(child))
+    None => ()
+  }
+}
+
+///|
 fn add_message(
   message : &@reflect.Message,
   number : Int32,
@@ -713,6 +830,53 @@ fn add_message(
   match message.descriptor().field_by_number(number) {
     Some(field) => message.mutable(field).list().append(@reflect.Message(child))
     None => ()
+  }
+}
+
+///|
+/// The request encoder is the inverse of `decode_request`: it writes the same
+/// unresolved feature sets protoc sends, so a round trip exercises inheritance.
+fn add_features(
+  owner : &@reflect.Message,
+  options_field : Int32,
+  options_name : String,
+  features_field : Int32,
+  features : @desc.Features,
+) -> Unit raise Refused {
+  let options = new_message(options_name)
+  let set = new_message("google.protobuf.FeatureSet")
+  if features.field_presence != 0 {
+    set_int(set, 1, features.field_presence)
+  }
+  if features.enum_type != 0 {
+    set_int(set, 2, features.enum_type)
+  }
+  if features.repeated_field_encoding != 0 {
+    set_int(set, 3, features.repeated_field_encoding)
+  }
+  if features.utf8_validation != 0 {
+    set_int(set, 4, features.utf8_validation)
+  }
+  if features.message_encoding != 0 {
+    set_int(set, 5, features.message_encoding)
+  }
+  if features.json_format != 0 {
+    set_int(set, 6, features.json_format)
+  }
+  set_child(options, features_field, set)
+  set_child(owner, options_field, options)
+}
+
+///|
+fn edition_code(edition : String?) -> Int32 {
+  match edition {
+    Some("proto2") => 998
+    Some("proto3") => 999
+    Some("2023") => 1000
+    Some("2024") => 1001
+    Some("2026") => 1002
+    Some("UNSTABLE") => 9999
+    _ => 0
   }
 }
 
@@ -760,6 +924,7 @@ fn encode_field(
   if field.proto3_optional {
     set_bool(message, 17, true)
   }
+  add_features(message, 8, "google.protobuf.FieldOptions", 21, field.features)
   message
 }
 
@@ -775,6 +940,7 @@ fn encode_enum(
     set_int(value_message, 2, value.number)
     add_message(message, 2, value_message)
   }
+  add_features(message, 3, "google.protobuf.EnumOptions", 7, item.features)
   message
 }
 
@@ -804,6 +970,7 @@ fn encode_message(
   for name in item.reserved_name {
     add_string(message, 10, name)
   }
+  add_features(message, 7, "google.protobuf.MessageOptions", 12, item.features)
   message
 }
 
@@ -852,6 +1019,11 @@ fn encode_file(
   for item in file.extension {
     add_message(message, 7, encode_field(item))
   }
+  let edition = edition_code(file.edition)
+  if edition != 0 {
+    set_int(message, 14, edition)
+  }
+  add_features(message, 8, "google.protobuf.FileOptions", 50, file.features)
   message
 }
 

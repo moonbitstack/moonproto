@@ -1,0 +1,20 @@
+// The MoonBit half of the protoc-gen-go interop check: read the shared text
+// fixture, encode it, and decode the bytes another implementation produced.
+import {
+  "moonbitlang/async",
+  "moonbitlang/async/stdio",
+  "moonbitlang/core/env",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitstack/moonproto/desc",
+  "moonbitstack/moonproto/dynamic",
+  "moonbitstack/moonproto/parser",
+  "moonbitstack/moonproto/proto",
+  "moonbitstack/moonproto/reflect",
+  "moonbitstack/moonproto/text",
+}
+
+pkgtype(kind: "executable")
+
+options(
+  supported_targets: "native",
+)
