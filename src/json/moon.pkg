@@ -11,9 +11,15 @@ import {
 }
 
 import {
+  "moonbitstack/moonproto/desc",
   "moonbitstack/moonproto/dynamic",
+  "moonbitstack/moonproto/parser",
 } for "wbtest"
 
 import {
   "moonbitstack/moonproto/known",
+} for "wbtest"
+
+import {
+  "moonbitstack/moonproto/known/google/protobuf",
 } for "wbtest"
