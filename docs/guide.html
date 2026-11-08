@@ -48,11 +48,10 @@
       <a href="#install"><span class="n">1</span> Install</a>
       <a href="#first-message"><span class="n">2</span> First message</a>
       <a href="#generate"><span class="n">3</span> Generated code</a>
-      <a href="#json"><span class="n">4</span> JSON</a>
-      <a href="#text"><span class="n">5</span> Text</a>
-      <a href="#editions"><span class="n">6</span> Editions</a>
-      <a href="#extensions"><span class="n">7</span> Extensions</a>
-      <a href="#known"><span class="n">8</span> Well-known types</a>
+      <a href="#json"><span class="n">4</span> JSON and text</a>
+      <a href="#editions"><span class="n">5</span> Editions</a>
+      <a href="#extensions"><span class="n">6</span> Extensions</a>
+      <a href="#known"><span class="n">7</span> Well-known types</a>
     </div>
     <div class="rail-group">
       <b>Also</b>
@@ -78,8 +77,13 @@
       <pre>import {
   "moonbitstack/moonproto/desc",
   "moonbitstack/moonproto/dynamic",
+  "moonbitstack/moonproto/json",
+  "moonbitstack/moonproto/known",
+  "moonbitstack/moonproto/known/google/protobuf",
   "moonbitstack/moonproto/parser",
+  "moonbitstack/moonproto/proto",
   "moonbitstack/moonproto/reflect",
+  "moonbitstack/moonproto/text",
 }</pre>
     </div>
 
@@ -113,10 +117,14 @@
   println(<span class="s">"binary bytes: \{bytes.length()}"</span>)
 
   <span class="k">let</span> back = @dynamic.Message::new(descriptor)
-  @proto.decode(bytes, back) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"decode failed"</span>) }
+  @proto.decode(bytes, back) <span class="k">catch</span> {
+    _ =&gt; abort(<span class="s">"decode failed"</span>)
+  }
   println(<span class="s">"name: \{back.get(name).string()}"</span>)
   println(<span class="s">"count: \{back.get(count).int()}"</span>)
   println(<span class="s">"nums: \{back.get(nums).list().length()}"</span>)
+  <span class="k">let</span> again = @proto.encode(back) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"re-encode failed"</span>) }
+  println(<span class="s">"same bytes again: \{again == bytes}"</span>)
 }</pre>
     </div>
 
@@ -151,37 +159,78 @@ same bytes again: true</div>
 
     <p>Read and write through the generated accessors, or through <code>reflect.Message</code> if the code is generic. The struct also registers a <code>MessageType</code>, which is how <code>Any</code> finds its payload.</p>
 
-    <h2 id="json"><span class="tag">4</span> JSON</h2>
-    <p>One message, three encoders. Each walks the same descriptor, so the mapping is written once.</p>
+    <h2 id="json"><span class="tag">4</span> JSON and text</h2>
+    <p>One message, three encoders: each walks the same descriptor, so the mapping is written once. This schema carries a 64-bit integer, a flag and a repeated string, which is where the JSON rules show.</p>
 
     <div class="codeblock">
       <div class="bar"><span class="tag">1</span> main.mbt<span class="grow"></span></div>
-<pre><span class="k">let</span> as_json = @json.encode(message) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"JSON failed"</span>) }
-println(<span class="s">"json: \{as_json}"</span>)
+<pre><span class="k">const</span> REPORT : String = <span class="s">"syntax = \"proto3\";\n"</span> +
+  <span class="s">"package report;\n"</span> +
+  <span class="s">"message Line { string title = 1; int64 total = 2; bool active = 3; repeated string tags = 4; }\n"</span>
 
-<span class="k">let</span> from_json = @dynamic.Message::new(descriptor)
-@json.decode(as_json, from_json) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"JSON decode failed"</span>) }</pre>
+<span class="k">fn</span> main {
+  @known.register_all()
+  <span class="k">let</span> parsed = @parser.parse(<span class="s">"report.proto"</span>, REPORT) <span class="k">catch</span> {
+    _ =&gt; abort(<span class="s">"bad schema"</span>)
+  }
+  <span class="k">let</span> built = @desc.build_file(parsed) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"bad descriptor"</span>) }
+  <span class="k">let</span> descriptor = built.messages[0]
+  <span class="k">let</span> message = @dynamic.Message::new(descriptor)
+
+  <span class="k">let</span> title = descriptor.field_by_name(<span class="s">"title"</span>).unwrap()
+  <span class="k">let</span> total = descriptor.field_by_name(<span class="s">"total"</span>).unwrap()
+  <span class="k">let</span> active = descriptor.field_by_name(<span class="s">"active"</span>).unwrap()
+  <span class="k">let</span> tags = descriptor.field_by_name(<span class="s">"tags"</span>).unwrap()
+  message.set(title, @reflect.String(<span class="s">"quarterly"</span>))
+  message.set(total, @reflect.Int64(10_000_000_000L))
+  message.set(active, @reflect.Bool(true))
+  message.mutable(tags).list().append(@reflect.String(<span class="s">"proto"</span>))
+
+  <span class="k">let</span> binary = @proto.encode(message) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"binary failed"</span>) }
+  println(<span class="s">"binary: \{binary.length()} bytes"</span>)
+  <span class="k">let</span> as_json = @json.encode(message) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"JSON failed"</span>) }
+  println(<span class="s">"json: \{as_json}"</span>)
+  <span class="k">let</span> as_text = @text.encode(message) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"text failed"</span>) }
+  println(<span class="s">"text: \{as_text}"</span>)
+
+  <span class="c">// Each format parses back into a fresh message of the same descriptor.</span>
+  <span class="k">let</span> from_json = @dynamic.Message::new(descriptor)
+  @json.decode(as_json, from_json) <span class="k">catch</span> {
+    _ =&gt; abort(<span class="s">"JSON decode failed"</span>)
+  }
+  println(<span class="s">"total from JSON: \{from_json.get(total).int()}"</span>)
+  <span class="k">let</span> from_text = @dynamic.Message::new(descriptor)
+  @text.decode(as_text, from_text) <span class="k">catch</span> {
+    _ =&gt; abort(<span class="s">"text decode failed"</span>)
+  }
+  println(<span class="s">"title from text: \{from_text.get(title).string()}"</span>)
+  <span class="k">let</span> from_binary = @dynamic.Message::new(descriptor)
+  @proto.decode(binary, from_binary) <span class="k">catch</span> {
+    _ =&gt; abort(<span class="s">"binary decode failed"</span>)
+  }
+  <span class="k">let</span> agree = @proto.equal(from_json, from_binary) &amp;&amp;
+    @proto.equal(from_text, from_binary)
+  println(<span class="s">"all three agree: \{agree}"</span>)
+}</pre>
     </div>
 
-    <div class="output">json: {"title":"quarterly","total":"10000000000","active":true,"tags":["proto"]}</div>
-
-    <p>64-bit integers are strings in both directions. Enums travel by name, bytes in base64, and a field without presence is left out when it holds its zero value.</p>
-
-    <h2 id="text"><span class="tag">5</span> Text</h2>
-    <p>The text format reads the same values, with its own grammar: groups, lists, semicolons and comments all work.</p>
-
-    <div class="codeblock">
-      <div class="bar"><span class="tag">1</span> main.mbt<span class="grow"></span></div>
-<pre><span class="k">let</span> as_text = @text.encode(message) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"text failed"</span>) }
-println(as_text)</pre>
-    </div>
-
-    <div class="output">title: "quarterly"
+    <div class="output">binary: 26 bytes
+json: {"title":"quarterly","total":"10000000000","active":true,"tags":["proto"]}
+text: title: "quarterly"
 total: 10000000000
 active: true
-tags: "proto"</div>
+tags: "proto"
 
-    <h2 id="editions"><span class="tag">6</span> Editions</h2>
+total from JSON: 10000000000
+title from text: quarterly
+all three agree: true</div>
+
+    <p>64-bit integers are strings in both directions. Enums travel by name, bytes in base64, and a field without presence is left out when it holds its zero value.</p>
+    <p>The text format is the one that reads as well as writes, and its grammar is wider than JSON's: fields separated by commas, semicolons or newlines, one element per repeated name, groups, octal and hexadecimal literals, and comments. Hand it <code>title: "quarterly", total: 10000000000, tags: "proto" tags: "wire"</code> and the encoder writes the two tags back one per line.</p>
+
+
+
+    <h2 id="editions"><span class="tag">5</span> Editions</h2>
     <p>Edition 2023 and 2024 schemas are read the same way. Features resolve from the innermost declaration outward, so a file-level default can be overridden per field.</p>
 
     <div class="codeblock">
@@ -199,7 +248,7 @@ tags: "proto"</div>
 
     <p>With <code>field_presence = IMPLICIT</code> a scalar is generated as <code>Int32</code>; without it, as <code>Int32?</code>. <code>repeated_field_encoding</code> decides whether a repeated scalar is packed on the wire.</p>
 
-    <h2 id="extensions"><span class="tag">7</span> Extensions</h2>
+    <h2 id="extensions"><span class="tag">6</span> Extensions</h2>
     <p>An extension lives in the message's extension range and is named in brackets in text and JSON. The binary encoding is the same as any other field.</p>
 
     <div class="codeblock">
@@ -219,13 +268,18 @@ tags: "proto"</div>
 
     <p>In text form the field is <code>[events.annotation]: "..."</code>; in JSON the key is the same bracketed name. A decoder resolves an unknown field number against the extension registry before it decides the bytes are unknown.</p>
 
-    <h2 id="known"><span class="tag">8</span> Well-known types</h2>
+    <h2 id="known"><span class="tag">7</span> Well-known types</h2>
     <p>The <code>google.protobuf</code> types ship with the module, generated from the schemas the protobuf release carries. Register them once and <code>Any</code>, <code>Timestamp</code>, <code>Duration</code>, <code>FieldMask</code> and the wrapper types use their own JSON forms.</p>
 
     <div class="codeblock">
       <div class="bar"><span class="tag">1</span> main.mbt<span class="grow"></span></div>
-<pre>@known.register_all()</pre>
+<pre>@known.register_all()
+<span class="k">let</span> stamp = @protobuf.Timestamp::new()
+stamp.set_seconds(1_700_000_000L)
+println(@json.encode(stamp) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"JSON failed"</span>) })</pre>
     </div>
+
+    <div class="output">"2023-11-14T22:13:20Z"</div>
 
     <p>Without that call the descriptors are still available, but <code>Any</code> cannot resolve a payload and a timestamp prints as its two integer fields rather than as an RFC 3339 string.</p>
 
@@ -240,11 +294,10 @@ tags: "proto"</div>
     <a href="#install">1 Install</a>
     <a href="#first-message">2 First message</a>
     <a href="#generate">3 Generated code</a>
-    <a href="#json">4 JSON</a>
-    <a href="#text">5 Text</a>
-    <a href="#editions">6 Editions</a>
-    <a href="#extensions">7 Extensions</a>
-    <a href="#known">8 Well-known types</a>
+    <a href="#json">4 JSON and text</a>
+    <a href="#editions">5 Editions</a>
+    <a href="#extensions">6 Extensions</a>
+    <a href="#known">7 Well-known types</a>
   </aside>
 
 </div>

@@ -27,6 +27,20 @@ jobs:
         with:
           python-version: "3.13"
 
+      - name: install moonbit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      # The playground computes its bytes, JSON and text with this library built
+      # to JavaScript. The build product is not committed.
+      - name: build the playground engine
+        run: |
+          moon update
+          moon build --target js --release src/examples/browser
+          mkdir -p docs/engine
+          cp _build/js/release/build/examples/browser/browser.js docs/engine/moonproto.js
+
       # The reference page is generated. A stale page means the site is wrong,
       # so the build stops before anything is published.
       - name: api reference is current

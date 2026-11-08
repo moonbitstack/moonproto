@@ -1,0 +1,16 @@
+// The playground's engine: this library built to JavaScript for the site.
+// https://moonbitlang.github.io/moonbit-docs/toolchain/package-management/
+import {
+  "moonbitlang/core/json" @cjson,
+  "moonbitstack/moonproto/desc",
+  "moonbitstack/moonproto/dynamic",
+  "moonbitstack/moonproto/json",
+  "moonbitstack/moonproto/parser",
+  "moonbitstack/moonproto/proto",
+  "moonbitstack/moonproto/reflect",
+  "moonbitstack/moonproto/text",
+}
+
+options(
+  link: { "js": { "exports": [ "sample" ], "format": "esm" } },
+)

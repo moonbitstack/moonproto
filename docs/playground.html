@@ -83,57 +83,7 @@
           <button type="button" role="tab" data-format="text" aria-selected="false">text</button>
         </div>
       </div>
-<pre data-view="bytes" data-sample="full"><span class="c">17 bytes</span>
-08 2a 12 04 6d 6f 6f 6e 1a 05 0a 01 61 10 01 20 01
-
-<span class="c">08</span>  <span class="c">tag</span>  field 1, varint
-<span class="c">2a</span>  <span class="c">value</span> 42
-<span class="c">12</span>  <span class="c">tag</span>  field 2, length-delimited
-<span class="c">04</span>  <span class="c">len</span>  4 bytes
-<span class="c">1a</span>  <span class="c">tag</span>  field 3, message
-<span class="c">05</span>  <span class="c">len</span>  5 bytes
-<span class="c">20</span>  <span class="c">tag</span>  field 4, varint</pre>
-<pre data-view="json" data-sample="full" hidden>{
-  "id": 42,
-  "name": "moon",
-  "counts": {
-    "a": 1
-  },
-  "color": "BLUE"
-}</pre>
-<pre data-view="text" data-sample="full" hidden>id: 42
-name: "moon"
-counts {
-  key: "a"
-  value: 1
-}
-color: BLUE</pre>
-
-<pre data-view="bytes" data-sample="empty" hidden><span class="c">0 bytes</span>
-
-<span class="c">every field holds its default, so nothing is written</span></pre>
-<pre data-view="json" data-sample="empty" hidden>{}</pre>
-<pre data-view="text" data-sample="empty" hidden><span class="c">empty</span></pre>
-
-<pre data-view="bytes" data-sample="unicode" hidden><span class="c">17 bytes</span>
-08 07 12 03 e6 9c 88 1a 05 0a 01 62 10 02 20 01
-
-<span class="c">e6 9c 88</span>  "月" in UTF-8, three bytes for one character</pre>
-<pre data-view="json" data-sample="unicode" hidden>{
-  "id": 7,
-  "name": "月",
-  "counts": {
-    "b": 2
-  },
-  "color": "BLUE"
-}</pre>
-<pre data-view="text" data-sample="unicode" hidden>id: 7
-name: "月"
-counts {
-  key: "b"
-  value: 2
-}
-color: BLUE</pre>
+      <pre data-out><span class="c">starting the engine</span></pre>
     </section>
   </div>
 
@@ -176,23 +126,69 @@ color: BLUE</pre>
 </footer>
 
 <script src="assets/site.js"></script>
-<script>
+<script type="module">
+  /* The engine is this library built to JavaScript; the page only chooses a
+     sample and a view. Nothing below computes protobuf. */
   const sampleButtons = document.querySelectorAll("[data-sample]");
   const formatButtons = document.querySelectorAll("[data-format]");
+  const out = document.querySelector("[data-out]");
   let sample = "full";
   let format = "bytes";
+  let engine = null;
+  let failed = false;
 
-  const paint = () => {
-    for (const el of document.querySelectorAll("pre[data-view]")) {
-      el.hidden = el.dataset.view !== format || el.dataset.sample !== sample;
-    }
-    for (const b of sampleButtons) b.setAttribute("aria-pressed", String(b.dataset.sample === sample));
-    for (const b of formatButtons) b.setAttribute("aria-selected", String(b.dataset.format === format));
+  const escape = (text) =>
+    text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  const wrap = (bytes) => {
+    const parts = bytes.length ? bytes.split(" ") : [];
+    if (!parts.length) return "";
+    const lines = [];
+    for (let i = 0; i < parts.length; i += 8) lines.push(parts.slice(i, i + 8).join(" "));
+    return lines.join("\n");
   };
 
-  for (const b of sampleButtons) b.addEventListener("click", () => { sample = b.dataset.sample; paint(); });
-  for (const b of formatButtons) b.addEventListener("click", () => { format = b.dataset.format; paint(); });
+  const paint = () => {
+    for (const b of sampleButtons) b.setAttribute("aria-pressed", String(b.dataset.sample === sample));
+    for (const b of formatButtons) b.setAttribute("aria-selected", String(b.dataset.format === format));
+    if (failed) {
+      out.innerHTML = '<span class="c">the engine did not load</span>';
+      return;
+    }
+    if (!engine) {
+      out.innerHTML = '<span class="c">starting the engine</span>';
+      return;
+    }
+    const result = JSON.parse(engine.sample(sample));
+    let head;
+    let body;
+    if (format === "bytes") {
+      head = result.length + (result.length === 1 ? " byte" : " bytes");
+      body = result.length
+        ? wrap(result.bytes)
+        : "nothing is written: every field holds its default";
+    } else if (format === "json") {
+      head = "JSON";
+      body = result.json;
+    } else {
+      head = "text";
+      body = result.text.length ? result.text.replace(/\n$/, "") : "empty message";
+    }
+    out.innerHTML =
+      '<span class="c">' + escape(head) + "</span>\n" + escape(body);
+  };
+
+  for (const b of sampleButtons) {
+    b.addEventListener("click", () => { sample = b.dataset.sample; paint(); });
+  }
+  for (const b of formatButtons) {
+    b.addEventListener("click", () => { format = b.dataset.format; paint(); });
+  }
+
   paint();
+  import("./engine/moonproto.js")
+    .then((m) => { engine = m; paint(); })
+    .catch(() => { failed = true; paint(); });
 </script>
 </body>
 </html>
