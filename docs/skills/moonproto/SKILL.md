@@ -41,8 +41,10 @@ let message = @dynamic.Message::new(descriptor)
 let name = descriptor.field_by_name("name").unwrap()
 message.set(name, @reflect.String("moon"))
 let bytes = @proto.encode(message) catch { _ => abort("encode failed") }
+assert_eq(bytes.length(), 6)
 let back = @dynamic.Message::new(descriptor)
 @proto.decode(bytes, back) catch { _ => abort("decode failed") }
+assert_eq(back.get(name).string(), "moon")
 ```
 
 ## Move between JSON and binary
@@ -53,8 +55,10 @@ types need their descriptors registered once:
 ```mbt
 @known.register_all()
 let text = @json.encode(message) catch { _ => abort("bad JSON output") }
+assert_eq(text, "{\"name\":\"moon\"}")
 let from_json = @dynamic.Message::new(descriptor)
 @json.decode(text, from_json) catch { _ => abort("bad JSON input") }
+assert_eq(from_json.get(name).string(), "moon")
 ```
 
 ## Generate real MoonBit structs
@@ -76,7 +80,8 @@ reaching into the struct from another package.
 `edition = "2023"` and `edition = "2024"` are supported. Features are resolved
 from the innermost declaration outward, so a file-level
 `option features.field_presence = IMPLICIT` changes the generated field types
-from `T?` to `T`.
+from `T?` to `T`. A proto3 field needs the `optional` keyword to get `T?`; a
+field written without a label holds a plain `T`.
 
 ## Rules that catch people out
 
@@ -89,11 +94,17 @@ from `T?` to `T`.
   their zero value, even if the input mentioned them. Set
   `emit_default_values` in the marshal options to force them out.
 - Enum names in JSON and text need the enum's file descriptor in
-  `reflect.global_files`. Register well-known types with `@known.register_all()`
-  before using `Any`, `Timestamp`, `Duration`, `FieldMask` or `Struct`.
-- A `FieldMask` path is lowerCamelCase in JSON and snake_case in the message.
-  Underscores are not valid in its JSON form.
+  `reflect.global_files`; without it the encoder writes the number. Register a
+  schema read by `parser` with `reflect.global_files.register(file)`, and the
+  well-known types with `@known.register_all()`, before using `Any`,
+  `Timestamp`, `Duration`, `FieldMask` or `Struct`.
+- A `FieldMask` is one comma-separated string in JSON, and each path is
+  lowerCamelCase there and snake_case in the message: `"userName"` reads as
+  `user_name` and writes back as `"userName"`. An underscore or a space in the
+  JSON form is refused.
 - Only one member of a oneof may be set per JSON object. On the binary wire the
   last member wins.
 - Generated struct fields are private to their package. Code in another package
   must use the generated accessors or the `reflect.Message` trait.
+- A received message may nest up to `recursion_limit` deep (10 000 by default);
+  lower it in the unmarshal options to stop a hostile message early.
