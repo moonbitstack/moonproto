@@ -831,6 +831,9 @@ fn parse_field(
       )
     }
   }
+  // Only the `optional` keyword asks for presence in proto3; a field written
+  // without a label has none, which is why label 1 alone cannot decide it.
+  let explicit_optional = first == "optional"
   let word = parser.read_ident()
   if word == "group" {
     return parse_group(parser, scope, syntax, label, oneof_index)
@@ -860,6 +863,7 @@ fn parse_field(
       type_name,
       oneof_index,
       false,
+      explicit_optional~,
       inherited~,
     ),
     [],
@@ -875,6 +879,7 @@ fn parse_field_tail(
   type_word : String,
   oneof_index : Int32?,
   is_group : Bool,
+  explicit_optional~ : Bool = false,
   inherited~ : @desc.Features = @desc.features_auto,
 ) -> @desc.FieldDescriptorProto raise Refused {
   let name = parser.read_ident()
@@ -889,7 +894,10 @@ fn parse_field_tail(
     Some(code) => (code, None)
     None => (if is_group { 10 } else { 0 }, Some(type_word))
   }
-  let proto3_optional = syntax == "proto3" && label == 1 && oneof_index is None
+  let proto3_optional = syntax == "proto3" &&
+    explicit_optional &&
+    label == 1 &&
+    oneof_index is None
   let _ = scope
   make_field(
     lower_first_if_group(name, is_group),
