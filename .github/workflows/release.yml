@@ -77,8 +77,7 @@ jobs:
             https://api.github.com/repos/moonbitstack/moonbitstack.github.io/dispatches \
             -d '{"event_type":"released"}'
 
-  # Its own job: the module is already out by now, so rerunning a failure here
-  # must not publish it a second time.
+  # Its own job: the module is already out by now, so rerunning a failure here must not publish it again.
   skills:
     needs: publish
     runs-on: ubuntu-26.04
