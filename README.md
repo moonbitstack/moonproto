@@ -85,15 +85,60 @@ change the generated struct shape, the packing on the wire and enum openness.
 Descriptors are plain records. `desc` builds them from the descriptor shape;
 the encoders walk the descriptor and never look at a struct's layout.
 Cross-type references are fully-qualified names resolved through a symbol table
-when the file is built.
+when the file is built. A schema can therefore be read, filled and encoded with
+no generated code at all:
 
-<!-- nocheck -->
 ```mbt
-let msg = HelloRequest::new()
-msg.set_name("moon")
-let bytes = @proto.encode(msg)
-let back = HelloRequest::new()
-@proto.decode(bytes, back)
+let schema =
+  "syntax = \"proto3\";\n" +
+  "package hello;\n" +
+  "message Request { string name = 1; int32 count = 2; repeated int32 nums = 3; }\n"
+let parsed = @parser.parse("hello.proto", schema) catch { _ => abort("bad schema") }
+let file = @desc.build_file(parsed) catch { _ => abort("bad descriptor") }
+let request = file.messages[0]
+assert_eq(request.full_name, "hello.Request")
+assert_eq(request.fields.length(), 3)
+```
+
+A dynamic message holds the values, and every encoder takes the same
+`reflect.Message`:
+
+```mbt
+let message = @dynamic.Message::new(request)
+let name = request.field_by_name("name").unwrap()
+message.set(name, @reflect.String("moon"))
+let bytes = @proto.encode(message) catch { _ => abort("encode failed") }
+assert_eq(bytes.length(), 6)
+
+let back = @dynamic.Message::new(request)
+@proto.decode(bytes, back) catch { _ => abort("decode failed") }
+assert_eq(back.get(name).string(), "moon")
+```
+
+The JSON mapping is the same walk with the mapping rules applied — 64-bit
+integers as strings, enums by name, bytes in base64:
+
+```mbt
+let json = @json.encode(message) catch { _ => abort("JSON failed") }
+assert_eq(json, "{\"name\":\"moon\"}")
+```
+
+The text format carries the same values with its own grammar:
+
+```mbt
+let text = @text.encode(message) catch { _ => abort("text failed") }
+assert_eq(text, "name: \"moon\"\n")
+```
+
+A generated message takes the same path. A well-known type is a generated
+message like any other, and it brings its own JSON form:
+
+```mbt
+@known.register_all()
+let stamp = @protobuf.Timestamp::new()
+stamp.set_seconds(1_700_000_000L)
+let stamp_json = @json.encode(stamp) catch { _ => abort("JSON failed") }
+assert_eq(stamp_json, "\"2023-11-14T22:13:20Z\"")
 ```
 
 ## Parsing and generating
@@ -197,6 +242,7 @@ source file before it exits.
 | `scripts/interop-go.sh` | Go and MoonBit encode and decode each other's bytes |
 | `scripts/mutation-check.sh` | the three mutation checks above |
 | `scripts/generate-known.sh` | regenerates the well-known package from the protobuf includes |
+| `scripts/check_snippets.py` | every MoonBit block in this file and in the skill compiles against the source |
 
 ## Design notes
 
