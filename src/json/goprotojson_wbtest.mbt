@@ -131,5 +131,7 @@ test "protojson: a FieldMask path changes from camel case to snake case" {
   decode("{\"mask\":\"foo,barBaz\"}", m)
   let paths = m.get(mask).message().descriptor().field_by_number(1)
   assert_true(paths is Some(_))
-  assert_eq(encode(m), "{\"mask\":\"foo,bar_baz\"}")
+  // The path is snake_case inside the message and lowerCamelCase on the wire,
+  // in both directions: the encoder gives the input back.
+  assert_eq(encode(m), "{\"mask\":\"foo,barBaz\"}")
 }

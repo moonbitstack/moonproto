@@ -483,7 +483,7 @@ fn field_mask_to_json(message : &@reflect.Message) -> @cjson.Json {
         let list = message.get(field).list()
         let parts : Array[String] = []
         for i in 0..<list.length() {
-          parts.push(list.get(i).string())
+          parts.push(field_mask_json_path(list.get(i).string()))
         }
         @cjson.Json::string(join_strings(parts))
       } else {
@@ -1301,11 +1301,17 @@ fn field_mask_from_json(
   }
   match message.descriptor().field_by_number(1) {
     Some(field) => {
-      let list = message.mutable(field).list()
+      // Every path is read before any is stored, so a malformed path leaves the
+      // message as it was.
+      let paths : Array[String] = []
       if text.length() > 0 {
         for part in text.split(",") {
-          list.append(@reflect.String(field_mask_path(part)))
+          paths.push(field_mask_path(part))
         }
+      }
+      let list = message.mutable(field).list()
+      for path in paths {
+        list.append(@reflect.String(path))
       }
     }
     None => ()
@@ -1314,7 +1320,8 @@ fn field_mask_from_json(
 
 ///|
 /// A FieldMask path is lowerCamelCase in JSON and snake_case in the message.
-/// Underscores and non-alphanumeric characters are not valid in the JSON form.
+/// The dots between segments are part of the path in both forms; underscores
+/// and other characters are not valid in the JSON form.
 fn field_mask_path(text : StringView) -> String raise Refused {
   let mut result = ""
   let mut i = 0
@@ -1322,12 +1329,38 @@ fn field_mask_path(text : StringView) -> String raise Refused {
     let code = text[i].to_int()
     if code >= 65 && code <= 90 {
       result = result + "_" + (code + 32).unsafe_to_char().to_string()
-    } else if (code >= 97 && code <= 122) || (code >= 48 && code <= 57) {
+    } else if (code >= 97 && code <= 122) ||
+      (code >= 48 && code <= 57) ||
+      code == 46 {
       result = result + code.unsafe_to_char().to_string()
     } else {
       raise BadValue("field mask")
     }
     i = i + 1
+  }
+  result
+}
+
+///|
+/// The other direction of `field_mask_path`: an underscore starts a capital in
+/// the JSON form, and the dots stay where they were.
+fn field_mask_json_path(path : String) -> String {
+  let mut result = ""
+  let mut capital = false
+  for ch in path {
+    let code = ch.to_int()
+    if code == 95 {
+      capital = true
+    } else if code == 46 {
+      result = result + "."
+      capital = false
+    } else if capital && code >= 97 && code <= 122 {
+      result = result + (code - 32).unsafe_to_char().to_string()
+      capital = false
+    } else {
+      result = result + ch.to_string()
+      capital = false
+    }
   }
   result
 }
