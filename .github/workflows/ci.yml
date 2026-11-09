@@ -51,6 +51,13 @@ jobs:
           moon version --all
           moon update
 
+      # The release host answers 504 for hours at a time; once a binary is
+      # cached the build no longer depends on it.
+      - uses: actions/cache@v6
+        with:
+          path: .cache/protoc-36.2
+          key: protoc-36.2-${{ runner.os }}-${{ runner.arch }}
+
       - name: pin protoc 36.2
         run: |
           # A failed download fails this step: inside `eval "$(...)"` it would be
