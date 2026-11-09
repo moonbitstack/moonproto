@@ -53,9 +53,10 @@ jobs:
 
       - name: pin protoc 36.2
         run: |
-          eval "$(bash scripts/setup-protoc.sh)"
-          echo "PROTOC=$PROTOC" >> "$GITHUB_ENV"
-          echo "PROTOC_INCLUDE=$PROTOC_INCLUDE" >> "$GITHUB_ENV"
+          # A failed download fails this step: inside `eval "$(...)"` it would be
+          # swallowed and only surface later as a missing protoc.
+          bash scripts/setup-protoc.sh > "$RUNNER_TEMP/protoc.env"
+          cat "$RUNNER_TEMP/protoc.env" >> "$GITHUB_ENV"
 
       - name: moon check
         run: moon check --target all --deny-warn

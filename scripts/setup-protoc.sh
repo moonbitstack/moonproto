@@ -40,7 +40,8 @@ if [ ! -x "$protoc" ]; then
   mkdir -p "$dest"
   zip="$dest/protoc.zip"
   url="https://github.com/protocolbuffers/protobuf/releases/download/v${version}/protoc-${version}-${asset}.zip"
-  curl -fsSL "$url" -o "$zip"
+  # the release host answers 5xx now and then; a retry is cheaper than a red build
+  curl -fsSL --retry 5 --retry-delay 3 --retry-all-errors "$url" -o "$zip"
   if command -v unzip >/dev/null 2>&1; then
     unzip -q -o "$zip" -d "$dest"
   elif command -v python3 >/dev/null 2>&1; then
