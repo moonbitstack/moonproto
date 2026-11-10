@@ -17,6 +17,7 @@ pub struct Symbols {
 }
 
 ///|
+/// An empty table; `add_file` fills it, one file at a time.
 pub fn Symbols::new() -> Symbols {
   { types: Map([]), }
 }

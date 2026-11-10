@@ -105,7 +105,7 @@ pub(all) struct Limits {
 }
 
 ///|
-/// The reference defaults: ten thousand levels, and no practical byte ceiling.
+/// The defaults: ten thousand levels of nesting, and no practical byte ceiling.
 pub let limits : Limits = { depth: 10000, size: 0x7FFF_FFFF, }
 
 ///|

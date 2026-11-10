@@ -2,16 +2,22 @@
 // as the stream carries.
 
 ///|
+/// A byte sink: the library writes the prefix and the body through it, so a
+/// message can go to a socket, a file or a buffer without being assembled first.
 pub(open) trait Writer {
   fn write(Self, BytesView) -> Unit raise Refused
 }
 
 ///|
+/// A byte source that can also say it has ended: the prefix is read one byte at
+/// a time, and a stream that stops inside a prefix or a body is refused rather
+/// than treated as the end of the stream.
 pub(open) trait Reader {
   fn read_byte(Self) -> Int32?
 }
 
 ///|
+/// How a framed message is written: the binary options, passed through.
 pub(all) struct MarshalOptions {
   marshal : @proto.MarshalOptions
 }
@@ -20,6 +26,9 @@ pub(all) struct MarshalOptions {
 pub let marshal_options : MarshalOptions = { marshal: @proto.marshal_options, }
 
 ///|
+/// How a framed message is read. `max_size` is 4 MiB by default, the ceiling a
+/// request over a shared connection is usually given; zero means the same
+/// default and a negative value means no ceiling.
 pub(all) struct UnmarshalOptions {
   unmarshal : @proto.UnmarshalOptions
   max_size : Int32
@@ -32,10 +41,15 @@ pub let unmarshal_options : UnmarshalOptions = {
 }
 
 ///|
+/// A framing refusal. A refusal from either lower layer travels as a payload.
 pub(all) suberror Refused {
+  /// The prefix is not a valid varint.
   Wire(@wire.Refused)
+  /// The body is not a valid message.
   Proto(@proto.Refused)
+  /// The prefix announced a body larger than `max_size`.
   Size(Int32, Int32)
+  /// The stream ended inside a prefix or a body.
   Truncated
 }
 
@@ -56,7 +70,8 @@ pub impl Show for Refused with fn output(self, logger) {
 pub extend Refused with Show::{to_string, output}
 
 ///|
-/// Write one size-delimited message, returning the bytes written.
+/// Write one size-delimited message, returning the number of bytes written: the
+/// varint prefix and the body together.
 pub fn[M : @reflect.Message] encode_to(
   writer : &Writer,
   message : M,
@@ -74,7 +89,8 @@ pub fn[M : @reflect.Message] encode_to(
 }
 
 ///|
-/// Read one size-delimited message into `message`.
+/// Read one size-delimited message into `message`, refusing a prefix that
+/// announces more than `max_size` before any of the body is read.
 pub fn[M : @reflect.Message] decode_from(
   reader : &Reader,
   message : M,

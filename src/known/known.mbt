@@ -66,6 +66,11 @@ fn find_in(
 ///|
 /// Register every well-known type, so the codecs can resolve a message by name.
 /// Registering twice is harmless.
+///
+/// The well-known types are ordinary generated messages and nothing about them
+/// is special-cased in the message model: `Any` keeps its payload as bytes and
+/// only the JSON and text encoders expand it, and the canonical forms of
+/// `Timestamp` and `Duration` live in the encoders, keyed by full name.
 pub fn register_all() -> Unit {
   let all = files() catch { _ => [] }
   let descriptors = all +

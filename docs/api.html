@@ -274,9 +274,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">limits</span><span class="sdoc">The reference defaults: ten thousand levels, and no practical byte ceiling.</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">limits</span><span class="sdoc">The defaults: ten thousand levels of nesting, and no practical byte ceiling.</span></summary>
         <div class="sym-body">
-          <p>The reference defaults: ten thousand levels, and no practical byte ceiling.</p><pre class="sig">pub let limits : Limits</pre>
+          <p>The defaults: ten thousand levels of nesting, and no practical byte ceiling.</p><pre class="sig">pub let limits : Limits</pre>
         </div>
       </details>
       <details class="sym">
@@ -297,27 +297,27 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">EnumDescriptor</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">EnumDescriptor</span><span class="sdoc">An enum: the values it declares, and whether it is closed</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct EnumDescriptor</pre><div>name : String</div><div>full_name : String</div><div>values : Array[EnumValueDescriptor]</div><div>closed : Bool</div><div>file_path : String</div>
+          <p>An enum: the values it declares, and whether it is closed. A closed enum refuses a number it does not declare; an open one carries it through, which is what lets a sender add values without breaking an older reader.</p><pre class="sig">pub(all) struct EnumDescriptor</pre><div>name : String</div><div>full_name : String</div><div>values : Array[EnumValueDescriptor]</div><div>closed : Bool</div><div>file_path : String</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">EnumValueDescriptor</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">EnumValueDescriptor</span><span class="sdoc">One value an enum declares: the short name a schema writes, its number, and the qualified nam…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct EnumValueDescriptor</pre><div>name : String</div><div>number : Int32</div><div>full_name : String</div>
+          <p>One value an enum declares: the short name a schema writes, its number, and the qualified name that includes the enum.</p><pre class="sig">pub(all) struct EnumValueDescriptor</pre><div>name : String</div><div>number : Int32</div><div>full_name : String</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">FieldDescriptor</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">FieldDescriptor</span><span class="sdoc">One field: the number that identifies it on the wire, its kind, how often it may appear, its…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct FieldDescriptor</pre><div>name : String</div><div>full_name : String</div><div>number : Int32</div><div>kind : Kind</div><div>cardinality : Cardinality</div><div>json_name : String</div><div>text_name : String</div><div>has_presence : Bool</div><div>is_extension : Bool</div><div>is_map : Bool</div><div>packed : Bool</div><div>oneof_index : Int32?</div><div>message_type : String?</div><div>enum_type : String?</div>
+          <p>One field: the number that identifies it on the wire, its kind, how often it may appear, its two names, and the types it refers to by qualified name. A map field is not a kind of its own: it is a repeated field whose element is a generated entry message, so `is_map` says which reading applies and `map_key_field` and `map_value_field` describe the entry.</p><pre class="sig">pub(all) struct FieldDescriptor</pre><div>name : String</div><div>full_name : String</div><div>number : Int32</div><div>kind : Kind</div><div>cardinality : Cardinality</div><div>json_name : String</div><div>text_name : String</div><div>has_presence : Bool</div><div>is_extension : Bool</div><div>is_map : Bool</div><div>packed : Bool</div><div>oneof_index : Int32?</div><div>message_type : String?</div><div>enum_type : String?</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">FileDescriptor</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">FileDescriptor</span><span class="sdoc">One `.proto` file: what it declares, what it imports, and the options written on each declara…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct FileDescriptor</pre><div>path : String</div><div>package_name : String</div><div>syntax : Syntax</div><div>messages : Array[MessageDescriptor]</div><div>enums : Array[EnumDescriptor]</div><div>services : Array[ServiceDescriptor]</div><div>extensions : Array[FieldDescriptor]</div><div>dependencies : Array[String]</div><div>public_dependencies : Array[String]</div><div>edition : String?</div><div>option_map : Array[(String, Array[(String, String)])]</div>
+          <p>One `.proto` file: what it declares, what it imports, and the options written on each declaration. Declarations refer to one another by qualified name rather than by pointer, so a file can be built from the descriptor shape, walked, and converted back without a cycle.</p><pre class="sig">pub(all) struct FileDescriptor</pre><div>path : String</div><div>package_name : String</div><div>syntax : Syntax</div><div>messages : Array[MessageDescriptor]</div><div>enums : Array[EnumDescriptor]</div><div>services : Array[ServiceDescriptor]</div><div>extensions : Array[FieldDescriptor]</div><div>dependencies : Array[String]</div><div>public_dependencies : Array[String]</div><div>edition : String?</div><div>option_map : Array[(String, Array[(String, String)])]</div>
         </div>
       </details>
       <details class="sym">
@@ -327,21 +327,21 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">MessageDescriptor</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">MessageDescriptor</span><span class="sdoc">A message: its fields, the oneofs they belong to, the numbers and names it reserves, the rang…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct MessageDescriptor</pre><div>name : String</div><div>full_name : String</div><div>syntax : Syntax</div><div>fields : Array[FieldDescriptor]</div><div>oneofs : Array[OneofDescriptor]</div><div>is_map_entry : Bool</div><div>reserved_names : Array[String]</div><div>reserved_ranges : Array[(Int32, Int32)]</div><div>required_numbers : Array[Int32]</div><div>extension_ranges : Array[(Int32, Int32)]</div><div>nested_messages : Array[MessageDescriptor]</div><div>nested_enums : Array[EnumDescriptor]</div><div>nested_extensions : Array[FieldDescriptor]</div><div>file_path : String</div>
+          <p>A message: its fields, the oneofs they belong to, the numbers and names it reserves, the ranges an extension may occupy, and its nested declarations. A map entry is a message like any other with `is_map_entry` set.</p><pre class="sig">pub(all) struct MessageDescriptor</pre><div>name : String</div><div>full_name : String</div><div>syntax : Syntax</div><div>fields : Array[FieldDescriptor]</div><div>oneofs : Array[OneofDescriptor]</div><div>is_map_entry : Bool</div><div>reserved_names : Array[String]</div><div>reserved_ranges : Array[(Int32, Int32)]</div><div>required_numbers : Array[Int32]</div><div>extension_ranges : Array[(Int32, Int32)]</div><div>nested_messages : Array[MessageDescriptor]</div><div>nested_enums : Array[EnumDescriptor]</div><div>nested_extensions : Array[FieldDescriptor]</div><div>file_path : String</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">MethodDescriptor</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">MethodDescriptor</span><span class="sdoc">One method of a service: the messages it takes and returns, and whether either side may send…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct MethodDescriptor</pre><div>name : String</div><div>full_name : String</div><div>input_type : String</div><div>output_type : String</div><div>streaming_client : Bool</div><div>streaming_server : Bool</div>
+          <p>One method of a service: the messages it takes and returns, and whether either side may send a stream.</p><pre class="sig">pub(all) struct MethodDescriptor</pre><div>name : String</div><div>full_name : String</div><div>input_type : String</div><div>output_type : String</div><div>streaming_client : Bool</div><div>streaming_server : Bool</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">OneofDescriptor</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">OneofDescriptor</span><span class="sdoc">A set of fields of which at most one holds a value</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct OneofDescriptor</pre><div>name : String</div><div>synthetic : Bool</div><div>field_numbers : Array[Int32]</div>
+          <p>A set of fields of which at most one holds a value. A synthetic oneof is how a field with the `optional` keyword is declared: it has exactly one member and is not a choice a reader sees.</p><pre class="sig">pub(all) struct OneofDescriptor</pre><div>name : String</div><div>synthetic : Bool</div><div>field_numbers : Array[Int32]</div>
         </div>
       </details>
       <details class="sym">
@@ -351,9 +351,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">ServiceDescriptor</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">ServiceDescriptor</span><span class="sdoc">A service: the methods it declares, in declaration order.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct ServiceDescriptor</pre><div>name : String</div><div>full_name : String</div><div>methods : Array[MethodDescriptor]</div><div>file_path : String</div>
+          <p>A service: the methods it declares, in declaration order.</p><pre class="sig">pub(all) struct ServiceDescriptor</pre><div>name : String</div><div>full_name : String</div><div>methods : Array[MethodDescriptor]</div><div>file_path : String</div>
         </div>
       </details>
       <details class="sym">
@@ -1547,33 +1547,33 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">MarshalOptions</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">MarshalOptions</span><span class="sdoc">How a framed message is written: the binary options, passed through.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct MarshalOptions</pre><div>marshal : @proto.MarshalOptions</div>
+          <p>How a framed message is written: the binary options, passed through.</p><pre class="sig">pub(all) struct MarshalOptions</pre><div>marshal : @proto.MarshalOptions</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">UnmarshalOptions</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">UnmarshalOptions</span><span class="sdoc">How a framed message is read</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct UnmarshalOptions</pre><div>unmarshal : @proto.UnmarshalOptions</div><div>max_size : Int32</div>
+          <p>How a framed message is read. `max_size` is 4 MiB by default, the ceiling a request over a shared connection is usually given; zero means the same default and a negative value means no ceiling.</p><pre class="sig">pub(all) struct UnmarshalOptions</pre><div>unmarshal : @proto.UnmarshalOptions</div><div>max_size : Int32</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span></summary>
+        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">A framing refusal</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) suberror Refused</pre><div>Wire(@wire.Refused)</div><div>Proto(@proto.Refused)</div><div>Size(Int32, Int32)</div><div>Truncated</div>
+          <p>A framing refusal. A refusal from either lower layer travels as a payload.</p><pre class="sig">pub(all) suberror Refused</pre><div>Wire(@wire.Refused)</div><div>Proto(@proto.Refused)</div><div>Size(Int32, Int32)</div><div>Truncated</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">Reader</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">Reader</span><span class="sdoc">A byte source that can also say it has ended: the prefix is read one byte at a time, and a st…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(open) trait Reader</pre><div>fn read_byte(Self) -&gt; Int32?</div>
+          <p>A byte source that can also say it has ended: the prefix is read one byte at a time, and a stream that stops inside a prefix or a body is refused rather than treated as the end of the stream.</p><pre class="sig">pub(open) trait Reader</pre><div>fn read_byte(Self) -&gt; Int32?</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">Writer</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">Writer</span><span class="sdoc">A byte sink: the library writes the prefix and the body through it, so a message can go to a…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(open) trait Writer</pre><div>fn write(Self, BytesView) -&gt; Unit raise Refused</div>
+          <p>A byte sink: the library writes the prefix and the body through it, so a message can go to a socket, a file or a buffer without being assembled first.</p><pre class="sig">pub(open) trait Writer</pre><div>fn write(Self, BytesView) -&gt; Unit raise Refused</div>
         </div>
       </details>
       <details class="sym">
@@ -1619,15 +1619,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">decode_from</span><span class="sdoc">Read one size-delimited message into `message`.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">decode_from</span><span class="sdoc">Read one size-delimited message into `message`, refusing a prefix that announces more than `m…</span></summary>
         <div class="sym-body">
-          <p>Read one size-delimited message into `message`.</p><pre class="sig">pub fn[M : @reflect.Message] decode_from(&amp;Reader, M, unmarshal_options? : UnmarshalOptions) -&gt; Unit raise Refused</pre>
+          <p>Read one size-delimited message into `message`, refusing a prefix that announces more than `max_size` before any of the body is read.</p><pre class="sig">pub fn[M : @reflect.Message] decode_from(&amp;Reader, M, unmarshal_options? : UnmarshalOptions) -&gt; Unit raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">encode_to</span><span class="sdoc">Write one size-delimited message, returning the bytes written.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">encode_to</span><span class="sdoc">Write one size-delimited message, returning the number of bytes written: the varint prefix an…</span></summary>
         <div class="sym-body">
-          <p>Write one size-delimited message, returning the bytes written.</p><pre class="sig">pub fn[M : @reflect.Message] encode_to(&amp;Writer, M, marshal_options? : MarshalOptions) -&gt; Int32 raise Refused</pre>
+          <p>Write one size-delimited message, returning the number of bytes written: the varint prefix and the body together.</p><pre class="sig">pub fn[M : @reflect.Message] encode_to(&amp;Writer, M, marshal_options? : MarshalOptions) -&gt; Int32 raise Refused</pre>
         </div>
       </details>
       <details class="sym">
@@ -1887,9 +1887,9 @@
       <p class="pkg-path">moonbitstack/moonproto/desc</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">Building runtime descriptors, and converting them back.</p>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">DescriptorProto</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">DescriptorProto</span><span class="sdoc">One message as a schema writes it: its fields, nested declarations, oneofs, reserved numbers…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct DescriptorProto</pre><div>name : String</div><div>field : Array[FieldDescriptorProto]</div><div>nested_type : Array[DescriptorProto]</div><div>enum_type : Array[EnumDescriptorProto]</div><div>extension : Array[FieldDescriptorProto]</div><div>oneof_decl : Array[OneofDescriptorProto]</div><div>reserved_range : Array[(Int32, Int32)]</div><div>reserved_name : Array[String]</div><div>extension_range : Array[(Int32, Int32)]</div><div>map_entry : Bool</div><div>features : Features</div><div>options : Array[(String, String)]</div>
+          <p>One message as a schema writes it: its fields, nested declarations, oneofs, reserved numbers and the ranges an extension may occupy.</p><pre class="sig">pub(all) struct DescriptorProto</pre><div>name : String</div><div>field : Array[FieldDescriptorProto]</div><div>nested_type : Array[DescriptorProto]</div><div>enum_type : Array[EnumDescriptorProto]</div><div>extension : Array[FieldDescriptorProto]</div><div>oneof_decl : Array[OneofDescriptorProto]</div><div>reserved_range : Array[(Int32, Int32)]</div><div>reserved_name : Array[String]</div><div>extension_range : Array[(Int32, Int32)]</div><div>map_entry : Bool</div><div>features : Features</div><div>options : Array[(String, String)]</div>
         </div>
       </details>
       <details class="sym">
@@ -1911,15 +1911,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">FieldDescriptorProto</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">FieldDescriptorProto</span><span class="sdoc">One field as a schema writes it, before presence, packing and the rest are resolved into a `r…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct FieldDescriptorProto</pre><div>name : String</div><div>number : Int32</div><div>label : Int32</div><div>type_code : Int32</div><div>type_name : String?</div><div>json_name : String?</div><div>default_value : String?</div><div>oneof_index : Int32?</div><div>proto3_optional : Bool</div><div>packed_off : Bool</div><div>extendee : String?</div><div>features : Features</div><div>options : Array[(String, String)]</div>
+          <p>One field as a schema writes it, before presence, packing and the rest are resolved into a `reflect.FieldDescriptor`. The shapes here follow `descriptor.proto`, because that is also what a plugin request carries.</p><pre class="sig">pub(all) struct FieldDescriptorProto</pre><div>name : String</div><div>number : Int32</div><div>label : Int32</div><div>type_code : Int32</div><div>type_name : String?</div><div>json_name : String?</div><div>default_value : String?</div><div>oneof_index : Int32?</div><div>proto3_optional : Bool</div><div>packed_off : Bool</div><div>extendee : String?</div><div>features : Features</div><div>options : Array[(String, String)]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">FileDescriptorProto</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">FileDescriptorProto</span><span class="sdoc">One file as a schema writes it: the declarations it holds, what it imports, its syntax or edi…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct FileDescriptorProto</pre><div>name : String</div><div>package_name : String</div><div>syntax : String</div><div>message_type : Array[DescriptorProto]</div><div>enum_type : Array[EnumDescriptorProto]</div><div>service : Array[ServiceDescriptorProto]</div><div>extension : Array[FieldDescriptorProto]</div><div>dependency : Array[String]</div><div>public_dependency : Array[Int32]</div><div>edition : String?</div><div>features : Features</div><div>options : Array[(String, String)]</div>
+          <p>One file as a schema writes it: the declarations it holds, what it imports, its syntax or edition, and the options written on it.</p><pre class="sig">pub(all) struct FileDescriptorProto</pre><div>name : String</div><div>package_name : String</div><div>syntax : String</div><div>message_type : Array[DescriptorProto]</div><div>enum_type : Array[EnumDescriptorProto]</div><div>service : Array[ServiceDescriptorProto]</div><div>extension : Array[FieldDescriptorProto]</div><div>dependency : Array[String]</div><div>public_dependency : Array[Int32]</div><div>edition : String?</div><div>features : Features</div><div>options : Array[(String, String)]</div>
         </div>
       </details>
       <details class="sym">
@@ -1971,15 +1971,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">build_file</span><span class="sdoc">Build a runtime file descriptor from the proto form.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">build_file</span><span class="sdoc">Build a runtime file descriptor from the proto form</span></summary>
         <div class="sym-body">
-          <p>Build a runtime file descriptor from the proto form.</p><pre class="sig">pub fn build_file(FileDescriptorProto) -&gt; @reflect.FileDescriptor raise Refused</pre>
+          <p>Build a runtime file descriptor from the proto form. Type references are resolved against the file&#x27;s own declarations, an edition&#x27;s features are resolved from the innermost scope outward, and a name that does not resolve is refused rather than left dangling.</p><pre class="sig">pub fn build_file(FileDescriptorProto) -&gt; @reflect.FileDescriptor raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">to_file_descriptor_proto</span><span class="sdoc">The proto form of a runtime file descriptor.</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">to_file_descriptor_proto</span><span class="sdoc">The proto form of a runtime file descriptor, for a caller that has to hand a file to somethin…</span></summary>
         <div class="sym-body">
-          <p>The proto form of a runtime file descriptor.</p><pre class="sig">pub fn to_file_descriptor_proto(@reflect.FileDescriptor) -&gt; FileDescriptorProto</pre>
+          <p>The proto form of a runtime file descriptor, for a caller that has to hand a file to something that speaks the descriptor shape.</p><pre class="sig">pub fn to_file_descriptor_proto(@reflect.FileDescriptor) -&gt; FileDescriptorProto</pre>
         </div>
       </details>
       <details class="sym">
@@ -1989,9 +1989,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind let">let</span><span class="sname">features_auto</span></summary>
+        <summary><span class="kind let">let</span><span class="sname">features_auto</span><span class="sdoc">Every feature left to inherit, which is what a file written without any `features.*` option m…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub let features_auto : Features</pre>
+          <p>Every feature left to inherit, which is what a file written without any `features.*` option means.</p><pre class="sig">pub let features_auto : Features</pre>
         </div>
       </details>
     </section>
@@ -2059,9 +2059,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Naming::new</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Naming::new</span><span class="sdoc">An empty table; `add_file` fills it, one file at a time.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn Naming::new(String, Symbols) -&gt; Self</pre>
+          <p>An empty table; `add_file` fills it, one file at a time.</p><pre class="sig">pub fn Naming::new(String, Symbols) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
@@ -2083,9 +2083,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Symbols::new</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Symbols::new</span><span class="sdoc">An empty table; `add_file` fills it, one file at a time.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn Symbols::new() -&gt; Self</pre>
+          <p>An empty table; `add_file` fills it, one file at a time.</p><pre class="sig">pub fn Symbols::new() -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
@@ -2180,7 +2180,7 @@
       <details class="sym">
         <summary><span class="kind fn">fn</span><span class="sname">register_all</span><span class="sdoc">Register every well-known type, so the codecs can resolve a message by name</span></summary>
         <div class="sym-body">
-          <p>Register every well-known type, so the codecs can resolve a message by name. Registering twice is harmless.</p><pre class="sig">pub fn register_all() -&gt; Unit</pre>
+          <p>Register every well-known type, so the codecs can resolve a message by name. Registering twice is harmless. The well-known types are ordinary generated messages and nothing about them is special-cased in the message model: `Any` keeps its payload as bytes and only the JSON and text encoders expand it, and the canonical forms of `Timestamp` and `Duration` live in the encoders, keyed by full name.</p><pre class="sig">pub fn register_all() -&gt; Unit</pre>
         </div>
       </details>
     </section>

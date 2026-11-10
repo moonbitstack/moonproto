@@ -61,7 +61,7 @@ async fn main {
 }
 
 ///|
-/// Re-encoding to the reference bytes asserts every field of the decoded
+/// Re-encoding to the fixture bytes asserts every field of the decoded
 /// message at once: a single wrong scalar, list element, map entry or oneof
 /// choice changes the output.
 fn encode_checked(message : @dynamic.Message) -> Bytes {

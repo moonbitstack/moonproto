@@ -4,6 +4,8 @@
 // declarations from needing pointers back to one another.
 
 ///|
+/// One value an enum declares: the short name a schema writes, its number, and
+/// the qualified name that includes the enum.
 pub(all) struct EnumValueDescriptor {
   name : String
   number : Int32
@@ -11,6 +13,9 @@ pub(all) struct EnumValueDescriptor {
 }
 
 ///|
+/// An enum: the values it declares, and whether it is closed. A closed enum
+/// refuses a number it does not declare; an open one carries it through, which
+/// is what lets a sender add values without breaking an older reader.
 pub(all) struct EnumDescriptor {
   name : String
   full_name : String
@@ -48,6 +53,9 @@ pub fn EnumDescriptor::value_by_name(
 }
 
 ///|
+/// A set of fields of which at most one holds a value. A synthetic oneof is how
+/// a field with the `optional` keyword is declared: it has exactly one member
+/// and is not a choice a reader sees.
 pub(all) struct OneofDescriptor {
   name : String
   synthetic : Bool
@@ -56,6 +64,12 @@ pub(all) struct OneofDescriptor {
 }
 
 ///|
+/// One field: the number that identifies it on the wire, its kind, how often it
+/// may appear, its two names, and the types it refers to by qualified name.
+///
+/// A map field is not a kind of its own: it is a repeated field whose element is
+/// a generated entry message, so `is_map` says which reading applies and
+/// `map_key_field` and `map_value_field` describe the entry.
 pub(all) struct FieldDescriptor {
   name : String
   full_name : String
@@ -64,7 +78,13 @@ pub(all) struct FieldDescriptor {
   cardinality : Cardinality
   json_name : String
   text_name : String
+  /// Whether the field records that it was set. A field with presence keeps an
+  /// explicit zero; a field without presence is on the wire only when its value
+  /// is not the zero of its kind, because the wire cannot tell an explicit zero
+  /// from a field that was never mentioned.
   has_presence : Bool
+  /// Whether the field was declared as an extension rather than inside the
+  /// message it belongs to.
   is_extension : Bool
   is_map : Bool
   packed : Bool
@@ -97,6 +117,9 @@ pub fn FieldDescriptor::is_map_field(self : FieldDescriptor) -> Bool {
 }
 
 ///|
+/// A message: its fields, the oneofs they belong to, the numbers and names it
+/// reserves, the ranges an extension may occupy, and its nested declarations.
+/// A map entry is a message like any other with `is_map_entry` set.
 pub(all) struct MessageDescriptor {
   name : String
   full_name : String
@@ -176,6 +199,8 @@ pub fn MessageDescriptor::oneof_of_field(
 }
 
 ///|
+/// One method of a service: the messages it takes and returns, and whether
+/// either side may send a stream.
 pub(all) struct MethodDescriptor {
   name : String
   full_name : String
@@ -186,6 +211,7 @@ pub(all) struct MethodDescriptor {
 }
 
 ///|
+/// A service: the methods it declares, in declaration order.
 pub(all) struct ServiceDescriptor {
   name : String
   full_name : String
@@ -194,6 +220,10 @@ pub(all) struct ServiceDescriptor {
 }
 
 ///|
+/// One `.proto` file: what it declares, what it imports, and the options written
+/// on each declaration. Declarations refer to one another by qualified name
+/// rather than by pointer, so a file can be built from the descriptor shape,
+/// walked, and converted back without a cycle.
 pub(all) struct FileDescriptor {
   path : String
   package_name : String

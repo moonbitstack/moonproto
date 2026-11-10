@@ -19,6 +19,8 @@ pub(all) struct Features {
 }
 
 ///|
+/// Every feature left to inherit, which is what a file written without any
+/// `features.*` option means.
 pub let features_auto : Features = {
   field_presence: 0,
   enum_type: 0,
@@ -90,6 +92,9 @@ pub fn Features::merge(parent : Features, child : Features) -> Features {
 }
 
 ///|
+/// One field as a schema writes it, before presence, packing and the rest are
+/// resolved into a `reflect.FieldDescriptor`. The shapes here follow
+/// `descriptor.proto`, because that is also what a plugin request carries.
 pub(all) struct FieldDescriptorProto {
   name : String
   number : Int32
@@ -133,6 +138,8 @@ pub(all) struct EnumDescriptorProto {
 }
 
 ///|
+/// One message as a schema writes it: its fields, nested declarations, oneofs,
+/// reserved numbers and the ranges an extension may occupy.
 pub(all) struct DescriptorProto {
   name : String
   field : Array[FieldDescriptorProto]
@@ -165,6 +172,8 @@ pub(all) struct ServiceDescriptorProto {
 }
 
 ///|
+/// One file as a schema writes it: the declarations it holds, what it imports,
+/// its syntax or edition, and the options written on it.
 pub(all) struct FileDescriptorProto {
   name : String
   package_name : String
@@ -205,7 +214,10 @@ pub impl Show for Refused with fn output(self, logger) {
 pub extend Refused with Show::{to_string, output}
 
 ///|
-/// Build a runtime file descriptor from the proto form.
+/// Build a runtime file descriptor from the proto form. Type references are
+/// resolved against the file's own declarations, an edition's features are
+/// resolved from the innermost scope outward, and a name that does not resolve is
+/// refused rather than left dangling.
 pub fn build_file(
   proto : FileDescriptorProto,
 ) -> @reflect.FileDescriptor raise Refused {
@@ -881,7 +893,8 @@ fn upper_char(ch : Char) -> Char {
 }
 
 ///|
-/// The proto form of a runtime file descriptor.
+/// The proto form of a runtime file descriptor, for a caller that has to hand a
+/// file to something that speaks the descriptor shape.
 pub fn to_file_descriptor_proto(
   file : @reflect.FileDescriptor,
 ) -> FileDescriptorProto {

@@ -1,7 +1,8 @@
 // Emitting MoonBit code from a file descriptor. Each message becomes a struct
-// that holds a dynamic message, with typed accessors and a delegating
-// `Message` implementation; each enum becomes a MoonBit enum with `code` and
-// `of`.
+// whose fields are the protobuf fields, with typed accessors and a `Message`
+// implementation that reads and writes them; each enum becomes a MoonBit enum
+// with `code` and `of`. The generated file also registers its types and its own
+// descriptor, so reflection, `Any` and the encoders work with no further setup.
 
 ///|
 fn escape(text : String) -> String {
