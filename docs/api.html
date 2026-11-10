@@ -76,9 +76,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind enum">enum</span><span class="sname">WireType</span></summary>
+        <summary><span class="kind enum">enum</span><span class="sname">WireType</span><span class="sdoc">The five wire types a tag&#x27;s low three bits select</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) enum WireType</pre><div>Varint</div><div>Fixed64</div><div>LengthDelimited</div><div>StartGroup</div><div>EndGroup</div><div>Fixed32</div>
+          <p>The five wire types a tag&#x27;s low three bits select. The two group types are deprecated but still appear in proto2 messages, so they are decoded rather than rejected.</p><pre class="sig">pub(all) enum WireType</pre><div>Varint</div><div>Fixed64</div><div>LengthDelimited</div><div>StartGroup</div><div>EndGroup</div><div>Fixed32</div>
         </div>
       </details>
       <details class="sym">
@@ -387,27 +387,27 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind enum">enum</span><span class="sname">Cardinality</span></summary>
+        <summary><span class="kind enum">enum</span><span class="sname">Cardinality</span><span class="sdoc">Whether a field appears zero or one times, exactly once, or any number of times</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) enum Cardinality</pre><div>Optional</div><div>Required</div><div>Repeated</div>
+          <p>Whether a field appears zero or one times, exactly once, or any number of times. A map is repeated entries, so its cardinality is `Repeated`; `FieldDescriptor::is_map` separates the two readings.</p><pre class="sig">pub(all) enum Cardinality</pre><div>Optional</div><div>Required</div><div>Repeated</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind enum">enum</span><span class="sname">Kind</span></summary>
+        <summary><span class="kind enum">enum</span><span class="sname">Kind</span><span class="sdoc">The eighteen field kinds, numbered as `descriptor.proto` numbers them</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) enum Kind</pre><div>Double</div><div>Float</div><div>Int64</div><div>Uint64</div><div>Int32</div><div>Fixed64</div><div>Fixed32</div><div>Bool</div><div>String</div><div>Group</div><div>Message</div><div>Bytes</div><div>Uint32</div><div>Enum</div>
+          <p>The eighteen field kinds, numbered as `descriptor.proto` numbers them. The kind decides the wire type, the JSON form and the storage a generated message uses, so every encoder branches on it rather than on the schema.</p><pre class="sig">pub(all) enum Kind</pre><div>Double</div><div>Float</div><div>Int64</div><div>Uint64</div><div>Int32</div><div>Fixed64</div><div>Fixed32</div><div>Bool</div><div>String</div><div>Group</div><div>Message</div><div>Bytes</div><div>Uint32</div><div>Enum</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind enum">enum</span><span class="sname">MapKey</span></summary>
+        <summary><span class="kind enum">enum</span><span class="sname">MapKey</span><span class="sdoc">A map key: the six scalar kinds a map field&#x27;s key may take.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) enum MapKey</pre><div>Bool(Bool)</div><div>Int32(Int32)</div><div>Int64(Int64)</div><div>Uint32(UInt32)</div><div>Uint64(UInt64)</div><div>String(String)</div>
+          <p>A map key: the six scalar kinds a map field&#x27;s key may take.</p><pre class="sig">pub(all) enum MapKey</pre><div>Bool(Bool)</div><div>Int32(Int32)</div><div>Int64(Int64)</div><div>Uint32(UInt32)</div><div>Uint64(UInt64)</div><div>String(String)</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind enum">enum</span><span class="sname">Syntax</span></summary>
+        <summary><span class="kind enum">enum</span><span class="sname">Syntax</span><span class="sdoc">The language version a file declares</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) enum Syntax</pre><div>Proto2</div><div>Proto3</div><div>Editions</div>
+          <p>The language version a file declares. What reaches the wire is stated by the field descriptors instead: presence, packing and closedness are resolved when the file is built, so an encoder never asks which syntax a field came from.</p><pre class="sig">pub(all) enum Syntax</pre><div>Proto2</div><div>Proto3</div><div>Editions</div>
         </div>
       </details>
       <details class="sym">

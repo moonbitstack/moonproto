@@ -51,13 +51,17 @@ def doc_comments(pkg_dir: Path) -> dict[str, str]:
         for line in text:
             stripped = line.strip()
             if stripped.startswith("///"):
-                text = stripped[3:].strip()
+                prose_line = stripped[3:].strip()
                 # `///|` is the block marker MoonBit asks for; it is not prose.
-                if text.startswith("|"):
-                    text = text[1:].strip()
-                block.append(text)
+                if prose_line.startswith("|"):
+                    prose_line = prose_line[1:].strip()
+                block.append(prose_line)
                 continue
             if block:
+                # A `#derive` or another attribute may sit between the doc block
+                # and the declaration it belongs to.
+                if stripped.startswith("#"):
+                    continue
                 match = DECL.match(line)
                 if match:
                     name = match.group(2).split("::")[-1]
