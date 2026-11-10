@@ -2,9 +2,13 @@
 // on a format.
 
 ///|
-/// How a message is encoded.
+/// How a message is written as bytes.
 pub(all) struct MarshalOptions {
+  /// Skip the check that every required field is set. Off by default: a message
+  /// that would not decode back is worth refusing at the point of writing.
   allow_partial : Bool
+  /// Order map entries by key so one message always produces one byte string.
+  /// Off by default, because ordering costs a copy of the entry list.
   deterministic : Bool
 }
 
@@ -15,11 +19,19 @@ pub let marshal_options : MarshalOptions = {
 }
 
 ///|
-/// How a message is decoded.
+/// How a message is read from bytes.
 pub(all) struct UnmarshalOptions {
+  /// Keep what the destination already holds instead of clearing it first. A
+  /// repeated field is appended to, and a nested message is merged into.
   merge : Bool
+  /// Accept a message whose required fields are missing. Off by default.
   allow_partial : Bool
+  /// Drop a field the schema does not declare instead of keeping its bytes for
+  /// the next write. Off by default: unknown fields belong to whoever sent them.
   discard_unknown : Bool
+  /// How deep a nested message may go before the reader refuses. Nesting is
+  /// how a small input asks for unbounded memory, so the limit is a bound on
+  /// what an untrusted message may cost.
   recursion_limit : Int32
 }
 
@@ -32,12 +44,19 @@ pub let unmarshal_options : UnmarshalOptions = {
 }
 
 ///|
-/// A binary refusal.
+/// A binary refusal. A refusal raised by a lower package travels as a payload
+/// rather than as a string, so a caller can still see where the bytes stopped.
 pub(all) suberror Refused {
+  /// The bytes are not a valid encoding; the payload says where and why.
   Wire(@wire.Refused)
+  /// A required field was unset; the payload is its dotted path.
   Required(String)
+  /// A nested message's type is not registered under the name the field gives.
   NoType(String)
+  /// Nesting passed the limit; the payload is the limit that was in force.
   Recursion(Int32)
+  /// A tag carried a wire type the field's kind does not use; the payload is
+  /// the field's qualified name.
   Mismatch(String)
 }
 
@@ -57,7 +76,9 @@ pub impl Show for Refused with fn output(self, logger) {
 pub extend Refused with Show::{to_string, output}
 
 ///|
-/// The encoded bytes of `message`.
+/// The encoded bytes of `message`. Fields are written in field-number order, so
+/// the output depends only on the values, and a field without presence that
+/// holds its zero is left out.
 pub fn[M : @reflect.Message] encode(
   message : M,
   marshal_options~ : MarshalOptions = marshal_options,
@@ -71,7 +92,8 @@ pub fn[M : @reflect.Message] encode(
 }
 
 ///|
-/// Append the encoded bytes of `message` to `buf`.
+/// Append the encoded bytes of `message` to `buf`, which is what a message
+/// nested in another one is written through.
 pub fn[M : @reflect.Message] encode_to(
   buf : Buffer,
   message : M,
@@ -84,7 +106,8 @@ pub fn[M : @reflect.Message] encode_to(
 }
 
 ///|
-/// The encoded size of `message`, without keeping the bytes.
+/// The length `encode` would produce, without keeping the bytes. It is the same
+/// walk, so it refuses nothing the encoder would not.
 pub fn[M : @reflect.Message] size(message : M) -> Int32 {
   let buf = Buffer()
   encode_message(buf, message, marshal_options, 0) catch {
@@ -94,8 +117,9 @@ pub fn[M : @reflect.Message] size(message : M) -> Int32 {
 }
 
 ///|
-/// Read `bytes` into `message`. The destination is reset first unless `merge`
-/// is set.
+/// Read `bytes` into `message`. The destination is a struct with mutable fields,
+/// so it is written in place and the caller's binding sees the result; it is
+/// cleared first unless `merge` is set.
 pub fn[M : @reflect.Message] decode(
   bytes : BytesView,
   message : M,
@@ -111,7 +135,8 @@ pub fn[M : @reflect.Message] decode(
 }
 
 ///|
-/// Clear every field and every unknown byte.
+/// Clear every field and every unknown byte, leaving the message as `new`
+/// built it.
 pub fn[M : @reflect.Message] reset(message : M) -> Unit {
   let desc = message.descriptor()
   for field in desc.fields {
@@ -121,7 +146,9 @@ pub fn[M : @reflect.Message] reset(message : M) -> Unit {
 }
 
 ///|
-/// Merge `source` into `destination`.
+/// Merge `source` into `destination`: a repeated field is appended to, a map is
+/// merged key by key, a nested message is merged recursively, and a scalar with
+/// presence replaces what was there.
 pub fn[M : @reflect.Message] merge(
   destination : M,
   source : &@reflect.Message,
@@ -145,7 +172,8 @@ pub fn[M : @reflect.Message] merge(
 }
 
 ///|
-/// A deep copy of `message`.
+/// A deep copy of `message`. `Fresh` is what names the concrete type, so the copy
+/// has the same type as its source rather than the trait object behind it.
 pub fn[M : @reflect.Message + @reflect.Fresh] clone(message : M) -> M {
   let copy = @reflect.Fresh::fresh(message)
   merge(copy, message as &@reflect.Message)
@@ -181,7 +209,9 @@ fn merge_field(
 }
 
 ///|
-/// Whether two messages have the same fields and values.
+/// Whether two messages have the same fields and values. Presence is part of the
+/// answer: a field set to its zero counts as absent when it has no presence, and
+/// as a value when it has.
 pub fn[M : @reflect.Message] equal(left : M, right : M) -> Bool {
   equal_messages(left as &@reflect.Message, right as &@reflect.Message)
 }
@@ -290,7 +320,8 @@ fn equal_field_value(
 }
 
 ///|
-/// Refuse a message with a required field unset.
+/// Refuse a message with a required field unset. The refusal names the field by
+/// its dotted path, so a nested omission says where it is.
 pub fn[M : @reflect.Message] check_initialized(
   message : M,
 ) -> Unit raise Refused {
@@ -342,7 +373,7 @@ fn encode_one_of(
     encode_map(buf, message, field, opts, depth)
   } else if field.is_list() {
     encode_list(buf, message, field, opts, depth)
-  } else if message.has(field) {
+  } else if @reflect.is_populated(message, field) {
     encode_singular(buf, message.get(field), field, opts, depth)
   }
 }
@@ -998,6 +1029,9 @@ fn decode_scalar(
 // -- extensions -------------------------------------------------------------
 
 ///|
+/// Whether the message carries a value for `extension`. An extension is a field
+/// with a flag, so it is read and written through the same path as a declared
+/// field and only its descriptor's origin differs.
 pub fn[M : @reflect.Message] has_extension(
   message : M,
   extension : &@reflect.ExtensionType,
@@ -1007,6 +1041,7 @@ pub fn[M : @reflect.Message] has_extension(
 }
 
 ///|
+/// The value of `extension`, or `None` when the message does not carry one.
 pub fn[M : @reflect.Message] get_extension(
   message : M,
   extension : &@reflect.ExtensionType,
@@ -1020,6 +1055,8 @@ pub fn[M : @reflect.Message] get_extension(
 }
 
 ///|
+/// Give `extension` a value. The value must be of the extension's kind; the
+/// encoder writes it where the extension's number says.
 pub fn[M : @reflect.Message] set_extension(
   message : M,
   extension : &@reflect.ExtensionType,
@@ -1029,6 +1066,7 @@ pub fn[M : @reflect.Message] set_extension(
 }
 
 ///|
+/// Drop the value of `extension`, leaving the message as if it was never set.
 pub fn[M : @reflect.Message] clear_extension(
   message : M,
   extension : &@reflect.ExtensionType,
@@ -1037,6 +1075,8 @@ pub fn[M : @reflect.Message] clear_extension(
 }
 
 ///|
+/// Visit every extension the message carries, in the order they were first set.
+/// Returning `false` stops the walk.
 pub fn[M : @reflect.Message] range_extensions(
   message : M,
   f : (&@reflect.ExtensionType, @reflect.Value) -> Bool,

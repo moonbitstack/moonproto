@@ -1,10 +1,17 @@
 // The text format encoder and decoder.
 
 ///|
+/// How a message is written in the text format.
 pub(all) struct MarshalOptions {
+  /// Put one field per line. On by default: the text format is read by people,
+  /// and a single line of nested braces is not.
   multiline : Bool
+  /// The string one level of nesting is indented with.
   indent : String
+  /// Escape every non-ASCII character rather than writing it as itself, for a
+  /// reader downstream that only takes ASCII. Off by default.
   emit_ascii : Bool
+  /// Skip the check that every required field is set. Off by default.
   allow_partial : Bool
 }
 
@@ -17,9 +24,14 @@ pub let marshal_options : MarshalOptions = {
 }
 
 ///|
+/// How a message is read from the text format.
 pub(all) struct UnmarshalOptions {
+  /// Accept a message whose required fields are missing. Off by default.
   allow_partial : Bool
+  /// Ignore a field the schema does not declare, including a name it reserves,
+  /// instead of refusing it.
   discard_unknown : Bool
+  /// How deep a nested message may go before the reader refuses.
   recursion_limit : Int32
 }
 
@@ -31,8 +43,11 @@ pub let unmarshal_options : UnmarshalOptions = {
 }
 
 ///|
-/// A text-format refusal.
+/// A text-format refusal. The offset is the position in the input reached when
+/// the text stopped making sense.
 pub(all) suberror Refused {
+  /// The text is not a valid sequence of fields; the payload is the reason and
+  /// the offset.
   Syntax(String, Int32)
   UnknownField(String)
   BadValue(String)
@@ -165,7 +180,7 @@ fn encode_message(
           buf.write_string_utf8("\n")
         }
       }
-    } else if message.has(field) {
+    } else if @reflect.is_populated(message, field) {
       write_indent(buf, opts, depth)
       match field.kind {
         @reflect.Message | @reflect.Group => {
@@ -490,7 +505,7 @@ fn is_ident_char(ch : Char) -> Bool {
 
 ///|
 /// The whitespace the text format skips. Vertical tab and form feed are in the
-/// list because the reference tokenizer treats them as space.
+/// list because the grammar treats them as space.
 fn is_space_char(ch : Char) -> Bool {
   let code = ch.to_int()
   code == 32 || (code >= 9 && code <= 13)
@@ -655,10 +670,10 @@ fn Parser::read_number_token(self : Parser) -> String raise Refused {
 }
 
 ///|
-/// Read a bracketed name. Whitespace and comments are dropped, which is how the
-/// reference tokenizer reads a type URL spread over several lines, and a `%`
-/// has to introduce two hex digits so a broken percent escape is refused here
-/// rather than silently kept.
+/// Read a bracketed name. Whitespace and comments are dropped, which is how a
+/// type URL spread over several lines is read, and a `%` has to introduce two
+/// hex digits so a broken percent escape is refused here rather than silently
+/// kept.
 fn Parser::read_bracket(self : Parser) -> String raise Refused {
   self.skip()
   let start = self.pos
@@ -833,8 +848,8 @@ fn Parser::read_string_literal(self : Parser) -> Bytes raise Refused {
 }
 
 ///|
-/// One string value, which may be several adjacent literals: the reference
-/// parser joins them, so `'first' "second"` is one value.
+/// One string value, which may be several adjacent literals: they are joined,
+/// so `'first' "second"` is one value.
 fn Parser::read_string(self : Parser) -> Bytes raise Refused {
   let out = Buffer()
   let mut seen = false
@@ -1122,8 +1137,8 @@ fn is_reserved_name(desc : @reflect.MessageDescriptor, name : String) -> Bool {
 
 ///|
 /// The field a text name selects. A group field is written with the group's
-/// type name or its own field name, and the reference parser accepts either in
-/// any case, so the last comparison ignores case.
+/// type name or its own field name, in either case, so the last comparison
+/// ignores case.
 fn find_field(
   desc : @reflect.MessageDescriptor,
   name : String,
@@ -1204,8 +1219,8 @@ fn message_from_text(
         }
         None =>
           // A name the schema reserves is skipped the way an unknown field is:
-          // the message has no field to put it in, and the reference parser
-          // treats the case as data it is allowed to drop.
+          // the message has no field to put it in, and the case is data a reader is
+          // allowed to drop.
           if opts.discard_unknown || is_reserved_name(desc, name) {
             if parser.peek() == Some(':') {
               parser.expect(':')

@@ -1,9 +1,10 @@
 // The protobuf data model: the field kinds, the value union, and the raw bytes
 // of unknown fields. https://protobuf.dev/programming-guides/proto3/
 
-// The language version a file declares.
-
 ///|
+/// The language version a file declares. What reaches the wire is stated by the
+/// field descriptors instead: presence, packing and closedness are resolved when
+/// the file is built, so an encoder never asks which syntax a field came from.
 #derive(Eq)
 pub(all) enum Syntax {
   Proto2
@@ -35,7 +36,8 @@ pub fn Syntax::of(code : Int32) -> Syntax? {
 
 ///|
 /// Whether a field appears zero or one times, exactly once, or any number of
-/// times.
+/// times. A map is repeated entries, so its cardinality is `Repeated`;
+/// `FieldDescriptor::is_map` separates the two readings.
 #derive(Eq)
 pub(all) enum Cardinality {
   Optional
@@ -66,7 +68,9 @@ pub fn Cardinality::of(code : Int32) -> Cardinality? {
 }
 
 ///|
-/// The eighteen field kinds, numbered as `descriptor.proto` numbers them.
+/// The eighteen field kinds, numbered as `descriptor.proto` numbers them. The
+/// kind decides the wire type, the JSON form and the storage a generated message
+/// uses, so every encoder branches on it rather than on the schema.
 #derive(Eq)
 pub(all) enum Kind {
   Double
@@ -183,8 +187,14 @@ pub(all) enum MapKey {
 pub extend MapKey with Eq::{equal, not_equal}
 
 ///|
-/// One field value. A composite value holds a reference to a list, map or
-/// message, so mutation through it is visible to the message that owns it.
+/// One field value, tagged with its kind. The kind travels with the value, so a
+/// message that keys its values by field number and one that has a struct field
+/// per field answer the same questions about it.
+///
+/// A composite value holds a reference to a list, map or message, so mutation
+/// through it is visible to the message that owns it. The accessors abort when
+/// the value is not the kind asked for, as an out-of-range index does, and
+/// `map_key` refuses a value that is not one of the six key kinds.
 pub(all) enum Value {
   Invalid
   Bool(Bool)
@@ -327,6 +337,36 @@ pub fn MapKey::value(self : MapKey) -> Value {
     Uint64(v) => Uint64(v)
     String(v) => String(v)
   }
+}
+
+///|
+/// Whether a scalar value is the zero of its kind: the state in which a field
+/// without presence is absent, since the wire has no way to say "present, and
+/// zero". Negative zero is a value rather than a zero — the sign bit is part of
+/// it — so a field holding it is written and the sign survives every format.
+pub fn Value::is_zero(self : Value) -> Bool {
+  match self {
+    Bool(v) => !v
+    Int32(v) => v == 0
+    Int64(v) => v == 0L
+    Uint32(v) => v == 0U
+    Uint64(v) => v == 0UL
+    Float(v) => v == 0.0 && v.reinterpret_as_uint() == 0U
+    Double(v) => is_plain_zero(v)
+    String(v) => v.length() == 0
+    Bytes(v) => v.length() == 0
+    Enum(v) => v == 0
+    Invalid => true
+    Message(_) | ListView(_) | MapView(_) => false
+  }
+}
+
+///|
+/// Whether a double is `+0.0`, the zero that carries no sign. A generated
+/// message's own `has` asks this of a float field, so the answer matches what
+/// `Value::is_zero` says about the same value.
+pub fn is_plain_zero(value : Double) -> Bool {
+  value == 0.0 && value.reinterpret_as_uint64() == 0UL
 }
 
 ///|

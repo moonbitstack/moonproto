@@ -25,7 +25,7 @@ A few numbers that describe the current shape of the library:
 | Wire types | 5 |
 | Scalar kinds | 15 |
 | Syntax shapes generated and checked | 4 (`proto2`, `proto3`, editions 2023, editions 2024) |
-| Official binary and JSON conformance cases passing | 2737 / 2737 |
+| Official binary and JSON conformance cases passing | 2755 / 2755 |
 | Official text format conformance cases passing | 440 / 440 |
 | Declared conformance omissions | 0 |
 
@@ -79,6 +79,42 @@ encode.
 `FeatureSet` values protoc sends from the innermost scope outward. That is why
 `field_presence`, `repeated_field_encoding`, `message_encoding` and `enum_type`
 change the generated struct shape, the packing on the wire and enum openness.
+
+## Presence
+
+A field with presence has a set state of its own; a field without presence does
+not, and the wire has no way to record one. The library states the rule once, in
+`reflect.is_populated`, and every encoder asks it: a scalar without presence is
+written only when its value differs from the zero of its kind, so writing a zero
+and never mentioning the field produce the same bytes and the same JSON.
+
+```mbt
+let probe_schema =
+  "syntax = \"proto3\";\n" +
+  "package p;\n" +
+  "message Probe { int32 i = 1; optional int32 o = 2; }\n"
+let shape = @parser.parse("probe.proto", probe_schema) catch {
+  _ => abort("bad schema")
+}
+let built = @desc.build_file(shape) catch { _ => abort("bad descriptor") }
+let descriptor = built.messages[0]
+let probe = @dynamic.Message::new(descriptor)
+let i = descriptor.field_by_name("i").unwrap()
+let o = descriptor.field_by_name("o").unwrap()
+probe.set(i, @reflect.Int32(0))
+assert_eq(probe.has(i), false)
+assert_eq(@proto.encode(probe) catch { _ => abort("encode failed") }, b"")
+assert_eq(@json.encode(probe) catch { _ => abort("JSON failed") }, "{}")
+probe.set(o, @reflect.Int32(0))
+assert_eq(probe.has(o), true)
+assert_eq(@proto.encode(probe) catch { _ => abort("encode failed") }, b"\x10\x00")
+assert_eq(@json.encode(probe) catch { _ => abort("JSON failed") }, "{\"o\":0}")
+```
+
+Negative zero is a value rather than a zero, because its sign bit is part of it:
+a float or double field holding `-0.0` is written in both formats and reads back
+as one. A field that arrives carrying an explicit zero is read, reported as not
+set, and dropped by the next write.
 
 ## How it fits together
 
@@ -175,7 +211,7 @@ failure lists live in `tests/conformance/`.
 
 | Suite | Cases | Passed | Skipped | Expected failures | Unexpected failures |
 |:--|--:|--:|--:|--:|--:|
-| Binary and JSON (`failure_list.txt`) | 2737 | 2737 | 0 | 0 | 0 |
+| Binary and JSON (`failure_list.txt`) | 2755 | 2755 | 0 | 0 | 0 |
 | Text format (`text_format_failure_list.txt`) | 440 | 440 | 0 | 0 | 0 |
 
 Both failure lists are empty: no case in either suite is waived. The text
@@ -223,9 +259,11 @@ following tests red:
 | Varint ten-octet limit | `protowire: the largest varint takes ten octets, an eleventh overflows`; `varint refuses an eleventh octet` |
 | Unknown-field preservation | `proto: Marshal and Unmarshal keep a scalar alongside an unknown field`; `unknown fields survive a round-trip` |
 | 64-bit integers as JSON strings | `protojson: 64-bit integers are strings on the wire`; `binary to JSON keeps every scalar and the composite fields`; `the scalar mapping and its fixed text` |
+| A zero without presence stays off the wire | `binary: a zero without presence writes no bytes`; `binary: a zero read from the wire does not come back`; `binary and JSON leave the same zeros out` |
+| Negative zero keeps its sign | `binary: negative zero keeps its sign on the wire`; `a negative zero is written by both encodings` |
 
-Run `scripts/mutation-check.sh` to reproduce all three; it restores every
-source file before it exits.
+Run `scripts/mutation-check.sh` to reproduce all five; it restores every source
+file before it exits.
 
 ## Reproducing the results
 
@@ -244,11 +282,11 @@ source file before it exits.
 | `scripts/generate-known.sh` | regenerates the well-known package from the protobuf includes |
 | `scripts/check_snippets.py` | every MoonBit block in this file and in the skill compiles against the source |
 
-## Design notes
+## Agent skill
 
-- `docs/design/inventory.md` — every capability, one row each, with where it lives.
-- `docs/design/interface.md` — the types and signatures the implementation was written against, and the mechanism that replaces runtime field access.
-- `docs/skills/moonproto/SKILL.md` — the short reference for an agent using this library.
+`docs/skills/moonproto/SKILL.md` is the short reference for an agent using this
+library: what to import, the two or three things it will be asked to do, and the
+rules that are easy to get wrong. It ships with every release.
 
 ## Licence
 

@@ -47,11 +47,12 @@
       <b>Guide</b>
       <a href="#install"><span class="n">1</span> Install</a>
       <a href="#first-message"><span class="n">2</span> First message</a>
-      <a href="#generate"><span class="n">3</span> Generated code</a>
-      <a href="#json"><span class="n">4</span> JSON and text</a>
-      <a href="#editions"><span class="n">5</span> Editions</a>
-      <a href="#extensions"><span class="n">6</span> Extensions</a>
-      <a href="#known"><span class="n">7</span> Well-known types</a>
+      <a href="#presence"><span class="n">3</span> Presence</a>
+      <a href="#generate"><span class="n">4</span> Generated code</a>
+      <a href="#json"><span class="n">5</span> JSON and text</a>
+      <a href="#editions"><span class="n">6</span> Editions</a>
+      <a href="#extensions"><span class="n">7</span> Extensions</a>
+      <a href="#known"><span class="n">8</span> Well-known types</a>
     </div>
     <div class="rail-group">
       <b>Also</b>
@@ -136,7 +137,78 @@ same bytes again: true</div>
 
     <p>A repeated field is read and written through the same field descriptor: <code>mutable</code> hands back the list, <code>get</code> reads it. Scalars use <code>reflect.Value</code>, so the compiler never sees a protobuf type.</p>
 
-    <h2 id="generate"><span class="tag">3</span> Generated code</h2>
+    <h2 id="presence"><span class="tag">3</span> Presence</h2>
+    <p>A field with presence has a set state of its own, so writing a zero is a decision the reader can see. A field without presence has none: the wire carries no way to say "present, and zero", so a zero is the same as a field that was never mentioned. The rule is one function, <code>reflect.is_populated</code>, and every encoder asks it before writing a field.</p>
+
+    <div class="codeblock">
+      <div class="bar"><span class="tag">1</span> main.mbt<span class="grow"></span></div>
+<pre><span class="k">const</span> SCHEMA : String = <span class="s">"syntax = \"proto3\";\n"</span> +
+  <span class="s">"package presence;\n"</span> +
+  <span class="s">"message Probe {\n"</span> +
+  <span class="s">"  int32 count = 1;\n"</span> +
+  <span class="s">"  string label = 2;\n"</span> +
+  <span class="s">"  optional int32 limit = 3;\n"</span> +
+  <span class="s">"  double ratio = 4;\n"</span> +
+  <span class="s">"}\n"</span>
+
+<span class="k">fn</span> main {
+  <span class="k">let</span> parsed = @parser.parse(<span class="s">"presence.proto"</span>, SCHEMA) <span class="k">catch</span> {
+    _ =&gt; abort(<span class="s">"bad schema"</span>)
+  }
+  <span class="k">let</span> built = @desc.build_file(parsed) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"bad descriptor"</span>) }
+  <span class="k">let</span> descriptor = built.messages[0]
+  <span class="k">let</span> message = @dynamic.Message::new(descriptor)
+  <span class="k">let</span> count = descriptor.field_by_name(<span class="s">"count"</span>).unwrap()
+  <span class="k">let</span> label = descriptor.field_by_name(<span class="s">"label"</span>).unwrap()
+  <span class="k">let</span> limit = descriptor.field_by_name(<span class="s">"limit"</span>).unwrap()
+  <span class="k">let</span> ratio = descriptor.field_by_name(<span class="s">"ratio"</span>).unwrap()
+
+  message.set(count, @reflect.Int32(0))
+  message.set(label, @reflect.String(<span class="s">""</span>))
+  <span class="k">let</span> zeroed = @proto.encode(message) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"encode failed"</span>) }
+  println(<span class="s">"implicit zeros: \{zeroed.length()} bytes"</span>)
+  <span class="k">let</span> zeroed_json = @json.encode(message) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"JSON failed"</span>) }
+  println(<span class="s">"implicit zeros in JSON: \{zeroed_json}"</span>)
+
+  <span class="c">// The `optional` field has presence, so its zero is a value the reader keeps.</span>
+  message.set(limit, @reflect.Int32(0))
+  <span class="k">let</span> with_limit = @proto.encode(message) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"encode failed"</span>) }
+  println(<span class="s">"optional zero: \{with_limit.length()} bytes"</span>)
+  <span class="k">let</span> with_limit_json = @json.encode(message) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"JSON failed"</span>) }
+  println(<span class="s">"optional zero in JSON: \{with_limit_json}"</span>)
+
+  <span class="c">// Negative zero is not the zero: the sign bit is part of the value.</span>
+  message.set(ratio, @reflect.Double(-0.0))
+  <span class="k">let</span> with_ratio = @proto.encode(message) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"encode failed"</span>) }
+  println(<span class="s">"negative zero: \{with_ratio.length()} bytes"</span>)
+  <span class="k">let</span> with_ratio_json = @json.encode(message) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"JSON failed"</span>) }
+  println(<span class="s">"negative zero in JSON: \{with_ratio_json}"</span>)
+
+  <span class="c">// A sender may still write an explicit zero; reading it back does not make it</span>
+  <span class="c">// a value, so the next encode drops it again.</span>
+  <span class="k">let</span> read = @dynamic.Message::new(descriptor)
+  @proto.decode(b<span class="s">"\x08\x00"</span>, read) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"decode failed"</span>) }
+  println(<span class="s">"count read back: \{read.get(count).int()}"</span>)
+  println(<span class="s">"count has a value: \{read.has(count)}"</span>)
+  <span class="k">let</span> re_encoded = @proto.encode(read) <span class="k">catch</span> { _ =&gt; abort(<span class="s">"encode failed"</span>) }
+  println(<span class="s">"re-encoded: \{re_encoded.length()} bytes"</span>)
+}</pre>
+    </div>
+
+    <div class="output">implicit zeros: 0 bytes
+implicit zeros in JSON: {}
+optional zero: 2 bytes
+optional zero in JSON: {"limit":0}
+negative zero: 11 bytes
+negative zero in JSON: {"limit":0,"ratio":-0}
+count read back: 0
+count has a value: false
+re-encoded: 0 bytes</div>
+
+    <p>Three consequences worth knowing before a schema is written. A proto3 scalar without the <code>optional</code> keyword cannot round-trip a zero: the value survives in memory but not through bytes, so a schema that has to tell "unset" from "set to zero" needs <code>optional</code>. The two encodings agree, because both ask the same question — neither writes the field, and the JSON object is empty rather than <code>{"count":0}</code>. And a reader that receives an explicit zero stores it, reports it as not set, and drops it on the next write: the field leaves the encoding without leaving the values.</p>
+    <p>Negative zero is the exception that proves the rule: its sign bit is part of the value, so a float or double field holding <code>-0.0</code> is written in both formats, and <code>-0</code> reads back as one. Every zero is compared per kind, so a string's zero is the empty string, an enum's is the number <code>0</code>, and a message field is never zero — it has presence whether or not the schema says so.</p>
+
+    <h2 id="generate"><span class="tag">4</span> Generated code</h2>
     <p>When the schema is known at build time, <code>protoc-gen-mbt</code> writes MoonBit source instead. The struct's fields are the protobuf fields; there is no hidden message behind it.</p>
 
     <div class="codeblock">
@@ -159,7 +231,7 @@ same bytes again: true</div>
 
     <p>Read and write through the generated accessors, or through <code>reflect.Message</code> if the code is generic. The struct also registers a <code>MessageType</code>, which is how <code>Any</code> finds its payload.</p>
 
-    <h2 id="json"><span class="tag">4</span> JSON and text</h2>
+    <h2 id="json"><span class="tag">5</span> JSON and text</h2>
     <p>One message, three encoders: each walks the same descriptor, so the mapping is written once. This schema carries a 64-bit integer, a flag and a repeated string, which is where the JSON rules show.</p>
 
     <div class="codeblock">
@@ -225,12 +297,12 @@ total from JSON: 10000000000
 title from text: quarterly
 all three agree: true</div>
 
-    <p>64-bit integers are strings in both directions. Enums travel by name, bytes in base64, and a field without presence is left out when it holds its zero value.</p>
+    <p>64-bit integers are strings in both directions. Enums travel by name, bytes in base64, and a field without presence is left out when it holds its zero value, as the presence section above shows.</p>
     <p>The text format is the one that reads as well as writes, and its grammar is wider than JSON's: fields separated by commas, semicolons or newlines, one element per repeated name, groups, octal and hexadecimal literals, and comments. Hand it <code>title: "quarterly", total: 10000000000, tags: "proto" tags: "wire"</code> and the encoder writes the two tags back one per line.</p>
 
 
 
-    <h2 id="editions"><span class="tag">5</span> Editions</h2>
+    <h2 id="editions"><span class="tag">6</span> Editions</h2>
     <p>Edition 2023 and 2024 schemas are read the same way. Features resolve from the innermost declaration outward, so a file-level default can be overridden per field.</p>
 
     <div class="codeblock">
@@ -248,7 +320,7 @@ all three agree: true</div>
 
     <p>With <code>field_presence = IMPLICIT</code> a scalar is generated as <code>Int32</code>; without it, as <code>Int32?</code>. <code>repeated_field_encoding</code> decides whether a repeated scalar is packed on the wire.</p>
 
-    <h2 id="extensions"><span class="tag">6</span> Extensions</h2>
+    <h2 id="extensions"><span class="tag">7</span> Extensions</h2>
     <p>An extension lives in the message's extension range and is named in brackets in text and JSON. The binary encoding is the same as any other field.</p>
 
     <div class="codeblock">
@@ -268,7 +340,7 @@ all three agree: true</div>
 
     <p>In text form the field is <code>[events.annotation]: "..."</code>; in JSON the key is the same bracketed name. A decoder resolves an unknown field number against the extension registry before it decides the bytes are unknown.</p>
 
-    <h2 id="known"><span class="tag">7</span> Well-known types</h2>
+    <h2 id="known"><span class="tag">8</span> Well-known types</h2>
     <p>The <code>google.protobuf</code> types ship with the module, generated from the schemas the protobuf release carries. Register them once and <code>Any</code>, <code>Timestamp</code>, <code>Duration</code>, <code>FieldMask</code> and the wrapper types use their own JSON forms.</p>
 
     <div class="codeblock">

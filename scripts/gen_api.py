@@ -33,7 +33,11 @@ PACKAGES = [
 ]
 
 DECL = re.compile(
-    r"^\s*(?:pub\(all\)\s+|pub\(open\)\s+|pub\s+)?(struct|enum|suberror|trait|fn|let)\s+"
+    r"^\s*(?:pub\(all\)\s+|pub\(open\)\s+|pub\s+)?(struct|enum|suberror|trait|fn|let)\s*"
+    # A generic function carries its type parameters between the keyword and the
+    # name, with no space before the bracket; skipping them is what keeps its doc
+    # block attached to it.
+    r"(?:\[[^\]]*\]\s*)?"
     r"([A-Za-z_][\w]*(?:::[A-Za-z_][\w]*)?)"
 )
 

@@ -1,6 +1,13 @@
 // A message backed by an association array keyed by field number.
 
 ///|
+/// A message whose fields are known only at run time: it keeps the field number
+/// and the value of everything that was set, and answers every `Message` method
+/// against the descriptor it was built from.
+///
+/// It is the library's one implementation that is not generated, which makes it
+/// what a program uses when the schema arrives as bytes, and what the group,
+/// unknown-field and extension tests build their cases with.
 pub struct Message {
   desc : @reflect.MessageDescriptor
   msg_type : &@reflect.MessageType
@@ -13,6 +20,7 @@ pub struct Message {
 }
 
 ///|
+/// An empty message of the type `desc` describes.
 pub fn Message::new(desc : @reflect.MessageDescriptor) -> Message {
   let mt = MessageType::new(desc)
   {
@@ -92,7 +100,14 @@ pub impl @reflect.Message for Message with fn range(
   while i < self.fields.length() {
     let (number, value) = self.fields[i]
     match self.desc.field_by_number(number) {
-      Some(field) => if !f(field, value) { break }
+      // `range` visits the fields `has` reports, so a stored zero of a field
+      // without presence is not visited.
+      Some(field) =>
+        if @reflect.is_populated(self as &@reflect.Message, field) {
+          if !f(field, value) {
+            break
+          }
+        }
       None => ()
     }
     i = i + 1
@@ -131,8 +146,12 @@ pub impl @reflect.Message for Message with fn has(
     value.map().length() > 0
   } else if field.is_list() {
     value.list().length() > 0
-  } else {
+  } else if field.kind.is_message() || field.has_presence || field.is_extension {
     true
+  } else {
+    // A field without presence is stored like any other, but a zero is
+    // indistinguishable from an absent one, so a zero is not a value.
+    !value.is_zero()
   }
 }
 
@@ -286,7 +305,8 @@ pub extend Message with @reflect.Message::{
 pub extend Message with @reflect.Fresh::{fresh}
 
 ///|
-/// The type of a dynamic message: its descriptor and a constructor.
+/// The type of a dynamic message: the descriptor and a constructor, so a value
+/// reached through reflection can build a nested message of the same type.
 pub struct MessageType {
   desc : @reflect.MessageDescriptor
 }
@@ -328,7 +348,8 @@ pub extend MessageType with @reflect.MessageType::{
 }
 
 ///|
-/// An enum value carrying its descriptor and number.
+/// An enum value carrying its descriptor and number. A schema read at run time
+/// has no MoonBit enum to point at, so the number is the value.
 pub struct EnumValue {
   desc : @reflect.EnumDescriptor
   enum_type : &@reflect.EnumType
@@ -354,6 +375,7 @@ pub impl @reflect.Enum for EnumValue with fn number(self) -> Int32 {
 pub extend EnumValue with @reflect.Enum::{descriptor, enum_type, number}
 
 ///|
+/// An enum's type at run time: the descriptor, and a constructor from a number.
 pub struct EnumType {
   desc : @reflect.EnumDescriptor
 }
@@ -387,7 +409,9 @@ pub fn new_enum_type(desc : @reflect.EnumDescriptor) -> &@reflect.EnumType {
 }
 
 ///|
-/// An extension type backed by its descriptor.
+/// An extension type backed by its descriptor: it can make a value of the
+/// extension's kind, and it accepts any value because the descriptor already
+/// says which kind is legal.
 pub struct ExtensionType {
   desc : @reflect.FieldDescriptor
 }

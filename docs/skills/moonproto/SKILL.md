@@ -61,6 +61,19 @@ let from_json = @dynamic.Message::new(descriptor)
 assert_eq(from_json.get(name).string(), "moon")
 ```
 
+## Ask whether a field is set
+
+`Message::has` answers with the same rule the encoders use, so it is what tells
+"the peer sent a zero" from "the peer sent nothing":
+
+```mbt
+assert_eq(message.has(name), true)
+let count = descriptor.field_by_name("count").unwrap()
+message.set(count, @reflect.Int32(0))
+assert_eq(message.has(count), false)
+assert_eq(@proto.encode(message).length(), 6)
+```
+
 ## Generate real MoonBit structs
 
 `protoc-gen-mbt` turns a schema into a struct whose fields are the protobuf
@@ -90,9 +103,16 @@ field written without a label holds a plain `T`.
   original text when exact digits matter.
 - Unknown fields are kept on the message and re-emitted by the next encode.
   `proto.reset` deliberately clears them.
-- Proto3 scalars without presence are omitted from JSON output when they hold
-  their zero value, even if the input mentioned them. Set
-  `emit_default_values` in the marshal options to force them out.
+- A proto3 scalar without presence has no set state: binary and JSON both leave
+  it out when it holds the zero of its kind, even if the code or the input
+  mentioned it, and `Message::has` reports it as not set. Write `optional` in
+  the schema when a zero has to survive, and set `emit_default_values` in the
+  JSON marshal options to force every field into the document.
+- Negative zero is a value, not a zero. A float or double field holding `-0.0`
+  is written in binary and JSON (`-0`) and reads back with its sign; every other
+  kind's zero is compared by value.
+- Reading a message whose bytes carry an explicit zero stores the value but not
+  the presence: re-encoding drops the field, which is what a peer expects.
 - Enum names in JSON and text need the enum's file descriptor in
   `reflect.global_files`; without it the encoder writes the number. Register a
   schema read by `parser` with `reflect.global_files.register(file)`, and the

@@ -149,6 +149,11 @@ color: BLUE</pre>
         <p>Varints, fixed-width numbers, length-delimited values and groups. Unknown fields are kept and written back.</p>
       </article>
       <article class="card">
+        <span class="glyph">0</span>
+        <h3>Presence</h3>
+        <p>A field without presence is written only when it is not zero, in binary and in JSON alike. <code>optional</code> is what keeps a zero.</p>
+      </article>
+      <article class="card">
         <span class="glyph">{ }</span>
         <h3>JSON</h3>
         <p>64-bit integers as strings, enums by name, bytes in base64, and the well-known type forms.</p>

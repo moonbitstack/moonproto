@@ -1,0 +1,12 @@
+// Presence on the wire: what an implicit zero, an explicit one and a negative
+// one look like in binary and in JSON.
+import {
+  "moonbitstack/moonproto/desc",
+  "moonbitstack/moonproto/dynamic",
+  "moonbitstack/moonproto/json",
+  "moonbitstack/moonproto/parser",
+  "moonbitstack/moonproto/proto",
+  "moonbitstack/moonproto/reflect",
+}
+
+pkgtype(kind: "executable")

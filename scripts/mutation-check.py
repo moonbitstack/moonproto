@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Prove that three behaviours are actually pinned by the test suite.
+"""Prove that five behaviours are actually pinned by the test suite.
 
 Each mutation makes one deliberate, compiling change to a runtime invariant,
 runs the full wasm-gc test suite, records which tests turn red, and restores
 the original bytes. A mutation that leaves every test green means the suite no
 longer protects that invariant, and is itself a failure.
 
-The three invariants are the ones the delivery brief calls out: the ten-octet
-varint limit, unknown-field preservation, and 64-bit integers as JSON strings.
+The invariants are the ten-octet varint limit, unknown-field preservation,
+64-bit integers as JSON strings, a zero without presence staying off the wire,
+and negative zero keeping its sign.
 """
 
 from __future__ import annotations
@@ -73,6 +74,36 @@ MUTATIONS = [
             "protojson: 64-bit integers are strings on the wire",
         ],
     ),
+    Mutation(
+        name="a zero without presence stays off the wire",
+        path="src/reflect/message.mbt",
+        edits=[
+            (
+                "  } else {\n    !message.get(field).is_zero()\n  }",
+                "  } else {\n    true\n  }",
+            ),
+        ],
+        expect=[
+            "binary: a zero without presence writes no bytes",
+            "binary: a zero read from the wire does not come back",
+            "binary and JSON leave the same zeros out",
+            "a zero-valued field without presence is left out",
+        ],
+    ),
+    Mutation(
+        name="negative zero keeps its sign",
+        path="src/reflect/value.mbt",
+        edits=[
+            (
+                "  value == 0.0 && value.reinterpret_as_uint64() == 0UL",
+                "  value == 0.0",
+            ),
+        ],
+        expect=[
+            "binary: negative zero keeps its sign on the wire",
+            "a negative zero is written by both encodings",
+        ],
+    ),
 ]
 
 FAILED_NAME = re.compile(r'\btest \S+:?\d* \("([^"]+)"\) failed')
@@ -127,7 +158,7 @@ def main() -> int:
         for name in missing:
             print(f"    ! expected but stayed green: {name}")
         print(f"  verdict: {'PASS' if passed else 'FAIL'}")
-    print("\nmutation check: " + ("all three invariants are pinned" if ok else "FAILED"))
+    print("\nmutation check: " + ("all five invariants are pinned" if ok else "FAILED"))
     return 0 if ok else 1
 
 

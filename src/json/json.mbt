@@ -5,12 +5,25 @@
 ///|
 /// How a message is written as JSON.
 pub(all) struct MarshalOptions {
+  /// Break the object over several lines. Off by default: one line is what a
+  /// log or a wire capture wants.
   multiline : Bool
+  /// The string one level of nesting is indented with, used only when
+  /// `multiline` is set.
   indent : String
+  /// Skip the check that every required field is set. Off by default.
   allow_partial : Bool
+  /// Use the names the schema declares rather than the lowerCamelCase names the
+  /// JSON mapping prefers.
   use_proto_names : Bool
+  /// Write an enum as its number rather than as the name of the value.
   use_enum_numbers : Bool
+  /// Write every field the descriptor declares, including the ones that are not
+  /// set. A field with presence that is unset becomes `null`; a field without
+  /// presence becomes its zero.
   emit_unpopulated : Bool
+  /// Write the fields that are not set with their zero value, leaving out the
+  /// `null` a field with presence would produce.
   emit_default_values : Bool
 }
 
@@ -28,8 +41,11 @@ pub let marshal_options : MarshalOptions = {
 ///|
 /// How a message is read from JSON.
 pub(all) struct UnmarshalOptions {
+  /// Accept a message whose required fields are missing. Off by default.
   allow_partial : Bool
+  /// Ignore a member the schema does not declare instead of refusing it.
   discard_unknown : Bool
+  /// How deep a nested object may go before the reader refuses.
   recursion_limit : Int32
 }
 
@@ -71,7 +87,9 @@ pub impl Show for Refused with fn output(self, logger) {
 pub extend Refused with Show::{to_string, output}
 
 ///|
-/// The JSON text of `message`.
+/// The JSON text of `message`: a field without presence that holds its zero is
+/// absent, a 64-bit integer is a string, an enum is its name, bytes are base64,
+/// and the well-known types use the forms the mapping fixes for them.
 pub fn[M : @reflect.Message] encode(
   message : M,
   marshal_options~ : MarshalOptions = marshal_options,
@@ -96,7 +114,9 @@ pub fn[M : @reflect.Message] encode(
 }
 
 ///|
-/// A message as a `Json` value, so it composes with core's JSON layer.
+/// The same document as a core `Json` value, so a message composes with JSON a
+/// program already holds. A generated message's `ToJson` implementation is this
+/// call.
 pub fn[M : @reflect.Message] to_json(
   message : M,
   marshal_options~ : MarshalOptions = marshal_options,
@@ -105,7 +125,10 @@ pub fn[M : @reflect.Message] to_json(
 }
 
 ///|
-/// Read JSON text into `message`, replacing its contents.
+/// Read JSON text into `message`, replacing its contents. Numbers keep their
+/// written form, which is how an integer too large for a double survives the
+/// trip. A member the schema does not declare is refused unless
+/// `discard_unknown` is set.
 pub fn[M : @reflect.Message] decode(
   text : StringView,
   message : M,
@@ -118,7 +141,8 @@ pub fn[M : @reflect.Message] decode(
 }
 
 ///|
-/// Read a `Json` value into `message`.
+/// Read a core `Json` value into `message`. A generated message's `FromJson`
+/// implementation is this call.
 pub fn[M : @reflect.Message] from_json(
   message : M,
   value : @cjson.Json,
@@ -203,16 +227,11 @@ fn object_to_json(
       if emit {
         fields.set(name, list_to_json(field, message, opts, depth))
       }
-    } else if message.has(field) {
-      let value = message.get(field)
+    } else if @reflect.is_populated(message, field) {
       // A proto3 scalar without presence is absent when it holds its zero,
-      // even if the input explicitly mentioned it.
-      if !opts.emit_default_values &&
-        !field.has_presence &&
-        value.equal(@reflect.default_for(field)) {
-        continue
-      }
-      fields.set(name, singular_to_json(field, value, opts, depth))
+      // even if the input explicitly mentioned it; `is_populated` is what says
+      // so, and the binary encoder asks the same question.
+      fields.set(name, singular_to_json(field, message.get(field), opts, depth))
     } else if opts.emit_unpopulated || opts.emit_default_values {
       fields.set(name, default_to_json(field, opts, depth))
     }
@@ -365,7 +384,14 @@ fn float_json(value : Double) -> @cjson.Json {
       @cjson.Json::string("-Infinity")
     }
   } else {
-    @cjson.Json::number(value, repr=value.to_string())
+    // Core's `to_string` drops the sign of a negative zero, but the sign is
+    // part of the value: it is written as `-0` and reads back as one.
+    let repr = if value == 0.0 && !@reflect.is_plain_zero(value) {
+      "-0"
+    } else {
+      value.to_string()
+    }
+    @cjson.Json::number(value, repr~)
   }
 }
 

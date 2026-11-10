@@ -45,7 +45,7 @@
     <div class="rail-group">
       <b>Packages</b>
       <a href="#pkg-wire"><span class="n">36</span> wire</a>
-      <a href="#pkg-reflect"><span class="n">160</span> reflect</a>
+      <a href="#pkg-reflect"><span class="n">163</span> reflect</a>
       <a href="#pkg-proto"><span class="n">21</span> proto</a>
       <a href="#pkg-json"><span class="n">11</span> json</a>
       <a href="#pkg-text"><span class="n">9</span> text</a>
@@ -411,9 +411,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind enum">enum</span><span class="sname">Value</span><span class="sdoc">One field value</span></summary>
+        <summary><span class="kind enum">enum</span><span class="sname">Value</span><span class="sdoc">One field value, tagged with its kind</span></summary>
         <div class="sym-body">
-          <p>One field value. A composite value holds a reference to a list, map or message, so mutation through it is visible to the message that owns it.</p><pre class="sig">pub(all) enum Value</pre><div>Invalid</div><div>Bool(Bool)</div><div>Int32(Int32)</div><div>Int64(Int64)</div><div>Uint32(UInt32)</div><div>Uint64(UInt64)</div><div>Float(Float)</div><div>Double(Double)</div><div>String(String)</div><div>Bytes(Bytes)</div><div>Enum(Int32)</div><div>Message(&amp;Message)</div><div>ListView(&amp;ListField)</div><div>MapView(&amp;MapField)</div>
+          <p>One field value, tagged with its kind. The kind travels with the value, so a message that keys its values by field number and one that has a struct field per field answer the same questions about it. A composite value holds a reference to a list, map or message, so mutation through it is visible to the message that owns it. The accessors abort when the value is not the kind asked for, as an out-of-range index does, and `map_key` refuses a value that is not one of the six key kinds.</p><pre class="sig">pub(all) enum Value</pre><div>Invalid</div><div>Bool(Bool)</div><div>Int32(Int32)</div><div>Int64(Int64)</div><div>Uint32(UInt32)</div><div>Uint64(UInt64)</div><div>Float(Float)</div><div>Double(Double)</div><div>String(String)</div><div>Bytes(Bytes)</div><div>Enum(Int32)</div><div>Message(&amp;Message)</div><div>ListView(&amp;ListField)</div><div>MapView(&amp;MapField)</div>
         </div>
       </details>
       <details class="sym">
@@ -435,9 +435,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">ExtensionType</span><span class="sdoc">A concrete extension: its type and validation of a value assigned to it.</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">ExtensionType</span><span class="sdoc">A concrete extension: its descriptor, a value of its kind, and validation of a value assigned…</span></summary>
         <div class="sym-body">
-          <p>A concrete extension: its type and validation of a value assigned to it.</p><pre class="sig">pub(open) trait ExtensionType</pre><div>fn new_value(Self) -&gt; Value</div><div>fn zero(Self) -&gt; Value</div><div>fn descriptor(Self) -&gt; FieldDescriptor</div><div>fn is_valid_value(Self, Value) -&gt; Bool</div>
+          <p>A concrete extension: its descriptor, a value of its kind, and validation of a value assigned to it. There is no conversion to and from a universal carrier, because a value assigned to an extension is already a `Value`; validation is the only thing the two directions had left to do.</p><pre class="sig">pub(open) trait ExtensionType</pre><div>fn new_value(Self) -&gt; Value</div><div>fn zero(Self) -&gt; Value</div><div>fn descriptor(Self) -&gt; FieldDescriptor</div><div>fn is_valid_value(Self, Value) -&gt; Bool</div>
         </div>
       </details>
       <details class="sym">
@@ -447,27 +447,27 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">ListField</span><span class="sdoc">A repeated field: zero-indexed and ordered.</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">ListField</span><span class="sdoc">A repeated field: zero-indexed and ordered, with a mutable element for the decoder to fill in…</span></summary>
         <div class="sym-body">
-          <p>A repeated field: zero-indexed and ordered.</p><pre class="sig">pub(open) trait ListField</pre><div>fn length(Self) -&gt; Int32</div><div>fn get(Self, Int32) -&gt; Value</div><div>fn set(Self, Int32, Value) -&gt; Unit</div><div>fn append(Self, Value) -&gt; Unit</div><div>fn append_mutable(Self) -&gt; Value</div><div>fn truncate(Self, Int32) -&gt; Unit</div><div>fn new_element(Self) -&gt; Value</div><div>fn is_valid(Self) -&gt; Bool</div>
+          <p>A repeated field: zero-indexed and ordered, with a mutable element for the decoder to fill in place. Core already owns the names `List` and `Map`, so the views carry a suffix. A generated message hands its own `Array` to `TypedList` instead of copying it into a container of the library&#x27;s own, and `ValueList` is the implementation a message keeps when its values are only known at run time.</p><pre class="sig">pub(open) trait ListField</pre><div>fn length(Self) -&gt; Int32</div><div>fn get(Self, Int32) -&gt; Value</div><div>fn set(Self, Int32, Value) -&gt; Unit</div><div>fn append(Self, Value) -&gt; Unit</div><div>fn append_mutable(Self) -&gt; Value</div><div>fn truncate(Self, Int32) -&gt; Unit</div><div>fn new_element(Self) -&gt; Value</div><div>fn is_valid(Self) -&gt; Bool</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">MapField</span><span class="sdoc">A map field: unordered, keyed by one of the six key kinds.</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">MapField</span><span class="sdoc">A map field: unordered, keyed by one of the six key kinds, with a mutable value for the decod…</span></summary>
         <div class="sym-body">
-          <p>A map field: unordered, keyed by one of the six key kinds.</p><pre class="sig">pub(open) trait MapField</pre><div>fn length(Self) -&gt; Int32</div><div>fn range(Self, (MapKey, Value) -&gt; Bool) -&gt; Unit</div><div>fn has(Self, MapKey) -&gt; Bool</div><div>fn clear(Self, MapKey) -&gt; Unit</div><div>fn get(Self, MapKey) -&gt; Value</div><div>fn set(Self, MapKey, Value) -&gt; Unit</div><div>fn mutable(Self, MapKey) -&gt; Value</div><div>fn new_value(Self) -&gt; Value</div><div>fn is_valid(Self) -&gt; Bool</div>
+          <p>A map field: unordered, keyed by one of the six key kinds, with a mutable value for the decoder to fill in place. `TypedMap` wraps a `Map[K, V]` the generated message already has; `ValueMap` is the run-time implementation.</p><pre class="sig">pub(open) trait MapField</pre><div>fn length(Self) -&gt; Int32</div><div>fn range(Self, (MapKey, Value) -&gt; Bool) -&gt; Unit</div><div>fn has(Self, MapKey) -&gt; Bool</div><div>fn clear(Self, MapKey) -&gt; Unit</div><div>fn get(Self, MapKey) -&gt; Value</div><div>fn set(Self, MapKey, Value) -&gt; Unit</div><div>fn mutable(Self, MapKey) -&gt; Value</div><div>fn new_value(Self) -&gt; Value</div><div>fn is_valid(Self) -&gt; Bool</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">Message</span><span class="sdoc">A message instance, reachable only through its descriptor.</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">Message</span><span class="sdoc">A message instance, reachable only through its descriptor</span></summary>
         <div class="sym-body">
-          <p>A message instance, reachable only through its descriptor.</p><pre class="sig">pub(open) trait Message</pre><div>fn descriptor(Self) -&gt; MessageDescriptor</div><div>fn message_type(Self) -&gt; &amp;MessageType</div><div>fn is_valid(Self) -&gt; Bool</div><div>fn range(Self, (FieldDescriptor, Value) -&gt; Bool) -&gt; Unit</div><div>fn range_extensions(Self, (FieldDescriptor, Value) -&gt; Bool) -&gt; Unit</div><div>fn has(Self, FieldDescriptor) -&gt; Bool</div><div>fn clear(Self, FieldDescriptor) -&gt; Unit</div><div>fn get(Self, FieldDescriptor) -&gt; Value</div><div>fn set(Self, FieldDescriptor, Value) -&gt; Unit</div><div>fn mutable(Self, FieldDescriptor) -&gt; Value</div><div>fn new_field(Self, FieldDescriptor) -&gt; Value</div><div>fn which_oneof(Self, OneofDescriptor) -&gt; Int32?</div><div>fn get_unknown(Self) -&gt; RawFields</div><div>fn set_unknown(Self, RawFields) -&gt; Unit</div>
+          <p>A message instance, reachable only through its descriptor. `has` answers whether a field carries a value. A repeated or map field carries one when it is non-empty, a field with presence when it is set, and a field without presence when its value is not the zero of its kind — writing a zero is the same as leaving the field out. Encoders ask `is_populated`, which is the same rule stated once for every implementation.</p><pre class="sig">pub(open) trait Message</pre><div>fn descriptor(Self) -&gt; MessageDescriptor</div><div>fn message_type(Self) -&gt; &amp;MessageType</div><div>fn is_valid(Self) -&gt; Bool</div><div>fn range(Self, (FieldDescriptor, Value) -&gt; Bool) -&gt; Unit</div><div>fn range_extensions(Self, (FieldDescriptor, Value) -&gt; Bool) -&gt; Unit</div><div>fn has(Self, FieldDescriptor) -&gt; Bool</div><div>fn clear(Self, FieldDescriptor) -&gt; Unit</div><div>fn get(Self, FieldDescriptor) -&gt; Value</div><div>fn set(Self, FieldDescriptor, Value) -&gt; Unit</div><div>fn mutable(Self, FieldDescriptor) -&gt; Value</div><div>fn new_field(Self, FieldDescriptor) -&gt; Value</div><div>fn which_oneof(Self, OneofDescriptor) -&gt; Int32?</div><div>fn get_unknown(Self) -&gt; RawFields</div><div>fn set_unknown(Self, RawFields) -&gt; Unit</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind trait">trait</span><span class="sname">MessageType</span><span class="sdoc">A message&#x27;s concrete type: its descriptor and a constructor.</span></summary>
+        <summary><span class="kind trait">trait</span><span class="sname">MessageType</span><span class="sdoc">A message&#x27;s concrete type: its descriptor, and a constructor for an empty instance</span></summary>
         <div class="sym-body">
-          <p>A message&#x27;s concrete type: its descriptor and a constructor.</p><pre class="sig">pub(open) trait MessageType</pre><div>fn new_message(Self) -&gt; &amp;Message</div><div>fn zero(Self) -&gt; &amp;Message</div><div>fn descriptor(Self) -&gt; MessageDescriptor</div>
+          <p>A message&#x27;s concrete type: its descriptor, and a constructor for an empty instance. The registry stores these, which is how `Any` turns a type URL into a message and how a decoder builds a nested message it has never seen.</p><pre class="sig">pub(open) trait MessageType</pre><div>fn new_message(Self) -&gt; &amp;Message</div><div>fn zero(Self) -&gt; &amp;Message</div><div>fn descriptor(Self) -&gt; MessageDescriptor</div>
         </div>
       </details>
       <details class="sym">
@@ -981,6 +981,12 @@
         </div>
       </details>
       <details class="sym">
+        <summary><span class="kind fn">fn</span><span class="sname">Value::is_zero</span><span class="sdoc">Whether a scalar value is the zero of its kind: the state in which a field without presence i…</span></summary>
+        <div class="sym-body">
+          <p>Whether a scalar value is the zero of its kind: the state in which a field without presence is absent, since the wire has no way to say &quot;present, and zero&quot;. Negative zero is a value rather than a zero — the sign bit is part of it — so a field holding it is written and the sign survives every format.</p><pre class="sig">pub fn Value::is_zero(Self) -&gt; Bool</pre>
+        </div>
+      </details>
+      <details class="sym">
         <summary><span class="kind fn">fn</span><span class="sname">Value::list</span></summary>
         <div class="sym-body">
           <pre class="sig">pub fn Value::list(Self) -&gt; &amp;ListField</pre>
@@ -1137,15 +1143,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">assign_list</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">assign_list</span><span class="sdoc">Replace the contents of `target` with the elements of `source`.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[T] assign_list(Array[T], &amp;ListField, Element[T]) -&gt; Unit</pre>
+          <p>Replace the contents of `target` with the elements of `source`.</p><pre class="sig">pub fn[T] assign_list(Array[T], &amp;ListField, Element[T]) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">assign_map</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">assign_map</span><span class="sdoc">Replace the contents of `target` with the entries of `source`.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[K : Hash + Eq, V] assign_map(Map[K, V], &amp;MapField, (MapKey) -&gt; K, Element[V]) -&gt; Unit</pre>
+          <p>Replace the contents of `target` with the entries of `source`.</p><pre class="sig">pub fn[K : Hash + Eq, V] assign_map(Map[K, V], &amp;MapField, (MapKey) -&gt; K, Element[V]) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
@@ -1161,27 +1167,39 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">is_set</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">is_plain_zero</span><span class="sdoc">Whether a double is `+0.0`, the zero that carries no sign</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[T] is_set(T?) -&gt; Bool</pre>
+          <p>Whether a double is `+0.0`, the zero that carries no sign. A generated message&#x27;s own `has` asks this of a float field, so the answer matches what `Value::is_zero` says about the same value.</p><pre class="sig">pub fn is_plain_zero(Double) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">list_view</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">is_populated</span><span class="sdoc">Whether `message` carries a value for `field`, which is what every encoder asks before it wri…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[T] list_view(Array[T], Element[T]) -&gt; &amp;ListField</pre>
+          <p>Whether `message` carries a value for `field`, which is what every encoder asks before it writes one. A repeated or map field carries one when it is non-empty; a field with presence when it is set; and a field without presence when its value is not zero, because the wire cannot tell a zero written by hand from a field that was never mentioned.</p><pre class="sig">pub fn is_populated(&amp;Message, FieldDescriptor) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">map_view</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">is_set</span><span class="sdoc">Whether an optional field slot has a value.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[K : Hash + Eq, V] map_view(Map[K, V], (K) -&gt; MapKey, (MapKey) -&gt; K, Element[V]) -&gt; &amp;MapField</pre>
+          <p>Whether an optional field slot has a value.</p><pre class="sig">pub fn[T] is_set(T?) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">message_element</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">list_view</span><span class="sdoc">The view a generated message returns for a repeated field.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[T] message_element((T) -&gt; Value, () -&gt; T, (T, &amp;Message) -&gt; Unit) -&gt; Element[T]</pre>
+          <p>The view a generated message returns for a repeated field.</p><pre class="sig">pub fn[T] list_view(Array[T], Element[T]) -&gt; &amp;ListField</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind fn">fn</span><span class="sname">map_view</span><span class="sdoc">The view a generated message returns for a map field.</span></summary>
+        <div class="sym-body">
+          <p>The view a generated message returns for a map field.</p><pre class="sig">pub fn[K : Hash + Eq, V] map_view(Map[K, V], (K) -&gt; MapKey, (MapKey) -&gt; K, Element[V]) -&gt; &amp;MapField</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind fn">fn</span><span class="sname">message_element</span><span class="sdoc">The element of a repeated message field: a new element is the concrete type, and a value is c…</span></summary>
+        <div class="sym-body">
+          <p>The element of a repeated message field: a new element is the concrete type, and a value is copied into it.</p><pre class="sig">pub fn[T] message_element((T) -&gt; Value, () -&gt; T, (T, &amp;Message) -&gt; Unit) -&gt; Element[T]</pre>
         </div>
       </details>
       <details class="sym">
@@ -1215,9 +1233,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">scalar_element</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">scalar_element</span><span class="sdoc">The element of a repeated field: a scalar converts both ways.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[T] scalar_element((T) -&gt; Value, (Value) -&gt; T, () -&gt; T) -&gt; Element[T]</pre>
+          <p>The element of a repeated field: a scalar converts both ways.</p><pre class="sig">pub fn[T] scalar_element((T) -&gt; Value, (Value) -&gt; T, () -&gt; T) -&gt; Element[T]</pre>
         </div>
       </details>
       <details class="sym">
@@ -1256,21 +1274,21 @@
       <p class="pkg-path">moonbitstack/moonproto/proto</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">Binary encoding and decoding, size, merge, clone, equal, reset.</p>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">MarshalOptions</span><span class="sdoc">How a message is encoded.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">MarshalOptions</span><span class="sdoc">How a message is written as bytes.</span></summary>
         <div class="sym-body">
-          <p>How a message is encoded.</p><pre class="sig">pub(all) struct MarshalOptions</pre><div>allow_partial : Bool</div><div>deterministic : Bool</div>
+          <p>How a message is written as bytes.</p><pre class="sig">pub(all) struct MarshalOptions</pre><div>allow_partial : Bool</div><div>deterministic : Bool</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">UnmarshalOptions</span><span class="sdoc">How a message is decoded.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">UnmarshalOptions</span><span class="sdoc">How a message is read from bytes.</span></summary>
         <div class="sym-body">
-          <p>How a message is decoded.</p><pre class="sig">pub(all) struct UnmarshalOptions</pre><div>merge : Bool</div><div>allow_partial : Bool</div><div>discard_unknown : Bool</div><div>recursion_limit : Int32</div>
+          <p>How a message is read from bytes.</p><pre class="sig">pub(all) struct UnmarshalOptions</pre><div>merge : Bool</div><div>allow_partial : Bool</div><div>discard_unknown : Bool</div><div>recursion_limit : Int32</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">A binary refusal.</span></summary>
+        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">A binary refusal</span></summary>
         <div class="sym-body">
-          <p>A binary refusal.</p><pre class="sig">pub(all) suberror Refused</pre><div>Wire(@wire.Refused)</div><div>Required(String)</div><div>NoType(String)</div><div>Recursion(Int32)</div><div>Mismatch(String)</div>
+          <p>A binary refusal. A refusal raised by a lower package travels as a payload rather than as a string, so a caller can still see where the bytes stopped.</p><pre class="sig">pub(all) suberror Refused</pre><div>Wire(@wire.Refused)</div><div>Required(String)</div><div>NoType(String)</div><div>Recursion(Int32)</div><div>Mismatch(String)</div>
         </div>
       </details>
       <details class="sym">
@@ -1286,87 +1304,87 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">check_initialized</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">check_initialized</span><span class="sdoc">Refuse a message with a required field unset</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] check_initialized(M) -&gt; Unit raise Refused</pre>
+          <p>Refuse a message with a required field unset. The refusal names the field by its dotted path, so a nested omission says where it is.</p><pre class="sig">pub fn[M : @reflect.Message] check_initialized(M) -&gt; Unit raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">clear_extension</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">clear_extension</span><span class="sdoc">Drop the value of `extension`, leaving the message as if it was never set.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] clear_extension(M, &amp;@reflect.ExtensionType) -&gt; Unit</pre>
+          <p>Drop the value of `extension`, leaving the message as if it was never set.</p><pre class="sig">pub fn[M : @reflect.Message] clear_extension(M, &amp;@reflect.ExtensionType) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">clone</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">clone</span><span class="sdoc">A deep copy of `message`</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message + @reflect.Fresh] clone(M) -&gt; M</pre>
+          <p>A deep copy of `message`. `Fresh` is what names the concrete type, so the copy has the same type as its source rather than the trait object behind it.</p><pre class="sig">pub fn[M : @reflect.Message + @reflect.Fresh] clone(M) -&gt; M</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">decode</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">decode</span><span class="sdoc">Read `bytes` into `message`</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] decode(BytesView, M, unmarshal_options? : UnmarshalOptions) -&gt; Unit raise Refused</pre>
+          <p>Read `bytes` into `message`. The destination is a struct with mutable fields, so it is written in place and the caller&#x27;s binding sees the result; it is cleared first unless `merge` is set.</p><pre class="sig">pub fn[M : @reflect.Message] decode(BytesView, M, unmarshal_options? : UnmarshalOptions) -&gt; Unit raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">encode</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">encode</span><span class="sdoc">The encoded bytes of `message`</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] encode(M, marshal_options? : MarshalOptions) -&gt; Bytes raise Refused</pre>
+          <p>The encoded bytes of `message`. Fields are written in field-number order, so the output depends only on the values, and a field without presence that holds its zero is left out.</p><pre class="sig">pub fn[M : @reflect.Message] encode(M, marshal_options? : MarshalOptions) -&gt; Bytes raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">encode_to</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">encode_to</span><span class="sdoc">Append the encoded bytes of `message` to `buf`, which is what a message nested in another one…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] encode_to(@buffer.Buffer, M, marshal_options? : MarshalOptions) -&gt; Unit raise Refused</pre>
+          <p>Append the encoded bytes of `message` to `buf`, which is what a message nested in another one is written through.</p><pre class="sig">pub fn[M : @reflect.Message] encode_to(@buffer.Buffer, M, marshal_options? : MarshalOptions) -&gt; Unit raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">equal</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">equal</span><span class="sdoc">Whether two messages have the same fields and values</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] equal(M, M) -&gt; Bool</pre>
+          <p>Whether two messages have the same fields and values. Presence is part of the answer: a field set to its zero counts as absent when it has no presence, and as a value when it has.</p><pre class="sig">pub fn[M : @reflect.Message] equal(M, M) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">get_extension</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">get_extension</span><span class="sdoc">The value of `extension`, or `None` when the message does not carry one.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] get_extension(M, &amp;@reflect.ExtensionType) -&gt; @reflect.Value?</pre>
+          <p>The value of `extension`, or `None` when the message does not carry one.</p><pre class="sig">pub fn[M : @reflect.Message] get_extension(M, &amp;@reflect.ExtensionType) -&gt; @reflect.Value?</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">has_extension</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">has_extension</span><span class="sdoc">Whether the message carries a value for `extension`</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] has_extension(M, &amp;@reflect.ExtensionType) -&gt; Bool</pre>
+          <p>Whether the message carries a value for `extension`. An extension is a field with a flag, so it is read and written through the same path as a declared field and only its descriptor&#x27;s origin differs.</p><pre class="sig">pub fn[M : @reflect.Message] has_extension(M, &amp;@reflect.ExtensionType) -&gt; Bool</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">merge</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">merge</span><span class="sdoc">Merge `source` into `destination`: a repeated field is appended to, a map is merged key by ke…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] merge(M, &amp;@reflect.Message) -&gt; Unit</pre>
+          <p>Merge `source` into `destination`: a repeated field is appended to, a map is merged key by key, a nested message is merged recursively, and a scalar with presence replaces what was there.</p><pre class="sig">pub fn[M : @reflect.Message] merge(M, &amp;@reflect.Message) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">range_extensions</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">range_extensions</span><span class="sdoc">Visit every extension the message carries, in the order they were first set</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] range_extensions(M, (&amp;@reflect.ExtensionType, @reflect.Value) -&gt; Bool) -&gt; Unit</pre>
+          <p>Visit every extension the message carries, in the order they were first set. Returning `false` stops the walk.</p><pre class="sig">pub fn[M : @reflect.Message] range_extensions(M, (&amp;@reflect.ExtensionType, @reflect.Value) -&gt; Bool) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">reset</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">reset</span><span class="sdoc">Clear every field and every unknown byte, leaving the message as `new` built it.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] reset(M) -&gt; Unit</pre>
+          <p>Clear every field and every unknown byte, leaving the message as `new` built it.</p><pre class="sig">pub fn[M : @reflect.Message] reset(M) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">set_extension</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">set_extension</span><span class="sdoc">Give `extension` a value</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] set_extension(M, &amp;@reflect.ExtensionType, @reflect.Value) -&gt; Unit</pre>
+          <p>Give `extension` a value. The value must be of the extension&#x27;s kind; the encoder writes it where the extension&#x27;s number says.</p><pre class="sig">pub fn[M : @reflect.Message] set_extension(M, &amp;@reflect.ExtensionType, @reflect.Value) -&gt; Unit</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">size</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">size</span><span class="sdoc">The length `encode` would produce, without keeping the bytes</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] size(M) -&gt; Int32</pre>
+          <p>The length `encode` would produce, without keeping the bytes. It is the same walk, so it refuses nothing the encoder would not.</p><pre class="sig">pub fn[M : @reflect.Message] size(M) -&gt; Int32</pre>
         </div>
       </details>
       <details class="sym">
@@ -1417,27 +1435,27 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">decode</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">decode</span><span class="sdoc">Read JSON text into `message`, replacing its contents</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] decode(StringView, M, unmarshal_options? : UnmarshalOptions) -&gt; Unit raise Refused</pre>
+          <p>Read JSON text into `message`, replacing its contents. Numbers keep their written form, which is how an integer too large for a double survives the trip. A member the schema does not declare is refused unless `discard_unknown` is set.</p><pre class="sig">pub fn[M : @reflect.Message] decode(StringView, M, unmarshal_options? : UnmarshalOptions) -&gt; Unit raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">encode</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">encode</span><span class="sdoc">The JSON text of `message`: a field without presence that holds its zero is absent, a 64-bit…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] encode(M, marshal_options? : MarshalOptions) -&gt; String raise Refused</pre>
+          <p>The JSON text of `message`: a field without presence that holds its zero is absent, a 64-bit integer is a string, an enum is its name, bytes are base64, and the well-known types use the forms the mapping fixes for them.</p><pre class="sig">pub fn[M : @reflect.Message] encode(M, marshal_options? : MarshalOptions) -&gt; String raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">from_json</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">from_json</span><span class="sdoc">Read a core `Json` value into `message`</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] from_json(M, @moonbitlang/core/json.Json, unmarshal_options? : UnmarshalOptions) -&gt; Unit raise Refused</pre>
+          <p>Read a core `Json` value into `message`. A generated message&#x27;s `FromJson` implementation is this call.</p><pre class="sig">pub fn[M : @reflect.Message] from_json(M, @moonbitlang/core/json.Json, unmarshal_options? : UnmarshalOptions) -&gt; Unit raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">to_json</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">to_json</span><span class="sdoc">The same document as a core `Json` value, so a message composes with JSON a program already h…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] to_json(M, marshal_options? : MarshalOptions) -&gt; @moonbitlang/core/json.Json raise Refused</pre>
+          <p>The same document as a core `Json` value, so a message composes with JSON a program already holds. A generated message&#x27;s `ToJson` implementation is this call.</p><pre class="sig">pub fn[M : @reflect.Message] to_json(M, marshal_options? : MarshalOptions) -&gt; @moonbitlang/core/json.Json raise Refused</pre>
         </div>
       </details>
       <details class="sym">
@@ -1458,21 +1476,21 @@
       <p class="pkg-path">moonbitstack/moonproto/text</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">The text format: fields, groups, lists and every literal.</p>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">MarshalOptions</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">MarshalOptions</span><span class="sdoc">How a message is written in the text format.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct MarshalOptions</pre><div>multiline : Bool</div><div>indent : String</div><div>emit_ascii : Bool</div><div>allow_partial : Bool</div>
+          <p>How a message is written in the text format.</p><pre class="sig">pub(all) struct MarshalOptions</pre><div>multiline : Bool</div><div>indent : String</div><div>emit_ascii : Bool</div><div>allow_partial : Bool</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">UnmarshalOptions</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">UnmarshalOptions</span><span class="sdoc">How a message is read from the text format.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub(all) struct UnmarshalOptions</pre><div>allow_partial : Bool</div><div>discard_unknown : Bool</div><div>recursion_limit : Int32</div>
+          <p>How a message is read from the text format.</p><pre class="sig">pub(all) struct UnmarshalOptions</pre><div>allow_partial : Bool</div><div>discard_unknown : Bool</div><div>recursion_limit : Int32</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">A text-format refusal.</span></summary>
+        <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">A text-format refusal</span></summary>
         <div class="sym-body">
-          <p>A text-format refusal.</p><pre class="sig">pub(all) suberror Refused</pre><div>Syntax(String, Int32)</div><div>UnknownField(String)</div><div>BadValue(String)</div><div>NoType(String)</div><div>Required(String)</div><div>Recursion(Int32)</div>
+          <p>A text-format refusal. The offset is the position in the input reached when the text stopped making sense.</p><pre class="sig">pub(all) suberror Refused</pre><div>Syntax(String, Int32)</div><div>UnknownField(String)</div><div>BadValue(String)</div><div>NoType(String)</div><div>Required(String)</div><div>Recursion(Int32)</div>
         </div>
       </details>
       <details class="sym">
@@ -1488,15 +1506,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">decode</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">decode</span><span class="sdoc">Read text into `message`, replacing its contents.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] decode(StringView, M, unmarshal_options? : UnmarshalOptions) -&gt; Unit raise Refused</pre>
+          <p>Read text into `message`, replacing its contents.</p><pre class="sig">pub fn[M : @reflect.Message] decode(StringView, M, unmarshal_options? : UnmarshalOptions) -&gt; Unit raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">encode</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">encode</span><span class="sdoc">The text of `message`.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] encode(M, marshal_options? : MarshalOptions) -&gt; String raise Refused</pre>
+          <p>The text of `message`.</p><pre class="sig">pub fn[M : @reflect.Message] encode(M, marshal_options? : MarshalOptions) -&gt; String raise Refused</pre>
         </div>
       </details>
       <details class="sym">
@@ -1601,15 +1619,15 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">decode_from</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">decode_from</span><span class="sdoc">Read one size-delimited message into `message`.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] decode_from(&amp;Reader, M, unmarshal_options? : UnmarshalOptions) -&gt; Unit raise Refused</pre>
+          <p>Read one size-delimited message into `message`.</p><pre class="sig">pub fn[M : @reflect.Message] decode_from(&amp;Reader, M, unmarshal_options? : UnmarshalOptions) -&gt; Unit raise Refused</pre>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">encode_to</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">encode_to</span><span class="sdoc">Write one size-delimited message, returning the bytes written.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn[M : @reflect.Message] encode_to(&amp;Writer, M, marshal_options? : MarshalOptions) -&gt; Int32 raise Refused</pre>
+          <p>Write one size-delimited message, returning the bytes written.</p><pre class="sig">pub fn[M : @reflect.Message] encode_to(&amp;Writer, M, marshal_options? : MarshalOptions) -&gt; Int32 raise Refused</pre>
         </div>
       </details>
       <details class="sym">
@@ -1630,33 +1648,33 @@
       <p class="pkg-path">moonbitstack/moonproto/dynamic</p>
       <p style="color: var(--ink-2); max-width: 62ch; margin: 0 0 24px">Messages, enums and extensions built from descriptors at run time.</p>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">EnumType</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">EnumType</span><span class="sdoc">An enum&#x27;s type at run time: the descriptor, and a constructor from a number.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub struct EnumType</pre><div>desc : @reflect.EnumDescriptor</div>
+          <p>An enum&#x27;s type at run time: the descriptor, and a constructor from a number.</p><pre class="sig">pub struct EnumType</pre><div>desc : @reflect.EnumDescriptor</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">EnumValue</span><span class="sdoc">An enum value carrying its descriptor and number.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">EnumValue</span><span class="sdoc">An enum value carrying its descriptor and number</span></summary>
         <div class="sym-body">
-          <p>An enum value carrying its descriptor and number.</p><pre class="sig">pub struct EnumValue</pre><div>desc : @reflect.EnumDescriptor</div><div>enum_type : &amp;@reflect.EnumType</div><div>number_value : Int32</div>
+          <p>An enum value carrying its descriptor and number. A schema read at run time has no MoonBit enum to point at, so the number is the value.</p><pre class="sig">pub struct EnumValue</pre><div>desc : @reflect.EnumDescriptor</div><div>enum_type : &amp;@reflect.EnumType</div><div>number_value : Int32</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">ExtensionType</span><span class="sdoc">An extension type backed by its descriptor.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">ExtensionType</span><span class="sdoc">An extension type backed by its descriptor: it can make a value of the extension&#x27;s kind, and…</span></summary>
         <div class="sym-body">
-          <p>An extension type backed by its descriptor.</p><pre class="sig">pub struct ExtensionType</pre><div>desc : @reflect.FieldDescriptor</div>
+          <p>An extension type backed by its descriptor: it can make a value of the extension&#x27;s kind, and it accepts any value because the descriptor already says which kind is legal.</p><pre class="sig">pub struct ExtensionType</pre><div>desc : @reflect.FieldDescriptor</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">Message</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">Message</span><span class="sdoc">A message whose fields are known only at run time: it keeps the field number and the value of…</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub struct Message</pre><div>desc : @reflect.MessageDescriptor</div><div>msg_type : &amp;@reflect.MessageType</div><div>fields : Array[(Int32, @reflect.Value)]</div><div>mut unknown : Bytes</div><div>ext_fields : Array[@reflect.FieldDescriptor]</div>
+          <p>A message whose fields are known only at run time: it keeps the field number and the value of everything that was set, and answers every `Message` method against the descriptor it was built from. It is the library&#x27;s one implementation that is not generated, which makes it what a program uses when the schema arrives as bytes, and what the group, unknown-field and extension tests build their cases with.</p><pre class="sig">pub struct Message</pre><div>desc : @reflect.MessageDescriptor</div><div>msg_type : &amp;@reflect.MessageType</div><div>fields : Array[(Int32, @reflect.Value)]</div><div>mut unknown : Bytes</div><div>ext_fields : Array[@reflect.FieldDescriptor]</div>
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind struct">struct</span><span class="sname">MessageType</span><span class="sdoc">The type of a dynamic message: its descriptor and a constructor.</span></summary>
+        <summary><span class="kind struct">struct</span><span class="sname">MessageType</span><span class="sdoc">The type of a dynamic message: the descriptor and a constructor, so a value reached through r…</span></summary>
         <div class="sym-body">
-          <p>The type of a dynamic message: its descriptor and a constructor.</p><pre class="sig">pub struct MessageType</pre><div>desc : @reflect.MessageDescriptor</div>
+          <p>The type of a dynamic message: the descriptor and a constructor, so a value reached through reflection can build a nested message of the same type.</p><pre class="sig">pub struct MessageType</pre><div>desc : @reflect.MessageDescriptor</div>
         </div>
       </details>
       <details class="sym">
@@ -1666,9 +1684,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">EnumType::new</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">EnumType::new</span><span class="sdoc">An empty message of the type `desc` describes.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn EnumType::new(@reflect.EnumDescriptor) -&gt; Self</pre>
+          <p>An empty message of the type `desc` describes.</p><pre class="sig">pub fn EnumType::new(@reflect.EnumDescriptor) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
@@ -1774,9 +1792,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">Message::new</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">Message::new</span><span class="sdoc">An empty message of the type `desc` describes.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn Message::new(@reflect.MessageDescriptor) -&gt; Self</pre>
+          <p>An empty message of the type `desc` describes.</p><pre class="sig">pub fn Message::new(@reflect.MessageDescriptor) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">
@@ -1828,9 +1846,9 @@
         </div>
       </details>
       <details class="sym">
-        <summary><span class="kind fn">fn</span><span class="sname">MessageType::new</span></summary>
+        <summary><span class="kind fn">fn</span><span class="sname">MessageType::new</span><span class="sdoc">An empty message of the type `desc` describes.</span></summary>
         <div class="sym-body">
-          <pre class="sig">pub fn MessageType::new(@reflect.MessageDescriptor) -&gt; Self</pre>
+          <p>An empty message of the type `desc` describes.</p><pre class="sig">pub fn MessageType::new(@reflect.MessageDescriptor) -&gt; Self</pre>
         </div>
       </details>
       <details class="sym">

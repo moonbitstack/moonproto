@@ -932,7 +932,8 @@ fn has_text(
     match field.kind {
       Bool => slot
       String | Bytes => slot + ".length() > 0"
-      Double | Float => slot + " != 0.0"
+      // A zero with no sign is the unset state; negative zero is a value.
+      Double | Float => "!@reflect.is_plain_zero(" + slot + ")"
       Enum => slot + ".code() != 0"
       _ => slot + " != " + zero_text(field, naming)
     }

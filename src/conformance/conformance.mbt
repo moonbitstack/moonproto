@@ -28,6 +28,24 @@ fn f(
 }
 
 ///|
+/// A field with presence. `conformance.proto` puts the payloads and the results
+/// in oneofs, so each of them is a value whether or not it is empty; the harness
+/// states the presence without the oneof, because it answers on two fields at
+/// once and a oneof would drop the first.
+fn f_optional(
+  name : String,
+  number : Int32,
+  label : Int32,
+  type_code : Int32,
+  type_name : String?,
+) -> @desc.FieldDescriptorProto {
+  {
+    ..f(name, number, label, type_code, type_name, None),
+    proto3_optional: true,
+  }
+}
+
+///|
 fn m(
   name : String,
   fields : Array[@desc.FieldDescriptorProto],
@@ -57,8 +75,8 @@ fn request_descriptor() -> @desc.FileDescriptorProto {
   let request = m(
     "ConformanceRequest",
     [
-      f("protobuf_payload", 1, 1, 12, None, None),
-      f("json_payload", 2, 1, 9, None, None),
+      f_optional("protobuf_payload", 1, 1, 12, None),
+      f_optional("json_payload", 2, 1, 9, None),
       f(
         "requested_output_format",
         3,
@@ -69,8 +87,8 @@ fn request_descriptor() -> @desc.FileDescriptorProto {
       ),
       f("message_type", 4, 1, 9, None, None),
       f("test_category", 5, 1, 14, Some(".conformance.TestCategory"), None),
-      f("jspb_payload", 7, 1, 9, None, None),
-      f("text_payload", 8, 1, 9, None, None),
+      f_optional("jspb_payload", 7, 1, 9, None),
+      f_optional("text_payload", 8, 1, 9, None),
       f("print_unknown_fields", 9, 1, 8, None, None),
     ],
     [],
@@ -81,15 +99,15 @@ fn request_descriptor() -> @desc.FileDescriptorProto {
   let response = m(
     "ConformanceResponse",
     [
-      f("parse_error", 1, 1, 9, None, None),
-      f("runtime_error", 2, 1, 9, None, None),
-      f("protobuf_payload", 3, 1, 12, None, None),
-      f("json_payload", 4, 1, 9, None, None),
-      f("skipped", 5, 1, 9, None, None),
-      f("serialize_error", 6, 1, 9, None, None),
-      f("jspb_payload", 7, 1, 9, None, None),
-      f("text_payload", 8, 1, 9, None, None),
-      f("timeout_error", 9, 1, 9, None, None),
+      f_optional("parse_error", 1, 1, 9, None),
+      f_optional("runtime_error", 2, 1, 9, None),
+      f_optional("protobuf_payload", 3, 1, 12, None),
+      f_optional("json_payload", 4, 1, 9, None),
+      f_optional("skipped", 5, 1, 9, None),
+      f_optional("serialize_error", 6, 1, 9, None),
+      f_optional("jspb_payload", 7, 1, 9, None),
+      f_optional("text_payload", 8, 1, 9, None),
+      f_optional("timeout_error", 9, 1, 9, None),
     ],
     [],
     [],

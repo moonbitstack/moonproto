@@ -16,6 +16,10 @@ pub let global_types : Types
 
 pub let invalid : Value
 
+pub fn is_plain_zero(Double) -> Bool
+
+pub fn is_populated(&Message, FieldDescriptor) -> Bool
+
 pub fn[T] is_set(T?) -> Bool
 
 pub fn[T] list_view(Array[T], Element[T]) -> &ListField
@@ -321,6 +325,7 @@ pub fn Value::equal(Self, Self) -> Bool
 pub fn Value::float(Self) -> Double
 pub fn Value::int(Self) -> Int64
 pub fn Value::is_valid(Self) -> Bool
+pub fn Value::is_zero(Self) -> Bool
 pub fn Value::list(Self) -> &ListField
 pub fn Value::map(Self) -> &MapField
 pub fn Value::map_key(Self) -> MapKey?

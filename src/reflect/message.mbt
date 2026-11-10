@@ -7,7 +7,13 @@
 // return the concrete type lives on `Fresh`, which is used only in generics.
 
 ///|
-/// A repeated field: zero-indexed and ordered.
+/// A repeated field: zero-indexed and ordered, with a mutable element for the
+/// decoder to fill in place.
+///
+/// Core already owns the names `List` and `Map`, so the views carry a suffix. A
+/// generated message hands its own `Array` to `TypedList` instead of copying it
+/// into a container of the library's own, and `ValueList` is the implementation
+/// a message keeps when its values are only known at run time.
 pub(open) trait ListField {
   fn length(Self) -> Int32
   fn get(Self, Int32) -> Value
@@ -20,7 +26,9 @@ pub(open) trait ListField {
 }
 
 ///|
-/// A map field: unordered, keyed by one of the six key kinds.
+/// A map field: unordered, keyed by one of the six key kinds, with a mutable
+/// value for the decoder to fill in place. `TypedMap` wraps a `Map[K, V]` the
+/// generated message already has; `ValueMap` is the run-time implementation.
 pub(open) trait MapField {
   fn length(Self) -> Int32
   fn range(Self, (MapKey, Value) -> Bool) -> Unit
@@ -50,6 +58,12 @@ pub(open) trait EnumType {
 
 ///|
 /// A message instance, reachable only through its descriptor.
+///
+/// `has` answers whether a field carries a value. A repeated or map field
+/// carries one when it is non-empty, a field with presence when it is set, and
+/// a field without presence when its value is not the zero of its kind —
+/// writing a zero is the same as leaving the field out. Encoders ask
+/// `is_populated`, which is the same rule stated once for every implementation.
 pub(open) trait Message {
   fn descriptor(Self) -> MessageDescriptor
   fn message_type(Self) -> &MessageType
@@ -68,7 +82,9 @@ pub(open) trait Message {
 }
 
 ///|
-/// A message's concrete type: its descriptor and a constructor.
+/// A message's concrete type: its descriptor, and a constructor for an empty
+/// instance. The registry stores these, which is how `Any` turns a type URL into
+/// a message and how a decoder builds a nested message it has never seen.
 pub(open) trait MessageType {
   fn new_message(Self) -> &Message
   fn zero(Self) -> &Message
@@ -76,7 +92,10 @@ pub(open) trait MessageType {
 }
 
 ///|
-/// A concrete extension: its type and validation of a value assigned to it.
+/// A concrete extension: its descriptor, a value of its kind, and validation of a
+/// value assigned to it. There is no conversion to and from a universal carrier,
+/// because a value assigned to an extension is already a `Value`; validation is
+/// the only thing the two directions had left to do.
 pub(open) trait ExtensionType {
   fn new_value(Self) -> Value
   fn zero(Self) -> Value
@@ -157,6 +176,22 @@ pub fn new_element_value(kind : Kind, message_type : String?) -> Value {
     }
   } else {
     zero_value(kind)
+  }
+}
+
+///|
+/// Whether `message` carries a value for `field`, which is what every encoder
+/// asks before it writes one. A repeated or map field carries one when it is
+/// non-empty; a field with presence when it is set; and a field without
+/// presence when its value is not zero, because the wire cannot tell a zero
+/// written by hand from a field that was never mentioned.
+pub fn is_populated(message : &Message, field : FieldDescriptor) -> Bool {
+  if field.is_map || field.is_list() {
+    message.has(field)
+  } else if field.kind.is_message() || field.has_presence || field.is_extension {
+    message.has(field)
+  } else {
+    !message.get(field).is_zero()
   }
 }
 
