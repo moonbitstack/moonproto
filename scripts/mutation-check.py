@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prove that five behaviours are actually pinned by the test suite.
+"""Prove that nine behaviours are actually pinned by the test suite.
 
 Each mutation makes one deliberate, compiling change to a runtime invariant,
 runs the full wasm-gc test suite, records which tests turn red, and restores
@@ -8,7 +8,9 @@ longer protects that invariant, and is itself a failure.
 
 The invariants are the ten-octet varint limit, unknown-field preservation,
 64-bit integers as JSON strings, a zero without presence staying off the wire,
-and negative zero keeping its sign.
+negative zero keeping its sign, a message field named twice, a repeated member
+name in the document, bytes taking either base64 alphabet, and a field the
+schema declares packed being written packed.
 """
 
 from __future__ import annotations
@@ -104,6 +106,45 @@ MUTATIONS = [
             "a negative zero is written by both encodings",
         ],
     ),
+    Mutation(
+        name="a field named twice is refused",
+        path="src/json/json.mbt",
+        edits=[
+            (
+                '    if number == field.number {\n'
+                '      raise Syntax("duplicate field " + name)',
+                "    if number == field.number {\n      ()",
+            ),
+        ],
+        expect=[
+            "one field named twice, once by each of its names, is refused",
+        ],
+    ),
+    Mutation(
+        name="a repeated member name is refused",
+        path="src/json/json.mbt",
+        edits=[
+            ("  duplicates: @moonjson.Reject,", "  duplicates: @moonjson.Last,"),
+        ],
+        expect=["a member declared twice is refused"],
+    ),
+    Mutation(
+        name="bytes take either base64 alphabet",
+        path="src/json/json.mbt",
+        edits=[
+            ("@base64.decode_any(text) catch {", "@base64.decode(text) catch {"),
+        ],
+        expect=["bytes take either base64 alphabet, and the padding is optional"],
+    ),
+    Mutation(
+        name="a packed field is written packed",
+        path="src/desc/desc.mbt",
+        edits=[("      1 => true\n      2 => false", "      1 => false\n      2 => false")],
+        expect=[
+            "a proto2 field declared packed is written as one length-delimited run",
+            "an editions field takes the feature on the field over the file default",
+        ],
+    ),
 ]
 
 FAILED_NAME = re.compile(r'\btest \S+:?\d* \("([^"]+)"\) failed')
@@ -158,7 +199,7 @@ def main() -> int:
         for name in missing:
             print(f"    ! expected but stayed green: {name}")
         print(f"  verdict: {'PASS' if passed else 'FAIL'}")
-    print("\nmutation check: " + ("all five invariants are pinned" if ok else "FAILED"))
+    print("\nmutation check: " + ("all nine invariants are pinned" if ok else "FAILED"))
     return 0 if ok else 1
 
 
