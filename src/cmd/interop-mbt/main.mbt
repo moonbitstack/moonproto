@@ -50,14 +50,17 @@ async fn main {
     encode_checked(message)
   } else if mode == "decode" {
     let message = @dynamic.Message::new(descriptor)
-    @proto.decode(from_hex(trim(input)), message) catch {
+    let bytes = @base16.decode(trim(input)) catch {
+      _ => fail("input is not hex")
+    }
+    @proto.decode(bytes, message) catch {
       err => fail("binary decode failed: " + err.to_string())
     }
     encode_checked(message)
   } else {
     fail("usage: interop-mbt encode|decode")
   }
-  write_out(to_hex(bytes) + "\n")
+  write_out(@base16.encode(bytes[:]) + "\n")
 }
 
 ///|
@@ -155,47 +158,9 @@ fn trim(text : String) -> String {
 }
 
 ///|
+/// A `String` index is a UTF-16 code unit, so the trim works on integer code
+/// units instead of bytes. The fixture is ASCII.
 fn is_space(code : UInt16) -> Bool {
   let n = code.to_int()
   n == 32 || n == 10 || n == 13 || n == 9
-}
-
-///|
-/// A `String` index is a UTF-16 code unit, so the hex helpers work on integer
-/// code units instead of bytes. All four formats in this check are ASCII.
-fn nibble(code : UInt16) -> Int32 {
-  let n = code.to_int()
-  if n >= 48 && n <= 57 {
-    n - 48
-  } else if n >= 97 && n <= 102 {
-    n - 87
-  } else {
-    fail("not a hex digit")
-  }
-}
-
-///|
-fn from_hex(text : String) -> Bytes {
-  if text.length() % 2 != 0 {
-    fail("odd number of hex digits")
-  }
-  let out = Buffer()
-  let mut at = 0
-  while at < text.length() {
-    out.write_byte((nibble(text[at]) * 16 + nibble(text[at + 1])).to_byte())
-    at = at + 2
-  }
-  out.to_bytes()
-}
-
-///|
-fn to_hex(bytes : Bytes) -> String {
-  let digits = [
-    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f",
-  ]
-  let mut out = ""
-  for byte in bytes {
-    out = out + digits[(byte.to_int() >> 4) & 0xF] + digits[byte.to_int() & 0xF]
-  }
-  out
 }

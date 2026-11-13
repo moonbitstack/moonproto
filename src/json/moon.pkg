@@ -3,9 +3,10 @@
 
 import {
   "moonbitlang/core/double",
-  "moonbitlang/core/encoding/base64",
   "moonbitlang/core/float",
   "moonbitlang/core/json" @cjson,
+  "moonbitstack/moonbase/base64",
+  "moonbitstack/moonjson",
   "moonbitstack/moonproto/proto",
   "moonbitstack/moonproto/reflect",
 }

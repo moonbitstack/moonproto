@@ -18,24 +18,16 @@ const SCHEMA : String = "syntax = \"proto3\";\n" +
   "}\n"
 
 ///|
-fn nibble(value : Int32) -> Char {
-  if value < 10 {
-    (48 + value).unsafe_to_char()
-  } else {
-    (87 + value).unsafe_to_char()
-  }
-}
-
-///|
+/// The bytes as the page prints them: two hex digits a byte, one space
+/// between bytes.
 fn hex(bytes : Bytes) -> String {
+  let digits = @base16.encode(bytes[:])
   let out = StringBuilder()
-  for i, byte in bytes {
-    if i > 0 {
+  for i in 0..<digits.length() {
+    if i > 0 && i % 2 == 0 {
       out.write_char(' ')
     }
-    let code = byte.to_int()
-    out.write_char(nibble(code / 16))
-    out.write_char(nibble(code % 16))
+    out.write_char(digits[i].unsafe_to_char())
   }
   out.to_string()
 }
@@ -84,5 +76,5 @@ pub fn sample(name : String) -> String {
     "json": @cjson.Json::string(as_json),
     "text": @cjson.Json::string(as_text),
   }
-  result.stringify()
+  result |> @moonjson.dumps
 }

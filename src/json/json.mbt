@@ -107,9 +107,9 @@ pub fn[M : @reflect.Message] encode(
     } else {
       2
     }
-    value.stringify(indent=width)
+    @moonjson.dumps(value, indent=width)
   } else {
-    value.stringify()
+    @moonjson.dumps(value)
   }
 }
 
@@ -125,6 +125,16 @@ pub fn[M : @reflect.Message] to_json(
 }
 
 ///|
+/// The flavor this mapping reads with: RFC 8259 and nothing relaxed, plus one
+/// rule of its own. A JSON object with two members of the same name has no
+/// single meaning — a reader that keeps the last one silently discards the
+/// first — so the mapping refuses the document instead of choosing.
+let reading_flavor : @moonjson.Flavor = {
+  ..@moonjson.strict,
+  duplicates: @moonjson.Reject,
+}
+
+///|
 /// Read JSON text into `message`, replacing its contents. Numbers keep their
 /// written form, which is how an integer too large for a double survives the
 /// trip. A member the schema does not declare is refused unless
@@ -134,8 +144,8 @@ pub fn[M : @reflect.Message] decode(
   message : M,
   unmarshal_options~ : UnmarshalOptions = unmarshal_options,
 ) -> Unit raise Refused {
-  let value = @cjson.parse(text, preserve_number_repr=true) catch {
-    _ => raise Syntax("not JSON")
+  let value = @moonjson.loads(text, reading_flavor) catch {
+    refused => raise Syntax(refused.message())
   }
   from_json(message, value, unmarshal_options~)
 }
@@ -352,7 +362,7 @@ fn singular_to_json(
   match field.kind {
     @reflect.Bool => @cjson.Json::boolean(value.bool())
     @reflect.String => @cjson.Json::string(value.string())
-    @reflect.Bytes => @cjson.Json::string(@base64.encode(value.bytes()))
+    @reflect.Bytes => @cjson.Json::string(@base64.encode(value.bytes()[:]))
     @reflect.Int32 | @reflect.Sint32 | @reflect.Sfixed32 =>
       number_json(value.int())
     @reflect.Uint32 | @reflect.Fixed32 =>
@@ -654,6 +664,9 @@ fn object_from_json(
   // A oneof may be set once per object. `null` does not set a member, so a
   // null member followed by a real one is still valid.
   let oneofs : Array[Int32] = []
+  // A field may be named once. The set is keyed on the field number, so a
+  // member written as `foo_bar` and again as `fooBar` is the same refusal.
+  let named : Array[Int32] = []
   for pair in object {
     let name = pair.0
     if name.has_prefix("[") && name.has_suffix("]") {
@@ -661,6 +674,7 @@ fn object_from_json(
       match @reflect.global_types.find_extension_by_name(qualified) {
         Some(extension) => {
           let field = extension.descriptor()
+          mark_named(named, field, name)
           field_from_json(message, field, pair.1, opts, depth)
         }
         None => if !opts.discard_unknown { raise UnknownField(name) }
@@ -673,6 +687,7 @@ fn object_from_json(
     }
     match field {
       Some(found) => {
+        mark_named(named, found, name)
         if !(pair.1 is @cjson.Json::Null) {
           match found.oneof_index {
             Some(index) => {
@@ -691,6 +706,23 @@ fn object_from_json(
       None => if !opts.discard_unknown { raise UnknownField(name) }
     }
   }
+}
+
+///|
+/// Record that an object has already named `field`, refusing a second name for
+/// it. Two members reach one field through the JSON name and the declared name,
+/// which is why the bookkeeping is by number rather than by the text.
+fn mark_named(
+  named : Array[Int32],
+  field : @reflect.FieldDescriptor,
+  name : String,
+) -> Unit raise Refused {
+  for number in named {
+    if number == field.number {
+      raise Syntax("duplicate field " + name)
+    }
+  }
+  named.push(field.number)
 }
 
 // -- Struct, Value and ListValue --------------------------------------------
@@ -972,8 +1004,9 @@ fn json_to_value(
     @reflect.Bytes =>
       match value {
         @cjson.Json::String(text) =>
+          // The mapping takes either alphabet, with or without the padding.
           @reflect.Bytes(
-            @base64.decode(text) catch {
+            @base64.decode_any(text) catch {
               _ => raise BadBase64(field.name)
             },
           )
@@ -1194,7 +1227,7 @@ fn float_value(value : @cjson.Json, name : String) -> Double raise Refused {
     @cjson.Json::String("-Infinity") => @double.neg_infinity
     @cjson.Json::String(text) =>
       match
-        (@cjson.parse(text, preserve_number_repr=true) catch {
+        (@moonjson.loads(text, reading_flavor) catch {
           _ => raise BadValue(name)
         }) {
         @cjson.Json::Number(number, ..) => finite_number(number, name)

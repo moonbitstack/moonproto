@@ -2,6 +2,8 @@
 // https://moonbitlang.github.io/moonbit-docs/toolchain/package-management/
 import {
   "moonbitlang/core/json" @cjson,
+  "moonbitstack/moonbase/base16",
+  "moonbitstack/moonjson",
   "moonbitstack/moonproto/desc",
   "moonbitstack/moonproto/dynamic",
   "moonbitstack/moonproto/json",
