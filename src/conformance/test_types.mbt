@@ -2961,7 +2961,7 @@ fn official_DescriptorProto_29() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -2983,7 +2983,7 @@ fn official_DescriptorProto_29() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -3005,7 +3005,7 @@ fn official_DescriptorProto_29() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -3027,7 +3027,7 @@ fn official_DescriptorProto_29() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -3049,7 +3049,7 @@ fn official_DescriptorProto_29() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -3071,7 +3071,7 @@ fn official_DescriptorProto_29() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -3093,7 +3093,7 @@ fn official_DescriptorProto_29() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -3115,7 +3115,7 @@ fn official_DescriptorProto_29() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -3137,7 +3137,7 @@ fn official_DescriptorProto_29() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -3159,7 +3159,7 @@ fn official_DescriptorProto_29() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -3181,7 +3181,7 @@ fn official_DescriptorProto_29() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -3203,7 +3203,7 @@ fn official_DescriptorProto_29() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -3225,7 +3225,7 @@ fn official_DescriptorProto_29() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -3249,7 +3249,7 @@ fn official_DescriptorProto_29() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -9741,7 +9741,7 @@ fn official_DescriptorProto_71() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -9763,7 +9763,7 @@ fn official_DescriptorProto_71() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -9785,7 +9785,7 @@ fn official_DescriptorProto_71() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -9807,7 +9807,7 @@ fn official_DescriptorProto_71() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -9829,7 +9829,7 @@ fn official_DescriptorProto_71() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -9851,7 +9851,7 @@ fn official_DescriptorProto_71() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -9873,7 +9873,7 @@ fn official_DescriptorProto_71() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -9895,7 +9895,7 @@ fn official_DescriptorProto_71() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -9917,7 +9917,7 @@ fn official_DescriptorProto_71() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -9939,7 +9939,7 @@ fn official_DescriptorProto_71() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -9961,7 +9961,7 @@ fn official_DescriptorProto_71() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -9983,7 +9983,7 @@ fn official_DescriptorProto_71() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -10005,7 +10005,7 @@ fn official_DescriptorProto_71() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,
@@ -10029,7 +10029,7 @@ fn official_DescriptorProto_71() -> @desc.DescriptorProto {
         features: {
           field_presence: 0,
           enum_type: 0,
-          repeated_field_encoding: 0,
+          repeated_field_encoding: 1,
           message_encoding: 0,
           utf8_validation: 0,
           json_format: 0,

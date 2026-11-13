@@ -190,11 +190,21 @@ def parse_field(data: bytes, parent: dict[str, int]) -> str:
     options = one(v, 8)
     own = merge(parent, read_features(options, "field"))
     packed_off = False
+    packed_on = False
     if options is not None:
         for number, _wire, value in wire_fields(options):
-            # FieldOptions.packed: an explicit false turns packing off.
-            if number == 2 and value == 0:
-                packed_off = True
+            # FieldOptions.packed is the legacy spelling of the editions
+            # feature: true packs the field, false expands it. Recorded as the
+            # feature, the way protoc normalizes an option into an editions
+            # descriptor, so one place decides how a repeated field is written.
+            if number == 2:
+                if value == 0:
+                    packed_off = True
+                else:
+                    packed_on = True
+    if packed_on:
+        own = dict(own)
+        own["repeated_field_encoding"] = 1
     return "\n".join(
         [
             "{",

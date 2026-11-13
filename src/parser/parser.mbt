@@ -951,7 +951,15 @@ fn parse_field_options(
       } else if key == "default" {
         default_value = Some(value)
       } else if key == "packed" {
-        packed_off = value != "true"
+        // The legacy spelling of the editions feature. `true` becomes the
+        // feature, which leaves one place deciding how a repeated field is
+        // written; `false` turns packing off where the syntax would default it
+        // on, which is what `packed_off` records.
+        if value == "true" {
+          features = features.set("repeated_field_encoding", "PACKED")
+        } else {
+          packed_off = true
+        }
       } else if name_has_prefix(key, "features.") {
         features = features.set(key[9:key.length()].to_owned(), value)
       } else {
