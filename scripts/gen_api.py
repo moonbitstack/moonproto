@@ -72,12 +72,40 @@ def doc_comments(pkg_dir: Path) -> dict[str, str]:
 
 
 def parse_mbti(path: Path) -> list[dict]:
-    """Read the declarations the interface file lists."""
+    """Read the declarations the interface file lists.
+
+    A trait implementation and a type alias are public surface too: the page
+    says which traits a type satisfies, and the methods an implementation adds,
+    so both are read here rather than left out.
+    """
     symbols: list[dict] = []
     lines = path.read_text(encoding="utf-8").splitlines()
     i = 0
     while i < len(lines):
         line = lines[i]
+        impl = re.match(
+            r"^pub(?:\(all\)|\(open\))?\s+(impl|type)(?:\[[^\]]*\])?\s+(.+)$", line
+        )
+        if impl:
+            kind, rest = impl.group(1), impl.group(2).strip().rstrip("{").strip()
+            # An implementation is filed under the type it adds to, which is
+            # the name a reader looks it up by; the signature keeps the rest.
+            name = rest.rsplit(" for ", 1)[-1] if " for " in rest else rest
+            name = name.split("=")[0].strip() if kind == "type" else name.strip()
+            body: list[str] = []
+            depth = line.count("{") - line.count("}")
+            while depth > 0 and i + 1 < len(lines):
+                i += 1
+                body.append(lines[i])
+                depth += lines[i].count("{") - lines[i].count("}")
+            symbols.append({
+                "kind": kind,
+                "name": name,
+                "sig": line.strip(),
+                "body": [b for b in body if b.strip() != "}"],
+            })
+            i += 1
+            continue
         match = re.match(
             r"^pub(?:\(all\)|\(open\))?\s+(fn|let|const|struct|enum|suberror|trait)(\[[^\]]*\])?\s+"
             r"([A-Za-z_][\w]*(?:::[A-Za-z_][\w]*)?)",
@@ -98,6 +126,15 @@ def parse_mbti(path: Path) -> list[dict]:
         else:
             symbols.append({"kind": kind, "name": name, "sig": line.strip(), "body": []})
         i += 1
+    # Every declaration the interface lists has to reach the page, or the
+    # reference is short by an item nobody notices is missing. `pub(all)` and
+    # `pub(open)` count as declarations too.
+    listed = sum(1 for line in lines if re.match(r"^pub[\s(]", line))
+    if listed != len(symbols):
+        raise SystemExit(
+            f"{path.relative_to(ROOT)}: {listed} public declarations, "
+            f"{len(symbols)} read — the reference would be short"
+        )
     return symbols
 
 
@@ -112,7 +149,9 @@ def kind_of(symbol: dict) -> str:
 def render_symbol(symbol: dict, docs: dict[str, str]) -> str:
     kind = kind_of(symbol)
     name = html.escape(symbol["name"])
-    doc = docs.get(symbol["name"].split("::")[-1], "")
+    # An implementation is filed under the type it adds to, so the type's own
+    # prose is already on the type's entry.
+    doc = "" if kind == "impl" else docs.get(symbol["name"].split("::")[-1], "")
     sig = html.escape(symbol["sig"].rstrip("{").strip())
     body = "".join("<div>" + html.escape(line.strip()) + "</div>" for line in symbol["body"][:14])
     doc_html = f"<p>{html.escape(doc)}</p>" if doc else ""
@@ -198,7 +237,7 @@ def build() -> str:
             continue
         docs = doc_comments(pkg_dir)
         symbols = parse_mbti(mbti)
-        order = {"struct": 0, "enum": 1, "suberror": 2, "trait": 3, "fn": 4, "let": 5, "const": 6}
+        order = {"struct": 0, "enum": 1, "suberror": 2, "trait": 3, "type": 4, "fn": 5, "let": 6, "const": 7, "impl": 8}
         symbols.sort(key=lambda s: (order.get(kind_of(s), 9), s["name"]))
         rendered = "\n".join(render_symbol(s, docs) for s in symbols)
         count = len(symbols)

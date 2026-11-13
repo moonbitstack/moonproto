@@ -25,7 +25,7 @@ A few numbers that describe the current shape of the library:
 | Wire types | 5 |
 | Scalar kinds | 15 |
 | Syntax shapes generated and checked | 4 (`proto2`, `proto3`, editions 2023, editions 2024) |
-| Official binary and JSON conformance cases passing | 2755 / 2755 |
+| Official binary and JSON conformance cases passing | 2793 / 2793 |
 | Official text format conformance cases passing | 440 / 440 |
 | Declared conformance omissions | 0 |
 
@@ -159,6 +159,24 @@ let json = @json.encode(message) catch { _ => abort("JSON failed") }
 assert_eq(json, "{\"name\":\"moon\"}")
 ```
 
+Reading is as strict as the format's own rules. A member the schema does not
+declare is refused unless `discard_unknown` is set, a message field named twice
+— once by each of its two names — is refused, and so is a document that writes
+the same member name twice rather than letting the second one win. Bytes are
+read in either base64 alphabet, padded or not, and always written back in the
+standard one with padding. A document that is not JSON at all fails with the
+line and column at which the reader stopped:
+
+```mbt
+let refusal = try {
+  @json.decode("{\"name\": }", @dynamic.Message::new(request))
+  "no refusal"
+} catch {
+  reason => reason.to_string()
+}
+assert_true(refusal.contains("line 1, column 10"))
+```
+
 The text format carries the same values with its own grammar:
 
 ```mbt
@@ -211,12 +229,27 @@ failure lists live in `tests/conformance/`.
 
 | Suite | Cases | Passed | Skipped | Expected failures | Unexpected failures |
 |:--|--:|--:|--:|--:|--:|
-| Binary and JSON (`failure_list.txt`) | 2755 | 2755 | 0 | 0 | 0 |
+| Binary and JSON (`failure_list.txt`) | 2793 | 2793 | 0 | 0 | 0 |
 | Text format (`text_format_failure_list.txt`) | 440 | 440 | 0 | 0 | 0 |
 
-Both failure lists are empty: no case in either suite is waived. The text
-format suite is the one that exercises the grammar rather than the message
-model, and it covers:
+Both failure lists are empty: no case in either suite is waived. The runner also
+prints a notice where a `Recommended` case produces a different answer without
+being wrong; 29 such notices remain, in seven groups. They are listed here because
+the format permits what this library does, not because the suite accepts a
+failure:
+
+| Notices | Case | What differs |
+|--:|:--|:--|
+| 10 | `IgnoreUnknownEnumStringValue*` | an unknown enum name is refused even when `discard_unknown` is set; the case expects the member to be dropped |
+| 4 | `Timestamp`/`Duration` with 3 or 6 fractional digits | a fraction is written with nine digits; the reference trims trailing zeroes to three or six |
+| 3 | `FieldMask` paths that do not round-trip | a path the lowerCamelCase form cannot carry back is written out rather than refused |
+| 3 | `Value`/`Struct`/`ListValue` nested 200 deep | the reader's limit is `recursion_limit`, 10 000 by default, so 200 levels are read rather than refused |
+| 2 | `Value` holding NaN or infinity | written as `"NaN"`/`"Infinity"` rather than refused |
+| 2 | `null` for a oneof member of type `NullValue` | the member is left unset, so the document comes back without it |
+| 5 | text format `\U0001xxxx` and `print_unknown_fields` | a lone surrogate half is refused, and unknown fields are not printed because there is no option for it |
+
+The text format suite is the one that exercises the grammar rather than the
+message model, and it covers:
 
 | Area | What is read |
 |:--|:--|
@@ -251,7 +284,7 @@ map, the nested message, the enum and the active oneof member.
 
 ### Mutation evidence
 
-Three invariants are guarded by the test suite. Breaking each one turns the
+Nine invariants are guarded by the test suite. Breaking each one turns the
 following tests red:
 
 | Invariant broken | Tests that fail |
@@ -261,8 +294,12 @@ following tests red:
 | 64-bit integers as JSON strings | `protojson: 64-bit integers are strings on the wire`; `binary to JSON keeps every scalar and the composite fields`; `the scalar mapping and its fixed text` |
 | A zero without presence stays off the wire | `binary: a zero without presence writes no bytes`; `binary: a zero read from the wire does not come back`; `binary and JSON leave the same zeros out` |
 | Negative zero keeps its sign | `binary: negative zero keeps its sign on the wire`; `a negative zero is written by both encodings` |
+| A field named twice by its two names | `one field named twice, once by each of its names, is refused` |
+| A repeated member name in the document | `a member declared twice is refused` |
+| Bytes in either base64 alphabet | `bytes take either base64 alphabet, and the padding is optional` |
+| A field the schema declares packed | `a proto2 field declared packed is written as one length-delimited run`; `an editions field takes the feature on the field over the file default` |
 
-Run `scripts/mutation-check.sh` to reproduce all five; it restores every source
+Run `scripts/mutation-check.sh` to reproduce all nine; it restores every source
 file before it exits.
 
 ## Reproducing the results
@@ -278,7 +315,7 @@ file before it exits.
 | `scripts/check-gointerop.sh` | the checked-in Go schema is exactly what `protoc-gen-go` v1.36.12 emits |
 | `scripts/interop.sh` | the fixture's reference bytes are what `protoc` itself encodes |
 | `scripts/interop-go.sh` | Go and MoonBit encode and decode each other's bytes |
-| `scripts/mutation-check.sh` | the three mutation checks above |
+| `scripts/mutation-check.sh` | the nine mutation checks above |
 | `scripts/generate-known.sh` | regenerates the well-known package from the protobuf includes |
 | `scripts/check_snippets.py` | every MoonBit block in this file and in the skill compiles against the source |
 

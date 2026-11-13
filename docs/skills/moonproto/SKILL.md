@@ -101,6 +101,16 @@ field written without a label holds a plain `T`.
 - 64-bit integers are strings in JSON, both on input and output. An unquoted
   64-bit literal is accepted on input but is not what the encoder emits; use the
   original text when exact digits matter.
+- Repeated scalars: proto3 packs by default, proto2 does not. An explicit
+  `[packed = true]` in proto2 writes one length-delimited run, and
+  `[packed = false]` (or `features.repeated_field_encoding = EXPANDED`) repeats
+  the tag per element.
+- A field is named once per JSON object. Two members reaching one field — the
+  JSON name and the declared name — and the same member name written twice are
+  both refused, so a document that duplicates a key is an error rather than a
+  silent overwrite.
+- Bytes are base64: either the standard or the URL-safe alphabet on input, with
+  or without padding. The encoder always writes the standard alphabet, padded.
 - Unknown fields are kept on the message and re-emitted by the next encode.
   `proto.reset` deliberately clears them.
 - A proto3 scalar without presence has no set state: binary and JSON both leave

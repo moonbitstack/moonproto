@@ -297,7 +297,8 @@ total from JSON: 10000000000
 title from text: quarterly
 all three agree: true</div>
 
-    <p>64-bit integers are strings in both directions. Enums travel by name, bytes in base64, and a field without presence is left out when it holds its zero value, as the presence section above shows.</p>
+    <p>64-bit integers are strings in both directions. Enums travel by name, bytes in base64 — either alphabet, padded or not — and a field without presence is left out when it holds its zero value, as the presence section above shows.</p>
+    <p>Reads are strict where the format is: a member the schema does not declare is refused unless <code>discard_unknown</code> is set, a message field named twice is refused, and so is a document that writes the same member name twice. A document that is not JSON reports the line and column where the reader stopped.</p>
     <p>The text format is the one that reads as well as writes, and its grammar is wider than JSON's: fields separated by commas, semicolons or newlines, one element per repeated name, groups, octal and hexadecimal literals, and comments. Hand it <code>title: "quarterly", total: 10000000000, tags: "proto" tags: "wire"</code> and the encoder writes the two tags back one per line.</p>
 
 
@@ -318,7 +319,7 @@ all three agree: true</div>
 }</pre>
     </div>
 
-    <p>With <code>field_presence = IMPLICIT</code> a scalar is generated as <code>Int32</code>; without it, as <code>Int32?</code>. <code>repeated_field_encoding</code> decides whether a repeated scalar is packed on the wire.</p>
+    <p>With <code>field_presence = IMPLICIT</code> a scalar is generated as <code>Int32</code>; without it, as <code>Int32?</code>. <code>repeated_field_encoding</code> decides whether a repeated scalar is packed on the wire. The older <code>[packed = true]</code> and <code>[packed = false]</code> options are the same feature: a proto2 field declared packed writes one length-delimited run, while one without the option repeats its tag.</p>
 
     <h2 id="extensions"><span class="tag">7</span> Extensions</h2>
     <p>An extension lives in the message's extension range and is named in brackets in text and JSON. The binary encoding is the same as any other field.</p>

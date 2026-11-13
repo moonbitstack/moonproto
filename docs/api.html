@@ -44,16 +44,16 @@
   <aside class="rail" aria-label="Packages">
     <div class="rail-group">
       <b>Packages</b>
-      <a href="#pkg-wire"><span class="n">36</span> wire</a>
-      <a href="#pkg-reflect"><span class="n">163</span> reflect</a>
-      <a href="#pkg-proto"><span class="n">21</span> proto</a>
-      <a href="#pkg-json"><span class="n">11</span> json</a>
-      <a href="#pkg-text"><span class="n">9</span> text</a>
-      <a href="#pkg-delim"><span class="n">18</span> delim</a>
-      <a href="#pkg-dynamic"><span class="n">39</span> dynamic</a>
-      <a href="#pkg-desc"><span class="n">18</span> desc</a>
-      <a href="#pkg-parser"><span class="n">4</span> parser</a>
-      <a href="#pkg-gen"><span class="n">20</span> gen</a>
+      <a href="#pkg-wire"><span class="n">38</span> wire</a>
+      <a href="#pkg-reflect"><span class="n">168</span> reflect</a>
+      <a href="#pkg-proto"><span class="n">22</span> proto</a>
+      <a href="#pkg-json"><span class="n">12</span> json</a>
+      <a href="#pkg-text"><span class="n">10</span> text</a>
+      <a href="#pkg-delim"><span class="n">21</span> delim</a>
+      <a href="#pkg-dynamic"><span class="n">45</span> dynamic</a>
+      <a href="#pkg-desc"><span class="n">19</span> desc</a>
+      <a href="#pkg-parser"><span class="n">5</span> parser</a>
+      <a href="#pkg-gen"><span class="n">21</span> gen</a>
       <a href="#pkg-known"><span class="n">5</span> known</a>
       <a href="#pkg-conformance"><span class="n">6</span> conformance</a>
     </div>
@@ -85,6 +85,12 @@
         <summary><span class="kind suberror">suberror</span><span class="sname">Refused</span><span class="sdoc">A wire-format refusal</span></summary>
         <div class="sym-body">
           <p>A wire-format refusal. The offset is where the reader stopped, `got` is what it saw and `want` is what the format required.</p><pre class="sig">pub(all) suberror Refused</pre><div>Incomplete(Int32)</div><div>Malformed(Int32, Int32, Int32)</div><div>Overflow(Int32)</div><div>FieldNumber(Int32, Int32)</div><div>WireType(Int32, Int32)</div><div>Recursion(Int32)</div>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind type">type</span><span class="sname">FieldNumber</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub type FieldNumber = Int32</pre>
         </div>
       </details>
       <details class="sym">
@@ -283,6 +289,12 @@
         <summary><span class="kind let">let</span><span class="sname">max_field_number</span><span class="sdoc">The largest field number the format allows.</span></summary>
         <div class="sym-body">
           <p>The largest field number the format allows.</p><pre class="sig">pub let max_field_number : Int32</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">Refused</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl Show for Refused</pre>
         </div>
       </details>
     </section>
@@ -1268,6 +1280,36 @@
           <p>The empty value, used where a field is absent and a `Value` is still required.</p><pre class="sig">pub let invalid : Value</pre>
         </div>
       </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">Refused</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl Show for Refused</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">TypedList[T]</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl[T] ListField for TypedList[T]</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">TypedMap[K, V]</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl[K : Hash + Eq, V] MapField for TypedMap[K, V]</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">ValueList</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl ListField for ValueList</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">ValueMap</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl MapField for ValueMap</pre>
+        </div>
+      </details>
     </section>
     <section id="pkg-proto">
       <div class="pkg-title"><h1>proto</h1></div>
@@ -1399,6 +1441,12 @@
           <pre class="sig">pub let unmarshal_options : UnmarshalOptions</pre>
         </div>
       </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">Refused</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl Show for Refused</pre>
+        </div>
+      </details>
     </section>
     <section id="pkg-json">
       <div class="pkg-title"><h1>json</h1></div>
@@ -1470,6 +1518,12 @@
           <pre class="sig">pub let unmarshal_options : UnmarshalOptions</pre>
         </div>
       </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">Refused</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl Show for Refused</pre>
+        </div>
+      </details>
     </section>
     <section id="pkg-text">
       <div class="pkg-title"><h1>text</h1></div>
@@ -1527,6 +1581,12 @@
         <summary><span class="kind let">let</span><span class="sname">unmarshal_options</span></summary>
         <div class="sym-body">
           <pre class="sig">pub let unmarshal_options : UnmarshalOptions</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">Refused</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl Show for Refused</pre>
         </div>
       </details>
     </section>
@@ -1640,6 +1700,24 @@
         <summary><span class="kind let">let</span><span class="sname">unmarshal_options</span></summary>
         <div class="sym-body">
           <pre class="sig">pub let unmarshal_options : UnmarshalOptions</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">BytesReader</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl Reader for BytesReader</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">BytesWriter</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl Writer for BytesWriter</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">Refused</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl Show for Refused</pre>
         </div>
       </details>
     </section>
@@ -1881,6 +1959,42 @@
           <pre class="sig">pub fn new_message_type(@reflect.MessageDescriptor) -&gt; &amp;@reflect.MessageType</pre>
         </div>
       </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">EnumType</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl @reflect.EnumType for EnumType</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">EnumValue</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl @reflect.Enum for EnumValue</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">ExtensionType</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl @reflect.ExtensionType for ExtensionType</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">Message</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl @reflect.Fresh for Message</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">Message</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl @reflect.Message for Message</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">MessageType</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl @reflect.MessageType for MessageType</pre>
+        </div>
+      </details>
     </section>
     <section id="pkg-desc">
       <div class="pkg-title"><h1>desc</h1></div>
@@ -1994,6 +2108,12 @@
           <p>Every feature left to inherit, which is what a file written without any `features.*` option means.</p><pre class="sig">pub let features_auto : Features</pre>
         </div>
       </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">Refused</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl Show for Refused</pre>
+        </div>
+      </details>
     </section>
     <section id="pkg-parser">
       <div class="pkg-title"><h1>parser</h1></div>
@@ -2021,6 +2141,12 @@
         <summary><span class="kind fn">fn</span><span class="sname">parse</span><span class="sdoc">Parse one `.proto` file.</span></summary>
         <div class="sym-body">
           <p>Parse one `.proto` file.</p><pre class="sig">pub fn parse(String, String) -&gt; @desc.FileDescriptorProto raise Refused</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">Refused</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl Show for Refused</pre>
         </div>
       </details>
     </section>
@@ -2146,6 +2272,12 @@
         <summary><span class="kind let">let</span><span class="sname">plugin_types</span></summary>
         <div class="sym-body">
           <pre class="sig">pub let plugin_types : @reflect.Types</pre>
+        </div>
+      </details>
+      <details class="sym">
+        <summary><span class="kind impl">impl</span><span class="sname">Refused</span></summary>
+        <div class="sym-body">
+          <pre class="sig">pub impl Show for Refused</pre>
         </div>
       </details>
     </section>
