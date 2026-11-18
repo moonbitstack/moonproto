@@ -6,6 +6,9 @@ on:
     branches:
       - master
   workflow_dispatch:
+  # Twice a month, so a new toolchain or a dependency's release shows up while nothing is pushed.
+  schedule:
+    - cron: "43 4 1,16 * *"
 
 jobs:
   build:
